@@ -1,0 +1,48 @@
+---
+glob: "**/*.ts,**/*.tsx"
+---
+
+# TypeScript Guidelines
+
+## Strict TypeScript
+
+- Enable `strict: true` in tsconfig.json
+- Never use `any` - use `unknown` with type guards instead
+- Prefer interfaces for object shapes, types for unions
+- Always specify return types for exported functions
+
+## Patterns
+
+### Type Guards
+
+```typescript
+// ✅ Use type guards instead of type assertions
+function isUser(value: unknown): value is User {
+  return typeof value === 'object' && value !== null && 'id' in value;
+}
+```
+
+### Discriminated Unions
+
+```typescript
+// ✅ Use discriminated unions for state
+type State<T> =
+  | { status: 'loading' }
+  | { status: 'success'; data: T }
+  | { status: 'error'; error: Error };
+```
+
+### Utility Types
+
+```typescript
+// Use built-in utility types
+type PartialUser = Partial<User>;
+type RequiredUser = Required<User>;
+type UserKeys = Pick<User, 'id' | 'name'>;
+```
+
+## Naming
+
+- **Interfaces**: PascalCase, describe the shape (`UserProfile`, `ButtonProps`)
+- **Types**: PascalCase for complex types, no I/T prefix
+- **Generics**: Descriptive names (`TData`, `TError`) not just `T`

@@ -1,0 +1,126 @@
+@import "tailwindcss";
+
+:root {
+  --background: #0a0a0a;
+  --foreground: #fafafa;
+  --primary: #6366f1;
+  --primary-foreground: #ffffff;
+  --secondary: #1e1e2e;
+  --secondary-foreground: #a1a1aa;
+  --accent: #818cf8;
+  --border: #27272a;
+  --card: #18181b;
+  --muted: #71717a;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-primary: var(--primary);
+  --color-accent: var(--accent);
+  --font-sans: var(--font-geist-mono);
+  --font-mono: var(--font-geist-mono);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+}
+
+/* Gradient text */
+.gradient-text {
+  background: linear-gradient(135deg, #6366f1 0%, #818cf8 50%, #a5b4fc 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Glow effect */
+.glow {
+  box-shadow: 0 0 40px rgba(99, 102, 241, 0.3);
+}
+
+/* Card hover effect */
+.card-hover {
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.card-hover:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 40px rgba(99, 102, 241, 0.2);
+}
+
+/* Code block styling */
+.code-block {
+  background: linear-gradient(135deg, #1e1e2e 0%, #18181b 100%);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+
+/* Animated gradient border */
+.gradient-border {
+  position: relative;
+  background: var(--card);
+  border-radius: 16px;
+}
+
+.gradient-border::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: 17px;
+  background: linear-gradient(135deg, #6366f1, #818cf8, #a5b4fc);
+  z-index: -1;
+  opacity: 0.5;
+}
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Selection color */
+::selection {
+  background: rgba(99, 102, 241, 0.3);
+}
+
+/* Icon animation */
+.icon-animate {
+  transition: transform 0.3s ease;
+}
+
+.icon-animate:hover {
+  transform: scale(1.1);
+}
+
+/* Spin animation for loading states */
+@keyframes spin-slow {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin-slow {
+  animation: spin-slow 3s linear infinite;
+}
+
+/* Pulse animation */
+@keyframes pulse-glow {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}

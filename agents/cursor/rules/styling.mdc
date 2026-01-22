@@ -1,0 +1,67 @@
+---
+glob: "**/*.tsx,**/*.css"
+---
+
+# Styling Guidelines
+
+## Tailwind CSS
+
+- Use utility classes for all styling
+- Follow mobile-first responsive design
+- Use design tokens via CSS variables
+- Avoid inline styles
+
+```tsx
+// ✅ Good
+<div className="flex items-center gap-4 p-4 md:p-6 lg:p-8">
+
+// ❌ Bad
+<div style={{ display: 'flex', padding: '16px' }}>
+```
+
+## Responsive Design
+
+```tsx
+// Mobile first - base styles for mobile, then add breakpoints
+<div className="
+  flex flex-col        // Mobile
+  md:flex-row          // Tablet
+  lg:gap-8             // Desktop
+">
+```
+
+## shadcn/ui Patterns
+
+- Use the component's variant props
+- Extend with className when needed
+- Keep customizations minimal
+
+```tsx
+<Button variant="outline" size="lg" className="w-full">
+  Submit
+</Button>
+```
+
+## Dark Mode
+
+- Use CSS variables for colors
+- Always define both light and dark variants
+- Test in both modes
+
+```tsx
+// ✅ Uses CSS variable that adapts to theme
+<div className="bg-background text-foreground">
+
+// ❌ Hardcoded color that won't adapt
+<div className="bg-white text-black">
+```
+
+## Animation
+
+- Use Tailwind's built-in animations
+- Respect `prefers-reduced-motion`
+- Keep animations subtle
+
+```tsx
+<div className="animate-in fade-in duration-300 motion-reduce:animate-none">
+```

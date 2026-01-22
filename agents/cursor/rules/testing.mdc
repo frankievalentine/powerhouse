@@ -1,0 +1,64 @@
+---
+glob: "**/*.test.ts,**/*.test.tsx,**/*.spec.ts,**/*.spec.tsx"
+---
+
+# Testing Guidelines
+
+## Test Structure
+
+```typescript
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+
+describe('ComponentName', () => {
+  it('describes what it should do', async () => {
+    // Arrange
+    const props = { onClick: jest.fn() };
+    
+    // Act
+    render(<Component {...props} />);
+    await userEvent.click(screen.getByRole('button'));
+    
+    // Assert
+    expect(props.onClick).toHaveBeenCalled();
+  });
+});
+```
+
+## Best Practices
+
+### Query Priority
+
+Use queries in this order:
+1. `getByRole` - Most accessible
+2. `getByLabelText` - For form fields
+3. `getByPlaceholderText` - For inputs
+4. `getByText` - For content
+5. `getByTestId` - Last resort
+
+### Async Operations
+
+```typescript
+// ✅ Wait for elements
+await screen.findByText('Loaded');
+
+// ✅ Wait for element to disappear
+await waitForElementToBeRemoved(() => screen.queryByText('Loading'));
+```
+
+### User Events
+
+```typescript
+// ✅ Use userEvent for realistic interactions
+const user = userEvent.setup();
+await user.click(button);
+await user.type(input, 'hello');
+```
+
+## What to Test
+
+- Rendering with different props
+- User interactions (click, type, submit)
+- Conditional rendering
+- Error states
+- Accessibility (roles, labels)

@@ -1,0 +1,137 @@
+# Continue.dev Configuration Template
+# Place in ~/.continue/config.yaml
+
+name: "Web Development"
+version: "1.0.0"
+
+# Model Configuration
+models:
+  - name: "Claude Sonnet"
+    provider: "anthropic"
+    model: "claude-sonnet-4-20250514"
+    apiKey: "${ANTHROPIC_API_KEY}" # Set via environment variable
+
+  - name: "GPT-4o"
+    provider: "openai"
+    model: "gpt-4o"
+    apiKey: "${OPENAI_API_KEY}"
+
+# Default model to use
+defaultModel: "Claude Sonnet"
+
+# Tab autocomplete settings
+tabAutocomplete:
+  enabled: true
+  model: "Claude Sonnet"
+
+# Context Providers - enable which context sources to use
+contextProviders:
+  - name: "file"
+    description: "Reference a specific file"
+
+  - name: "code"
+    description: "Reference functions and classes"
+
+  - name: "folder"
+    description: "Reference an entire folder"
+
+  - name: "codebase"
+    description: "Search the entire codebase"
+    params:
+      nRetrieve: 20
+
+  - name: "terminal"
+    description: "Reference terminal output"
+
+  - name: "git-diff"
+    description: "Reference current git changes"
+
+  - name: "open"
+    description: "Reference all open files"
+
+  - name: "problems"
+    description: "Reference current file problems"
+
+  - name: "url"
+    description: "Fetch content from a URL"
+
+  - name: "docs"
+    description: "Reference documentation"
+    params:
+      sites:
+        - title: "Next.js"
+          startUrl: "https://nextjs.org/docs"
+        - title: "React"
+          startUrl: "https://react.dev/reference"
+        - title: "TypeScript"
+          startUrl: "https://www.typescriptlang.org/docs"
+        - title: "Tailwind CSS"
+          startUrl: "https://tailwindcss.com/docs"
+
+# Slash Commands - custom commands for common tasks
+slashCommands:
+  - name: "review"
+    description: "Review the selected code"
+    prompt: |
+      Review this code for:
+      - Code quality and readability
+      - TypeScript best practices
+      - React/Next.js patterns
+      - Potential bugs or edge cases
+      - Performance issues
+      - Accessibility concerns
+
+      Provide specific, actionable feedback.
+
+  - name: "refactor"
+    description: "Suggest refactoring improvements"
+    prompt: |
+      Analyze this code and suggest refactoring improvements:
+      - Extract repeated logic
+      - Improve naming
+      - Simplify complexity
+      - Apply design patterns where appropriate
+      - Ensure TypeScript types are optimal
+
+  - name: "test"
+    description: "Generate tests for selected code"
+    prompt: |
+      Generate comprehensive tests for this code using Jest and React Testing Library:
+      - Unit tests for functions
+      - Component tests for React components
+      - Test happy path and edge cases
+      - Include accessibility checks where appropriate
+
+  - name: "document"
+    description: "Add documentation"
+    prompt: |
+      Add comprehensive documentation to this code:
+      - JSDoc comments for functions
+      - Interface documentation
+      - Usage examples
+      - Note any important caveats
+
+  - name: "fix"
+    description: "Fix the selected code issue"
+    prompt: |
+      Analyze and fix the issue in this code. Explain:
+      1. What the problem is
+      2. Why it occurs
+      3. How your fix resolves it
+
+# System message - added to all conversations
+systemMessage: |
+  You are an expert web developer specializing in:
+  - TypeScript with strict type checking
+  - Next.js App Router (Server Components, Server Actions)
+  - React best practices
+  - Tailwind CSS and shadcn/ui
+  - Web performance optimization
+  - Accessibility (WCAG 2.1)
+
+  Follow these principles:
+  - Write clean, readable code
+  - Use TypeScript strictly (no `any`)
+  - Prefer Server Components by default
+  - Always consider accessibility
+  - Optimize for performance

@@ -1,0 +1,9 @@
+{
+	"theme": "Default",
+	"preferredEditor": "vscode",
+	"coreTools": ["shell", "readFile", "writeFile", "glob", "grep", "listDir"],
+	"sandbox": false,
+	"checkpointing": {
+		"enabled": true
+	}
+}

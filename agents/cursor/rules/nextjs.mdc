@@ -1,0 +1,65 @@
+---
+glob: "**/app/**/*.tsx,**/components/**/*.tsx"
+---
+
+# Next.js App Router Guidelines
+
+## Server vs Client Components
+
+- Default to Server Components (no directive needed)
+- Only add `'use client'` when you need:
+  - React hooks (`useState`, `useEffect`, etc.)
+  - Browser APIs (`window`, `document`)
+  - Event handlers (`onClick`, `onChange`)
+  - Third-party libraries that use hooks
+
+## Data Fetching
+
+```typescript
+// ✅ Server Component - fetch directly
+export default async function Page() {
+  const data = await fetch('https://api.example.com/data', {
+    next: { revalidate: 3600 } // Cache for 1 hour
+  });
+  return <div>{data}</div>;
+}
+
+// ✅ Dynamic data - no caching
+const data = await fetch(url, { cache: 'no-store' });
+```
+
+## Server Actions
+
+```typescript
+// ✅ Use Server Actions for mutations
+'use server';
+
+export async function createPost(formData: FormData) {
+  const title = formData.get('title');
+  await db.posts.create({ title });
+  revalidatePath('/posts');
+}
+```
+
+## File Naming
+
+- `page.tsx` - Route page
+- `layout.tsx` - Shared layout
+- `loading.tsx` - Loading UI
+- `error.tsx` - Error boundary
+- `not-found.tsx` - 404 page
+
+## Metadata
+
+```typescript
+export const metadata = {
+  title: 'Page Title',
+  description: 'Page description',
+};
+
+// Or dynamic
+export async function generateMetadata({ params }) {
+  const post = await getPost(params.id);
+  return { title: post.title };
+}
+```

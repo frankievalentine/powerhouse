@@ -1,0 +1,14 @@
+{
+  "name": "opencode",
+  "version": "1",
+  "model": {
+    "provider": "anthropic",
+    "model": "claude-sonnet-4-20250514"
+  },
+  "theme": {
+    "colors": {
+      "primary": "#6366f1",
+      "secondary": "#a5b4fc"
+    }
+  }
+}

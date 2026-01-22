@@ -1,0 +1,48 @@
+{
+	"$schema": "https://json.schemastore.org/tsconfig",
+	"compilerOptions": {
+		"target": "ES2022",
+		"lib": ["ES2022", "DOM", "DOM.Iterable"],
+		"module": "NodeNext",
+		"moduleResolution": "NodeNext",
+		"resolveJsonModule": true,
+		"isolatedModules": true,
+		"jsx": "preserve",
+
+		"strict": true,
+		"noImplicitAny": true,
+		"strictNullChecks": true,
+		"strictFunctionTypes": true,
+		"strictBindCallApply": true,
+		"strictPropertyInitialization": true,
+		"noImplicitThis": true,
+		"useUnknownInCatchVariables": true,
+		"alwaysStrict": true,
+
+		"noUnusedLocals": true,
+		"noUnusedParameters": true,
+		"noImplicitReturns": true,
+		"noFallthroughCasesInSwitch": true,
+		"noUncheckedIndexedAccess": true,
+		"noImplicitOverride": true,
+		"noPropertyAccessFromIndexSignature": false,
+
+		"skipLibCheck": true,
+		"forceConsistentCasingInFileNames": true,
+		"esModuleInterop": true,
+		"allowSyntheticDefaultImports": true,
+
+		"declaration": true,
+		"declarationMap": true,
+		"sourceMap": true,
+
+		"incremental": true,
+
+		"baseUrl": ".",
+		"paths": {
+			"@/*": ["./src/*"]
+		}
+	},
+	"include": ["src/**/*", "*.config.ts"],
+	"exclude": ["node_modules", "dist", "build", ".next"]
+}
