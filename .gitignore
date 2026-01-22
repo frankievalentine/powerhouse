@@ -1,0 +1,5 @@
+.shared
+.agent
+.env
+.env.local
+.env.production

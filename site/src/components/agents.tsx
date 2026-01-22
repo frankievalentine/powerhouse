@@ -1,13 +1,15 @@
+"use client";
+
 import {
 	BotIcon,
-	Brain,
-	FileEdit,
+	BrainIcon,
+	FileEditIcon,
 	GithubIcon,
-	RefreshCw,
+	RefreshCwIcon,
 	SparklesIcon,
 	ZapIcon,
 } from "@/components/icons";
-import type { ReactNode } from "react";
+import { useRef, type ReactNode } from "react";
 
 interface Agent {
 	name: string;
@@ -15,64 +17,80 @@ interface Agent {
 	config: string;
 	context: string;
 	icon: ReactNode;
+	iconRef?: React.RefObject<{ startAnimation: () => void; stopAnimation: () => void } | null>;
 }
 
-const agents: Agent[] = [
-	{
-		name: "Claude Code",
-		status: "Native",
-		config: ".claude/",
-		context: "CLAUDE.md",
-		icon: <BotIcon size={24} className="text-[var(--accent)]" />,
-	},
-	{
-		name: "OpenCode",
-		status: "Native",
-		config: ".opencode/",
-		context: "OPENCODE.md",
-		icon: <ZapIcon size={24} className="text-[var(--accent)]" />,
-	},
-	{
-		name: "Gemini CLI",
-		status: "Native",
-		config: ".gemini/",
-		context: "GEMINI.md",
-		icon: <SparklesIcon size={24} className="text-[var(--accent)]" />,
-	},
-	{
-		name: "OpenAI Codex",
-		status: "Native",
-		config: ".codex/",
-		context: "AGENTS.md",
-		icon: <Brain className="h-6 w-6 text-[var(--accent)]" />,
-	},
-	{
-		name: "Continue.dev",
-		status: "Config",
-		config: ".continue/",
-		context: "config.yaml",
-		icon: <RefreshCw className="h-6 w-6 text-[var(--accent)]" />,
-	},
-	{
-		name: "GitHub Copilot",
-		status: "Instructions",
-		config: ".github/",
-		context: "copilot-instructions.md",
-		icon: <GithubIcon size={24} className="text-[var(--accent)]" />,
-	},
-	{
-		name: "Cursor",
-		status: "Rules",
-		config: ".cursor/",
-		context: "rules/*.mdc",
-		icon: <FileEdit className="h-6 w-6 text-[var(--accent)]" />,
-	},
-];
-
 export const Agents = () => {
+	const claudeRef = useRef<{ startAnimation: () => void; stopAnimation: () => void } | null>(null);
+	const opencodeRef = useRef<{ startAnimation: () => void; stopAnimation: () => void } | null>(null);
+	const geminiRef = useRef<{ startAnimation: () => void; stopAnimation: () => void } | null>(null);
+	const codexRef = useRef<{ startAnimation: () => void; stopAnimation: () => void } | null>(null);
+	const continueRef = useRef<{ startAnimation: () => void; stopAnimation: () => void } | null>(null);
+	const copilotRef = useRef<{ startAnimation: () => void; stopAnimation: () => void } | null>(null);
+	const cursorRef = useRef<{ startAnimation: () => void; stopAnimation: () => void } | null>(null);
+
+	const agents: Agent[] = [
+		{
+			name: "Claude Code",
+			status: "Native",
+			config: ".claude/",
+			context: "CLAUDE.md",
+			icon: <BotIcon ref={claudeRef} size={24} className="text-[var(--muted)]" />,
+			iconRef: claudeRef,
+		},
+		{
+			name: "OpenCode",
+			status: "Native",
+			config: ".opencode/",
+			context: "OPENCODE.md",
+			icon: <ZapIcon ref={opencodeRef} size={24} className="text-[var(--muted)]" />,
+			iconRef: opencodeRef,
+		},
+		{
+			name: "Gemini CLI",
+			status: "Native",
+			config: ".gemini/",
+			context: "GEMINI.md",
+			icon: <SparklesIcon ref={geminiRef} size={24} className="text-[var(--muted)]" />,
+			iconRef: geminiRef,
+		},
+		{
+			name: "OpenAI Codex",
+			status: "Native",
+			config: ".codex/",
+			context: "AGENTS.md",
+			icon: <BrainIcon ref={codexRef} size={24} className="text-[var(--muted)]" />,
+			iconRef: codexRef,
+		},
+		{
+			name: "Continue.dev",
+			status: "Config",
+			config: ".continue/",
+			context: "config.yaml",
+			icon: <RefreshCwIcon ref={continueRef} size={24} className="text-[var(--muted)]" />,
+			iconRef: continueRef,
+		},
+		{
+			name: "GitHub Copilot",
+			status: "Instructions",
+			config: ".github/",
+			context: "copilot-instructions.md",
+			icon: <GithubIcon ref={copilotRef} size={24} className="text-[var(--muted)]" />,
+			iconRef: copilotRef,
+		},
+		{
+			name: "Cursor",
+			status: "Rules",
+			config: ".cursor/",
+			context: "rules/*.mdc",
+			icon: <FileEditIcon ref={cursorRef} size={24} className="text-[var(--muted)]" />,
+			iconRef: cursorRef,
+		},
+	];
+
 	return (
-		<section id="agents" className="bg-[var(--secondary)] py-20">
-			<div className="mx-auto max-w-6xl px-6">
+		<section id="agents" className="relative py-24">
+			<div className="relative mx-auto max-w-6xl px-6">
 				<div className="mb-12 text-center">
 					<h2 className="mb-4 text-3xl font-bold md:text-4xl">
 						One Repository, Many Assistants
@@ -84,49 +102,53 @@ export const Agents = () => {
 					</p>
 				</div>
 
-				<div className="overflow-x-auto">
-					<table className="w-full">
-						<thead>
-							<tr className="border-b border-[var(--border)] text-left">
-								<th className="pb-4 pr-4 font-semibold">Assistant</th>
-								<th className="pb-4 pr-4 font-semibold">Format</th>
-								<th className="pb-4 pr-4 font-semibold">Config Directory</th>
-								<th className="pb-4 font-semibold">Context File</th>
-							</tr>
-						</thead>
-						<tbody>
-							{agents.map((agent) => (
-								<tr
-									key={agent.name}
-									className="border-b border-[var(--border)]"
-								>
-									<td className="py-4 pr-4">
-										<div className="flex items-center gap-3">
-											{agent.icon}
-											<span className="font-medium">{agent.name}</span>
-										</div>
-									</td>
-									<td className="py-4 pr-4">
-										<span
-											className={`inline-block rounded-full px-3 py-1 text-xs font-medium ${
-												agent.status === "Native"
-													? "bg-green-500/20 text-green-400"
-													: "bg-blue-500/20 text-blue-400"
-											}`}
-										>
-											{agent.status}
-										</span>
-									</td>
-									<td className="py-4 pr-4 text-sm text-[var(--muted)]">
-										{agent.config}
-									</td>
-									<td className="py-4 text-sm text-[var(--muted)]">
-										{agent.context}
-									</td>
+				<div className="rounded-2xl border border-[var(--border)] bg-[var(--card)]/80 backdrop-blur-sm overflow-hidden">
+					<div className="overflow-x-auto">
+						<table className="w-full">
+							<thead>
+								<tr className="border-b border-[var(--border)] text-left">
+									<th className="px-6 py-4 font-semibold font-mono text-sm">Assistant</th>
+									<th className="px-6 py-4 font-semibold font-mono text-sm">Format</th>
+									<th className="px-6 py-4 font-semibold font-mono text-sm">Config Directory</th>
+									<th className="px-6 py-4 font-semibold font-mono text-sm">Context File</th>
 								</tr>
-							))}
-						</tbody>
-					</table>
+							</thead>
+							<tbody>
+								{agents.map((agent) => (
+									<tr
+										key={agent.name}
+										className="border-b border-[var(--border)] last:border-b-0 transition-colors hover:bg-[var(--foreground)]/5"
+										onMouseEnter={() => agent.iconRef?.current?.startAnimation()}
+										onMouseLeave={() => agent.iconRef?.current?.stopAnimation()}
+									>
+										<td className="px-6 py-4">
+											<div className="flex items-center gap-3">
+												{agent.icon}
+												<span className="font-medium">{agent.name}</span>
+											</div>
+										</td>
+										<td className="px-6 py-4">
+											<span
+												className={`inline-block rounded-full px-3 py-1 text-xs font-medium font-mono ${
+													agent.status === "Native"
+														? "bg-[var(--foreground)]/10 text-[var(--foreground)]"
+														: "bg-[var(--muted)]/20 text-[var(--muted)]"
+												}`}
+											>
+												{agent.status}
+											</span>
+										</td>
+										<td className="px-6 py-4 text-sm text-[var(--muted)] font-mono">
+											{agent.config}
+										</td>
+										<td className="px-6 py-4 text-sm text-[var(--muted)] font-mono">
+											{agent.context}
+										</td>
+									</tr>
+								))}
+							</tbody>
+						</table>
+					</div>
 				</div>
 			</div>
 		</section>

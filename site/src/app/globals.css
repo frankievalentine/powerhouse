@@ -1,15 +1,16 @@
 @import "tailwindcss";
 
+/* Minimal Black Theme */
 :root {
-  --background: #0a0a0a;
+  --background: #000000;
   --foreground: #fafafa;
-  --primary: #6366f1;
-  --primary-foreground: #ffffff;
-  --secondary: #1e1e2e;
+  --primary: #ffffff;
+  --primary-foreground: #000000;
+  --secondary: #0a0a0a;
   --secondary-foreground: #a1a1aa;
-  --accent: #818cf8;
-  --border: #27272a;
-  --card: #18181b;
+  --accent: #fafafa;
+  --border: #1a1a1a;
+  --card: #0a0a0a;
   --muted: #71717a;
 }
 
@@ -18,63 +19,148 @@
   --color-foreground: var(--foreground);
   --color-primary: var(--primary);
   --color-accent: var(--accent);
-  --font-sans: var(--font-geist-mono);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
+  font-family: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+}
+
+/* Headings use Geist Mono */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   font-family: var(--font-geist-mono), ui-monospace, monospace;
 }
 
-/* Gradient text */
+/* Minimal gradient text */
 .gradient-text {
-  background: linear-gradient(135deg, #6366f1 0%, #818cf8 50%, #a5b4fc 100%);
+  background: linear-gradient(135deg, #ffffff 0%, #a1a1aa 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
-/* Glow effect */
-.glow {
-  box-shadow: 0 0 40px rgba(99, 102, 241, 0.3);
+/* ============================================
+   BACKGROUND DESIGNS
+   ============================================ */
+
+/* Dot Grid Background */
+.bg-dot-grid {
+  background-image: radial-gradient(
+    circle,
+    rgba(255, 255, 255, 0.08) 1px,
+    transparent 1px
+  );
+  background-size: 24px 24px;
 }
 
-/* Card hover effect */
+/* Radial Gradient Glow */
+.bg-radial-glow {
+  background: radial-gradient(
+    ellipse 80% 50% at 50% -20%,
+    rgba(120, 119, 198, 0.15),
+    transparent
+  );
+}
+
+/* Mesh Gradient Background */
+.bg-mesh-gradient {
+  background:
+    radial-gradient(at 40% 20%, rgba(88, 28, 135, 0.15) 0px, transparent 50%),
+    radial-gradient(at 80% 0%, rgba(17, 24, 39, 0.5) 0px, transparent 50%),
+    radial-gradient(at 0% 50%, rgba(59, 130, 246, 0.1) 0px, transparent 50%),
+    radial-gradient(at 80% 50%, rgba(168, 85, 247, 0.1) 0px, transparent 50%),
+    radial-gradient(at 0% 100%, rgba(17, 24, 39, 0.5) 0px, transparent 50%);
+}
+
+/* Grid Lines Background */
+.bg-grid-lines {
+  background-image:
+    linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+  background-size: 60px 60px;
+}
+
+/* Gradient Fade Bottom */
+.bg-fade-bottom {
+  mask-image: linear-gradient(to bottom, black 60%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to bottom, black 60%, transparent 100%);
+}
+
+/* Noise Texture Overlay */
+.bg-noise {
+  position: relative;
+}
+
+.bg-noise::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+  opacity: 0.03;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Spotlight Effect - Orange */
+.bg-spotlight {
+  background: radial-gradient(
+    ellipse 600px 400px at 50% 0%,
+    rgba(249, 115, 22, 0.12),
+    transparent
+  );
+}
+
+/* ============================================
+   CARD STYLES
+   ============================================ */
+
+/* Minimal card styling */
+.glass-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+}
+
+/* Card hover effect - minimal */
 .card-hover {
   transition:
     transform 0.2s ease,
-    box-shadow 0.2s ease;
+    border-color 0.2s ease;
+  cursor: pointer;
 }
 
 .card-hover:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 10px 40px rgba(99, 102, 241, 0.2);
+  transform: translateY(-2px);
+  border-color: var(--muted);
 }
 
 /* Code block styling */
 .code-block {
-  background: linear-gradient(135deg, #1e1e2e 0%, #18181b 100%);
+  background: var(--secondary);
   border: 1px solid var(--border);
   border-radius: 12px;
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
 }
 
-/* Animated gradient border */
-.gradient-border {
-  position: relative;
-  background: var(--card);
-  border-radius: 16px;
+/* ============================================
+   UTILITIES
+   ============================================ */
+
+/* Minimal glow effect */
+.glow {
+  box-shadow: none;
+  transition: opacity 0.2s ease;
 }
 
-.gradient-border::before {
-  content: "";
-  position: absolute;
-  inset: -1px;
-  border-radius: 17px;
-  background: linear-gradient(135deg, #6366f1, #818cf8, #a5b4fc);
-  z-index: -1;
-  opacity: 0.5;
+.glow:hover {
+  opacity: 0.9;
 }
 
 /* Smooth scrolling */
@@ -84,43 +170,27 @@ html {
 
 /* Selection color */
 ::selection {
-  background: rgba(99, 102, 241, 0.3);
+  background: rgba(255, 255, 255, 0.2);
 }
 
-/* Icon animation */
-.icon-animate {
-  transition: transform 0.3s ease;
+/* Focus states for accessibility */
+a:focus-visible,
+button:focus-visible {
+  outline: 1px solid var(--foreground);
+  outline-offset: 2px;
 }
 
-.icon-animate:hover {
-  transform: scale(1.1);
-}
-
-/* Spin animation for loading states */
-@keyframes spin-slow {
-  from {
-    transform: rotate(0deg);
+/* Respect reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
-  to {
-    transform: rotate(360deg);
-  }
-}
 
-.animate-spin-slow {
-  animation: spin-slow 3s linear infinite;
-}
-
-/* Pulse animation */
-@keyframes pulse-glow {
-  0%,
-  100% {
-    opacity: 1;
+  html {
+    scroll-behavior: auto;
   }
-  50% {
-    opacity: 0.6;
-  }
-}
-
-.animate-pulse-glow {
-  animation: pulse-glow 2s ease-in-out infinite;
 }

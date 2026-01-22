@@ -1,17 +1,20 @@
 "use client";
 
 import {
-	ArrowRight,
-	CheckIcon,
-	CopyIcon,
-	LinkIcon,
-	Package,
-	ZapIcon,
+    ArrowRight,
+    CheckIcon,
+    CopyIcon,
+    LinkIcon,
+    PackageIcon,
+    ZapIcon,
 } from "@/components/icons";
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 export const Installation = () => {
 	const [copied, setCopied] = useState(false);
+	const packageRef = useRef<{ startAnimation: () => void; stopAnimation: () => void } | null>(null);
+	const zapRef = useRef<{ startAnimation: () => void; stopAnimation: () => void } | null>(null);
+	const linkRef = useRef<{ startAnimation: () => void; stopAnimation: () => void } | null>(null);
 
 	const installCommand = `git clone https://github.com/frankievalentine/powerhouse.git
 cd powerhouse
@@ -24,9 +27,9 @@ cd powerhouse
 	};
 
 	return (
-		<section id="install" className="bg-[var(--secondary)] py-20">
-			<div className="mx-auto max-w-4xl px-6">
-				<div className="gradient-border p-8 md:p-12">
+		<section id="install" className="relative py-24">
+			<div className="relative mx-auto max-w-4xl px-6">
+				<div className="rounded-2xl border border-[var(--border)] bg-[var(--card)]/80 backdrop-blur-sm p-8 md:p-12">
 					<div className="text-center">
 						<h2 className="mb-4 text-3xl font-bold md:text-4xl">
 							Get Started in Seconds
@@ -39,11 +42,13 @@ cd powerhouse
 						{/* Code block */}
 						<div className="code-block relative mx-auto max-w-xl overflow-hidden text-left">
 							<div className="flex items-center justify-between border-b border-[var(--border)] px-4 py-2">
-								<span className="text-xs text-[var(--muted)]">Terminal</span>
+								<span className="text-xs text-[var(--muted)] font-mono">Terminal</span>
 								<button
+									type="button"
 									onClick={handleCopy}
-									className="flex items-center gap-1 rounded px-2 py-1 text-xs text-[var(--muted)] transition-colors hover:bg-[var(--border)] hover:text-[var(--foreground)]"
+									className="flex items-center gap-1 rounded px-2 py-1 text-xs text-[var(--muted)] transition-colors hover:bg-[var(--border)] hover:text-[var(--foreground)] cursor-pointer"
 									aria-label="Copy to clipboard"
+									tabIndex={0}
 								>
 									{copied ? (
 										<>
@@ -58,40 +63,52 @@ cd powerhouse
 									)}
 								</button>
 							</div>
-							<pre className="overflow-x-auto p-4 text-sm">
+							<pre className="overflow-x-auto p-4 text-sm font-mono">
 								<code>
 									<span className="text-[var(--muted)]">$</span>{" "}
-									<span className="text-[var(--accent)]">git clone</span>{" "}
+									<span className="text-[var(--foreground)]">git clone</span>{" "}
 									https://github.com/frankievalentine/powerhouse.git
 									{"\n"}
 									<span className="text-[var(--muted)]">$</span>{" "}
-									<span className="text-[var(--accent)]">cd</span> powerhouse
+									<span className="text-[var(--foreground)]">cd</span> powerhouse
 									{"\n"}
 									<span className="text-[var(--muted)]">$</span>{" "}
-									<span className="text-[var(--accent)]">./install.sh</span>
+									<span className="text-[var(--foreground)]">./install.sh</span>
 								</code>
 							</pre>
 						</div>
 
 						{/* What happens */}
 						<div className="mx-auto mt-8 grid max-w-2xl gap-4 text-left md:grid-cols-3">
-							<div className="rounded-lg bg-[var(--background)]/50 p-4">
-								<Package className="mb-2 h-6 w-6 text-[var(--accent)]" />
-								<div className="text-sm font-medium">Skills Installed</div>
+							<div
+								className="rounded-lg border border-[var(--border)] bg-[var(--secondary)]/80 backdrop-blur-sm p-4 cursor-pointer"
+								onMouseEnter={() => packageRef.current?.startAnimation()}
+								onMouseLeave={() => packageRef.current?.stopAnimation()}
+							>
+								<PackageIcon ref={packageRef} size={24} className="mb-2 text-[var(--muted)]" />
+								<div className="text-sm font-medium font-mono">Skills Installed</div>
 								<div className="mt-1 text-xs text-[var(--muted)]">
 									To all agent skill directories
 								</div>
 							</div>
-							<div className="rounded-lg bg-[var(--background)]/50 p-4">
-								<ZapIcon size={24} className="mb-2 text-[var(--accent)]" />
-								<div className="text-sm font-medium">Commands Ready</div>
+							<div
+								className="rounded-lg border border-[var(--border)] bg-[var(--secondary)]/80 backdrop-blur-sm p-4 cursor-pointer"
+								onMouseEnter={() => zapRef.current?.startAnimation()}
+								onMouseLeave={() => zapRef.current?.stopAnimation()}
+							>
+								<ZapIcon ref={zapRef} size={24} className="mb-2 text-[var(--muted)]" />
+								<div className="text-sm font-medium font-mono">Commands Ready</div>
 								<div className="mt-1 text-xs text-[var(--muted)]">
 									Slash commands for each agent
 								</div>
 							</div>
-							<div className="rounded-lg bg-[var(--background)]/50 p-4">
-								<LinkIcon className="mb-2 h-6 w-6 text-[var(--accent)]" />
-								<div className="text-sm font-medium">Symlinked</div>
+							<div
+								className="rounded-lg border border-[var(--border)] bg-[var(--secondary)]/80 backdrop-blur-sm p-4 cursor-pointer"
+								onMouseEnter={() => linkRef.current?.startAnimation()}
+								onMouseLeave={() => linkRef.current?.stopAnimation()}
+							>
+								<LinkIcon ref={linkRef} size={24} className="mb-2 text-[var(--muted)]" />
+								<div className="text-sm font-medium font-mono">Symlinked</div>
 								<div className="mt-1 text-xs text-[var(--muted)]">
 									Updates sync automatically
 								</div>
@@ -104,7 +121,9 @@ cd powerhouse
 								href="https://github.com/frankievalentine/powerhouse"
 								target="_blank"
 								rel="noopener noreferrer"
-								className="glow inline-flex items-center gap-2 rounded-lg bg-[var(--primary)] px-8 py-4 text-lg font-semibold text-white transition-transform hover:scale-105"
+								className="inline-flex items-center gap-2 rounded-lg bg-[var(--foreground)] px-8 py-4 text-lg font-semibold text-[var(--background)] transition-opacity hover:opacity-80 cursor-pointer"
+								tabIndex={0}
+								aria-label="View Powerhouse on GitHub"
 							>
 								View on GitHub
 								<ArrowRight className="h-5 w-5" />

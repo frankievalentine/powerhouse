@@ -1,24 +1,19 @@
 import {
-	ArrowRight,
-	BotIcon,
-	FileTextIcon,
-	TerminalIcon,
+    ArrowRight,
+    BotIcon,
+    FileTextIcon,
+    TerminalIcon,
 } from "@/components/icons";
 import { Code2 } from "lucide-react";
 
 export const Hero = () => {
 	return (
-		<section className="relative overflow-hidden pt-32 pb-20">
-			{/* Background gradient */}
-			<div className="pointer-events-none absolute inset-0 overflow-hidden">
-				<div className="absolute top-0 left-1/2 h-[600px] w-[600px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[var(--primary)] opacity-10 blur-[120px]" />
-			</div>
-
+		<section className="relative overflow-hidden pt-36 pb-24">
 			<div className="relative mx-auto max-w-6xl px-6">
 				<div className="flex flex-col items-center text-center">
 					{/* Badge */}
-					<div className="mb-6 inline-flex items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--secondary)] px-4 py-1.5">
-						<BotIcon size={16} className="text-[var(--accent)]" />
+					<div className="mb-6 inline-flex items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--secondary)]/80 backdrop-blur-sm px-4 py-1.5">
+						<BotIcon size={16} className="text-[var(--muted)]" />
 						<span className="text-sm text-[var(--muted)]">
 							Now supporting 7 AI assistants
 						</span>
@@ -42,7 +37,9 @@ export const Hero = () => {
 					<div className="flex flex-col items-center gap-4 sm:flex-row">
 						<a
 							href="#install"
-							className="glow inline-flex items-center gap-2 rounded-lg bg-[var(--primary)] px-6 py-3 text-lg font-semibold text-white transition-transform hover:scale-105"
+							className="inline-flex items-center gap-2 rounded-lg bg-[var(--foreground)] px-6 py-3 text-lg font-semibold text-[var(--background)] transition-opacity hover:opacity-80 cursor-pointer"
+							tabIndex={0}
+							aria-label="Get started with Powerhouse"
 						>
 							Get Started
 							<ArrowRight className="h-5 w-5" />
@@ -51,7 +48,9 @@ export const Hero = () => {
 							href="https://github.com/frankievalentine/powerhouse"
 							target="_blank"
 							rel="noopener noreferrer"
-							className="inline-flex items-center gap-2 rounded-lg border border-[var(--border)] bg-[var(--secondary)] px-6 py-3 text-lg font-semibold transition-colors hover:bg-[var(--border)]"
+							className="inline-flex items-center gap-2 rounded-lg border border-[var(--border)] bg-[var(--background)]/50 backdrop-blur-sm px-6 py-3 text-lg font-semibold transition-colors hover:border-[var(--muted)] cursor-pointer"
+							tabIndex={0}
+							aria-label="View Powerhouse on GitHub"
 						>
 							View on GitHub
 						</a>
@@ -96,8 +95,8 @@ const StatItem = ({
 	icon: React.ReactNode;
 }) => (
 	<div className="text-center">
-		<div className="mb-2 flex justify-center text-[var(--accent)]">{icon}</div>
-		<div className="text-3xl font-bold text-[var(--foreground)] md:text-4xl">
+		<div className="mb-2 flex justify-center text-[var(--muted)]">{icon}</div>
+		<div className="text-3xl font-bold text-[var(--foreground)] md:text-4xl font-mono">
 			{value}
 		</div>
 		<div className="mt-1 text-sm text-[var(--muted)]">{label}</div>

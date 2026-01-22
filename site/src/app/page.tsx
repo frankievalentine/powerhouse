@@ -8,14 +8,22 @@ import { Installation } from "@/components/installation";
 
 export default function Home() {
 	return (
-		<main className="min-h-screen">
-			<Header />
-			<Hero />
-			<Features />
-			<Agents />
-			<Commands />
-			<Installation />
-			<Footer />
+		<main className="relative min-h-screen">
+			{/* Global background - extends from hero and fades down */}
+			<div className="pointer-events-none fixed inset-0 bg-mesh-gradient" />
+			<div className="pointer-events-none fixed inset-0 bg-dot-grid" />
+			<div className="pointer-events-none fixed top-0 left-0 right-0 h-[800px] bg-spotlight" />
+			
+			{/* Content */}
+			<div className="relative">
+				<Header />
+				<Hero />
+				<Features />
+				<Agents />
+				<Commands />
+				<Installation />
+				<Footer />
+			</div>
 		</main>
 	);
 }
