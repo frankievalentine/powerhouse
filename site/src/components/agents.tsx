@@ -35,7 +35,7 @@ export const Agents = () => {
 			status: "Native",
 			config: ".claude/",
 			context: "CLAUDE.md",
-			icon: <BotIcon ref={claudeRef} size={24} className="text-[var(--muted)]" />,
+			icon: <BotIcon ref={claudeRef} size={24} className="text-(--muted)" />,
 			iconRef: claudeRef,
 		},
 		{
@@ -43,7 +43,7 @@ export const Agents = () => {
 			status: "Native",
 			config: ".opencode/",
 			context: "OPENCODE.md",
-			icon: <ZapIcon ref={opencodeRef} size={24} className="text-[var(--muted)]" />,
+			icon: <ZapIcon ref={opencodeRef} size={24} className="text-(--muted)" />,
 			iconRef: opencodeRef,
 		},
 		{
@@ -51,7 +51,7 @@ export const Agents = () => {
 			status: "Native",
 			config: ".gemini/",
 			context: "GEMINI.md",
-			icon: <SparklesIcon ref={geminiRef} size={24} className="text-[var(--muted)]" />,
+			icon: <SparklesIcon ref={geminiRef} size={24} className="text-(--muted)" />,
 			iconRef: geminiRef,
 		},
 		{
@@ -59,7 +59,7 @@ export const Agents = () => {
 			status: "Native",
 			config: ".codex/",
 			context: "AGENTS.md",
-			icon: <BrainIcon ref={codexRef} size={24} className="text-[var(--muted)]" />,
+			icon: <BrainIcon ref={codexRef} size={24} className="text-(--muted)" />,
 			iconRef: codexRef,
 		},
 		{
@@ -67,7 +67,7 @@ export const Agents = () => {
 			status: "Config",
 			config: ".continue/",
 			context: "config.yaml",
-			icon: <RefreshCwIcon ref={continueRef} size={24} className="text-[var(--muted)]" />,
+			icon: <RefreshCwIcon ref={continueRef} size={24} className="text-(--muted)" />,
 			iconRef: continueRef,
 		},
 		{
@@ -75,7 +75,7 @@ export const Agents = () => {
 			status: "Instructions",
 			config: ".github/",
 			context: "copilot-instructions.md",
-			icon: <GithubIcon ref={copilotRef} size={24} className="text-[var(--muted)]" />,
+			icon: <GithubIcon ref={copilotRef} size={24} className="text-(--muted)" />,
 			iconRef: copilotRef,
 		},
 		{
@@ -83,30 +83,30 @@ export const Agents = () => {
 			status: "Rules",
 			config: ".cursor/",
 			context: "rules/*.mdc",
-			icon: <FileEditIcon ref={cursorRef} size={24} className="text-[var(--muted)]" />,
+			icon: <FileEditIcon ref={cursorRef} size={24} className="text-(--muted)" />,
 			iconRef: cursorRef,
 		},
 	];
 
 	return (
-		<section id="agents" className="relative py-24">
+		<section id="agents" className="relative py-24 scroll-mt-24">
 			<div className="relative mx-auto max-w-6xl px-6">
 				<div className="mb-12 text-center">
-					<h2 className="mb-4 text-3xl font-bold md:text-4xl">
+					<h2 className="mb-4 text-3xl font-bold text-pretty md:text-4xl">
 						One Repository, Many Assistants
 					</h2>
-					<p className="mx-auto max-w-2xl text-[var(--muted)]">
+					<p className="mx-auto max-w-2xl text-(--muted)">
 						Powerhouse provides native skill support for 4 agents and converted
 						configurations for 3 more. Use the same skills across all your
 						favorite AI coding assistants.
 					</p>
 				</div>
 
-				<div className="rounded-2xl border border-[var(--border)] bg-[var(--card)]/80 backdrop-blur-sm overflow-hidden">
+				<div className="rounded-2xl border border-(--border) bg-(--card)/80 backdrop-blur-sm overflow-hidden">
 					<div className="overflow-x-auto">
 						<table className="w-full">
 							<thead>
-								<tr className="border-b border-[var(--border)] text-left">
+								<tr className="border-b border-(--border) text-left">
 									<th className="px-6 py-4 font-semibold font-mono text-sm">Assistant</th>
 									<th className="px-6 py-4 font-semibold font-mono text-sm">Format</th>
 									<th className="px-6 py-4 font-semibold font-mono text-sm">Config Directory</th>
@@ -117,13 +117,13 @@ export const Agents = () => {
 								{agents.map((agent) => (
 									<tr
 										key={agent.name}
-										className="border-b border-[var(--border)] last:border-b-0 transition-colors hover:bg-[var(--foreground)]/5"
+										className="border-b border-(--border) last:border-b-0 transition-colors hover:bg-(--foreground)/5"
 										onMouseEnter={() => agent.iconRef?.current?.startAnimation()}
 										onMouseLeave={() => agent.iconRef?.current?.stopAnimation()}
 									>
 										<td className="px-6 py-4">
 											<div className="flex items-center gap-3">
-												{agent.icon}
+												<span aria-hidden="true">{agent.icon}</span>
 												<span className="font-medium">{agent.name}</span>
 											</div>
 										</td>
@@ -131,17 +131,17 @@ export const Agents = () => {
 											<span
 												className={`inline-block rounded-full px-3 py-1 text-xs font-medium font-mono ${
 													agent.status === "Native"
-														? "bg-[var(--foreground)]/10 text-[var(--foreground)]"
-														: "bg-[var(--muted)]/20 text-[var(--muted)]"
+														? "bg-(--foreground)/10 text-foreground"
+														: "bg-(--muted)/20 text-(--muted)"
 												}`}
 											>
 												{agent.status}
 											</span>
 										</td>
-										<td className="px-6 py-4 text-sm text-[var(--muted)] font-mono">
+										<td className="px-6 py-4 text-sm text-(--muted) font-mono">
 											{agent.config}
 										</td>
-										<td className="px-6 py-4 text-sm text-[var(--muted)] font-mono">
+										<td className="px-6 py-4 text-sm text-(--muted) font-mono">
 											{agent.context}
 										</td>
 									</tr>

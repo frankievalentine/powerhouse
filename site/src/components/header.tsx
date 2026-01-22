@@ -3,7 +3,7 @@ import Link from "next/link";
 
 export const Header = () => {
 	return (
-		<header className="fixed top-4 left-4 right-4 z-50 rounded-2xl border border-[var(--border)] bg-[var(--background)]/80 backdrop-blur-md">
+		<header className="fixed top-4 left-4 right-4 z-50 rounded-2xl border border-(--border) bg-(--background)/80 backdrop-blur-md">
 			<div className="mx-auto max-w-6xl px-6 py-3">
 				<nav
 					className="flex items-center justify-between"
@@ -14,28 +14,28 @@ export const Header = () => {
 						className="flex items-center gap-2 transition-opacity hover:opacity-70"
 						aria-label="Powerhouse home"
 					>
-						<ZapIcon size={24} className="text-[var(--foreground)]" />
+						<ZapIcon size={24} className="text-foreground" aria-hidden="true" />
 						<span className="text-xl font-bold font-mono">Powerhouse</span>
 					</Link>
 
 					<div className="flex items-center gap-6">
 						<Link
 							href="#features"
-							className="text-sm text-[var(--muted)] transition-colors hover:text-[var(--foreground)]"
+							className="text-sm text-(--muted) transition-colors hover:text-foreground"
 							tabIndex={0}
 						>
 							Features
 						</Link>
 						<Link
 							href="#agents"
-							className="text-sm text-[var(--muted)] transition-colors hover:text-[var(--foreground)]"
+							className="text-sm text-(--muted) transition-colors hover:text-foreground"
 							tabIndex={0}
 						>
 							Agents
 						</Link>
 						<Link
 							href="#install"
-							className="text-sm text-[var(--muted)] transition-colors hover:text-[var(--foreground)]"
+							className="text-sm text-(--muted) transition-colors hover:text-foreground"
 							tabIndex={0}
 						>
 							Install
@@ -44,11 +44,11 @@ export const Header = () => {
 							href="https://github.com/frankievalentine/powerhouse"
 							target="_blank"
 							rel="noopener noreferrer"
-							className="flex items-center gap-2 rounded-lg bg-[var(--foreground)] px-4 py-2 text-sm font-medium text-[var(--background)] transition-opacity hover:opacity-80 cursor-pointer"
+							className="flex items-center gap-2 rounded-lg bg-foreground px-4 py-2 text-sm font-medium text-background transition-opacity hover:opacity-80 cursor-pointer"
 							aria-label="View Powerhouse on GitHub"
 							tabIndex={0}
 						>
-							<GithubIcon size={16} />
+							<GithubIcon size={16} aria-hidden="true" />
 							GitHub
 						</Link>
 					</div>

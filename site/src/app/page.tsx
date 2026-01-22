@@ -8,11 +8,11 @@ import { Installation } from "@/components/installation";
 
 export default function Home() {
 	return (
-		<main className="relative min-h-screen">
+		<main id="main-content" className="relative min-h-screen">
 			{/* Global background - extends from hero and fades down */}
-			<div className="pointer-events-none fixed inset-0 bg-mesh-gradient" />
-			<div className="pointer-events-none fixed inset-0 bg-dot-grid" />
-			<div className="pointer-events-none fixed top-0 left-0 right-0 h-[800px] bg-spotlight" />
+			<div className="pointer-events-none fixed inset-0 bg-mesh-gradient" aria-hidden="true" />
+			<div className="pointer-events-none fixed inset-0 bg-dot-grid" aria-hidden="true" />
+			<div className="pointer-events-none fixed top-0 left-0 right-0 h-[800px] bg-spotlight" aria-hidden="true" />
 			
 			{/* Content */}
 			<div className="relative">
