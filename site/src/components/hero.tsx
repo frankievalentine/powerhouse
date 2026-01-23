@@ -8,7 +8,7 @@ const TEXTS = [
 	"Claude Code",
 	"OpenCode",
 	"Antigravity",
-	"GitHub Copilot",
+	"Copilot CLI",
 	"Cursor"
 ];
 

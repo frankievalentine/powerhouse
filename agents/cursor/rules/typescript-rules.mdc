@@ -1,0 +1,25 @@
+---
+description: Global TypeScript coding standards and project rules.
+globs: ["**/*.ts", "**/*.tsx"]
+---
+
+# TypeScript & Project Rules
+
+Follow these standards for all development in this project:
+
+## Core Standards
+- **Strict Mode**: `strict: true` must be active in `tsconfig.json`.
+- **Type Safety**: No `any`. Use `unknown` and narrow types.
+- **Interfaces**: Use for object shapes.
+- **Exports**: Prefer named exports over default exports.
+
+## Code Style
+- **Flat Logic**: Use early returns to minimize nesting.
+- **Naming**: camelCase for variables/functions, PascalCase for types/classes.
+- **Handlers**: Prefix with `handle` (e.g., `handleKeyDown`).
+- **Immutability**: Use `const` and `readonly` where applicable.
+
+## React Patterns
+- Functional components only.
+- Hooks for state and side effects.
+- Tailwind CSS for all styling.

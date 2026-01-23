@@ -102,9 +102,12 @@ install_claude() {
     print_info "Installing Claude Code..."
     
     local claude_dir="$HOME/.claude"
-    mkdir -p "$claude_dir/commands"
+    mkdir -p "$claude_dir"
     
-    # Download commands
+    # Download specialized skills
+    download_directory "agents/claude/skills" "$claude_dir/skills"
+    
+    # Download specialized commands
     download_directory "agents/claude/commands" "$claude_dir/commands"
     
     # Download global skills
@@ -117,9 +120,12 @@ install_opencode() {
     print_info "Installing OpenCode..."
     
     local opencode_dir="$HOME/.config/opencode"
-    mkdir -p "$opencode_dir/commands"
+    mkdir -p "$opencode_dir"
     
-    # Download commands
+    # Download specialized skills
+    download_directory "agents/opencode/skills" "$opencode_dir/skills"
+    
+    # Download specialized commands
     download_directory "agents/opencode/commands" "$opencode_dir/commands"
     
     # Download global skills
@@ -132,9 +138,12 @@ install_antigravity() {
     print_info "Installing Antigravity..."
     
     local antigravity_dir="$HOME/.gemini/antigravity"
-    mkdir -p "$antigravity_dir/commands"
+    mkdir -p "$antigravity_dir"
     
-    # Download commands
+    # Download specialized skills
+    download_directory "agents/gemini/skills" "$antigravity_dir/skills"
+    
+    # Download specialized commands
     download_directory "agents/gemini/commands" "$antigravity_dir/commands"
     
     # Download global skills
@@ -148,6 +157,9 @@ install_codex() {
     
     local codex_dir="$HOME/.codex"
     mkdir -p "$codex_dir"
+    
+    # Download specialized skills
+    download_directory "agents/codex/skills" "$codex_dir/skills"
     
     # Download global skills
     download_directory "global/skills" "$codex_dir/skills"
@@ -176,7 +188,7 @@ install_cursor() {
     local cursor_dir="$HOME/.cursor"
     mkdir -p "$cursor_dir/rules"
     
-    # Download rules
+    # Download specialized rules
     download_directory "agents/cursor/rules" "$cursor_dir/rules"
     
     # Download global skills
@@ -186,18 +198,18 @@ install_cursor() {
 }
 
 install_copilot() {
-    print_info "Installing GitHub Copilot..."
+    print_info "Installing Copilot CLI..."
     
-    # Copilot is project-level, show instructions
-    echo ""
-    echo -e "  ${DIM}GitHub Copilot requires project-level setup.${NC}"
-    echo -e "  ${DIM}Run in your project root:${NC}"
-    echo ""
-    echo -e "  mkdir -p .github"
-    echo -e "  curl -fsSL $GITHUB_RAW/agents/copilot/copilot-instructions.md -o .github/copilot-instructions.md"
-    echo ""
+    local copilot_dir="$HOME/.copilot"
+    mkdir -p "$copilot_dir/skills"
     
-    print_success "GitHub Copilot instructions shown"
+    # Download copilot specialized skills
+    download_directory "agents/copilot/skills" "$copilot_dir/skills"
+    
+    # Download global skills
+    download_directory "global/skills" "$copilot_dir/skills"
+    
+    print_success "Copilot CLI configured → $copilot_dir"
 }
 
 show_completion() {
@@ -224,7 +236,7 @@ interactive_menu() {
     echo -e "  ${CYAN}4)${NC} OpenAI Codex     ${DIM}→ ~/.codex${NC}"
     echo -e "  ${CYAN}5)${NC} Continue.dev     ${DIM}→ ~/.continue${NC}"
     echo -e "  ${CYAN}6)${NC} Cursor           ${DIM}→ ~/.cursor${NC}"
-    echo -e "  ${CYAN}7)${NC} GitHub Copilot   ${DIM}→ project-level${NC}"
+    echo -e "  ${CYAN}7)${NC} Copilot CLI      ${DIM}→ ~/.copilot${NC}"
     echo ""
     echo -e "  ${CYAN}a)${NC} Install all"
     echo -e "  ${CYAN}q)${NC} Quit"

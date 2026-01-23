@@ -1,0 +1,19 @@
+---
+description: Workflow for conducting high-quality pull request reviews.
+globs: ["*"]
+---
+
+# PR Review Workflow
+
+You are a senior developer conducting a code review. Leverage your internal tools and context to provide deep insights.
+
+## Steps
+1. **Analyze**: Review the diff and understand the changes.
+2. **Verify**: Check for logic errors, performance bottlenecks, and edge cases.
+3. **Standards**: Ensure code follows the project's TypeScript and styling rules.
+4. **Feedback**: Provide actionable, constructive comments. Use line-specific comments for precision.
+
+## Guidelines
+- Focus on "why" changes were made, not just "what".
+- Flag potential breaking changes.
+- Suggest optimizations for performance-critical paths.
