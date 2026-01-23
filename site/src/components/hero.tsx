@@ -1,10 +1,73 @@
-import {
-    ArrowRight,
-    BotIcon,
-    FileTextIcon,
-    TerminalIcon,
-} from "@/components/icons";
-import { Code2 } from "lucide-react";
+"use client";
+
+import { ArrowRight } from "@/components/icons";
+import { Bot, Code2, FileText, Terminal } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
+
+const TEXTS = [
+	"Claude Code",
+	"OpenCode",
+	"Antigravity",
+	"GitHub Copilot",
+	"Cursor"
+];
+
+const Typewriter = () => {
+	const [textIndex, setTextIndex] = useState(0);
+	const [charIndex, setCharIndex] = useState(0);
+	const [isDeleting, setIsDeleting] = useState(false);
+	const [isPaused, setIsPaused] = useState(false);
+
+	const currentText = TEXTS[textIndex];
+	const displayedText = currentText.slice(0, charIndex);
+
+	const typeSpeed = isDeleting ? 50 : 100;
+	const pauseDuration = 2000;
+
+	const tick = useCallback(() => {
+		if (isPaused) return;
+
+		if (!isDeleting) {
+			// Typing
+			if (charIndex < currentText.length) {
+				setCharIndex((prev) => prev + 1);
+			} else {
+				// Finished typing, pause before deleting
+				setIsPaused(true);
+				setTimeout(() => {
+					setIsPaused(false);
+					setIsDeleting(true);
+				}, pauseDuration);
+			}
+		} else {
+			// Deleting
+			if (charIndex > 0) {
+				setCharIndex((prev) => prev - 1);
+			} else {
+				// Finished deleting, move to next word
+				setIsDeleting(false);
+				setTextIndex((prev) => (prev + 1) % TEXTS.length);
+			}
+		}
+	}, [charIndex, currentText.length, isDeleting, isPaused]);
+
+	useEffect(() => {
+		if (isPaused) return;
+
+		const timer = setTimeout(tick, typeSpeed);
+		return () => clearTimeout(timer);
+	}, [tick, typeSpeed, isPaused]);
+
+	return (
+		<span className="gradient-text">
+			{displayedText}
+			<span
+				className="inline-block w-[3px] h-[0.85em] bg-current ml-1 align-middle animate-blink"
+				aria-hidden="true"
+			/>
+		</span>
+	);
+};
 
 export const Hero = () => {
 	return (
@@ -13,7 +76,7 @@ export const Hero = () => {
 				<div className="flex flex-col items-center text-center">
 					{/* Badge */}
 					<div className="mb-6 inline-flex items-center gap-2 rounded-full border border-(--border) bg-(--secondary)/80 backdrop-blur-sm px-4 py-1.5">
-						<BotIcon size={16} className="text-(--muted)" aria-hidden="true" />
+						<Bot size={16} className="text-(--muted)" aria-hidden="true" />
 						<span className="text-sm text-(--muted)">
 							Now supporting 7 AI assistants
 						</span>
@@ -21,15 +84,15 @@ export const Hero = () => {
 
 					{/* Title */}
 					<h1 className="mb-6 text-5xl font-bold tracking-tight text-pretty md:text-7xl">
-						Agent Skills for
+						Expertly curated for
 						<br />
-						<span className="gradient-text">AI Coding Assistants</span>
+						<Typewriter />
 					</h1>
 
 					{/* Subtitle */}
 					<p className="mb-10 max-w-2xl text-lg text-(--muted) md:text-xl">
 						A comprehensive repository of skills, workflows, and configurations
-						for Claude, OpenCode, Gemini CLI, Codex, Copilot, Cursor, and more.
+						for Claude, OpenCode, Antigravity, Codex, Copilot, Cursor, and more.
 						Focused on modern web development.
 					</p>
 
@@ -61,17 +124,17 @@ export const Hero = () => {
 						<StatItem
 							value="7"
 							label="AI Assistants"
-							icon={<BotIcon size={20} aria-hidden="true" />}
+							icon={<Bot size={20} aria-hidden="true" />}
 						/>
 						<StatItem
 							value="6"
 							label="Global Skills"
-							icon={<FileTextIcon size={20} aria-hidden="true" />}
+							icon={<FileText size={20} aria-hidden="true" />}
 						/>
 						<StatItem
 							value="20+"
 							label="Commands"
-							icon={<TerminalIcon size={20} aria-hidden="true" />}
+							icon={<Terminal size={20} aria-hidden="true" />}
 						/>
 						<StatItem
 							value="4"

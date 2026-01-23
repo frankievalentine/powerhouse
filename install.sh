@@ -13,6 +13,8 @@ RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
+CYAN='\033[0;36m'
+BOLD='\033[1m'
 NC='\033[0m' # No Color
 
 print_header() {
@@ -122,22 +124,22 @@ install_opencode() {
     print_success "OpenCode installation complete"
 }
 
-install_gemini() {
+install_antigravity() {
     echo ""
-    echo -e "${BLUE}Installing for Gemini CLI...${NC}"
+    echo -e "${BLUE}Installing for Antigravity...${NC}"
     
-    local gemini_dir="$HOME/.gemini"
-    mkdir -p "$gemini_dir/skills"
+    local antigravity_dir="$HOME/.gemini/antigravity"
+    mkdir -p "$antigravity_dir/skills"
     
-    create_skills_symlink "$gemini_dir" "skills"
+    create_skills_symlink "$antigravity_dir" "skills"
     
     if [ -d "$SCRIPT_DIR/agents/gemini/commands" ]; then
-        mkdir -p "$gemini_dir/commands"
-        cp -r "$SCRIPT_DIR/agents/gemini/commands"/* "$gemini_dir/commands/" 2>/dev/null || true
-        print_success "Copied Gemini commands"
+        mkdir -p "$antigravity_dir/commands"
+        cp -r "$SCRIPT_DIR/agents/gemini/commands"/* "$antigravity_dir/commands/" 2>/dev/null || true
+        print_success "Copied Antigravity commands"
     fi
     
-    print_success "Gemini CLI installation complete"
+    print_success "Antigravity installation complete"
 }
 
 install_codex() {
@@ -194,33 +196,7 @@ show_project_instructions() {
     echo ""
 }
 
-main() {
-    print_header
-    
-    echo "This script will install global skills for:"
-    echo "  • Claude Code"
-    echo "  • OpenCode"
-    echo "  • Gemini CLI"
-    echo "  • OpenAI Codex"
-    echo "  • Continue.dev"
-    echo ""
-    
-    read -p "Continue with installation? [Y/n] " -n 1 -r
-    echo
-    
-    if [[ $REPLY =~ ^[Nn]$ ]]; then
-        echo "Installation cancelled."
-        exit 0
-    fi
-    
-    install_claude
-    install_opencode
-    install_gemini
-    install_codex
-    install_continue
-    
-    show_project_instructions
-    
+show_completion() {
     echo ""
     echo -e "${GREEN}═══════════════════════════════════════════════════════════${NC}"
     echo -e "${GREEN}  ✓ Installation Complete!${NC}"
@@ -241,6 +217,150 @@ main() {
     echo "  • add-shadcn      - Add shadcn/ui components"
     echo "  • a11y-audit      - Audit accessibility"
     echo ""
+}
+
+# Interactive agent selection menu
+select_agents() {
+    local agents=("Claude Code" "OpenCode" "Antigravity" "OpenAI Codex" "Continue.dev")
+    local selected=(0 0 0 0 0)
+    local current=0
+    local total=${#agents[@]}
+    
+    echo ""
+    echo -e "${BOLD}Select which agents to install:${NC}"
+    echo -e "${CYAN}(Use arrow keys to navigate, space to toggle, enter to confirm)${NC}"
+    echo ""
+    
+    # Check if we're in an interactive terminal
+    if [ ! -t 0 ]; then
+        # Non-interactive mode (piped from curl) - show simple numbered menu
+        echo "Available agents:"
+        echo ""
+        for i in "${!agents[@]}"; do
+            echo "  $((i+1)). ${agents[$i]}"
+        done
+        echo "  a. All agents"
+        echo "  q. Quit"
+        echo ""
+        read -p "Enter your choices (e.g., 1 3 5 or 'a' for all): " choices
+        
+        if [[ "$choices" == "q" ]]; then
+            echo "Installation cancelled."
+            exit 0
+        fi
+        
+        if [[ "$choices" == "a" ]]; then
+            selected=(1 1 1 1 1)
+        else
+            for choice in $choices; do
+                if [[ "$choice" =~ ^[1-5]$ ]]; then
+                    selected[$((choice-1))]=1
+                fi
+            done
+        fi
+    else
+        # Interactive mode - use arrow keys and highlighting
+        while true; do
+            # Clear and redraw menu
+            tput cuu $((total + 2)) 2>/dev/null || true
+            
+            for i in "${!agents[@]}"; do
+                local checkbox="[ ]"
+                local prefix="  "
+                
+                if [ "${selected[$i]}" -eq 1 ]; then
+                    checkbox="[${GREEN}✓${NC}]"
+                fi
+                
+                if [ "$i" -eq "$current" ]; then
+                    prefix="${CYAN}▸${NC} "
+                    echo -e "${prefix}${checkbox} ${BOLD}${agents[$i]}${NC}"
+                else
+                    echo -e "${prefix}${checkbox} ${agents[$i]}"
+                fi
+            done
+            
+            echo ""
+            echo -e "  ${CYAN}[A]${NC} Select All  ${CYAN}[N]${NC} Select None  ${CYAN}[Enter]${NC} Confirm"
+            
+            # Read single character
+            read -rsn1 key
+            
+            case "$key" in
+                A|B|C|D)
+                    read -rsn2 key
+                    case "$key" in
+                        "[A") # Up arrow
+                            ((current--))
+                            [ $current -lt 0 ] && current=$((total-1))
+                            ;;
+                        "[B") # Down arrow
+                            ((current++))
+                            [ $current -ge $total ] && current=0
+                            ;;
+                    esac
+                    ;;
+                " ") # Space - toggle selection
+                    if [ "${selected[$current]}" -eq 1 ]; then
+                        selected[$current]=0
+                    else
+                        selected[$current]=1
+                    fi
+                    ;;
+                "a"|"A") # Select all
+                    for i in "${!selected[@]}"; do
+                        selected[$i]=1
+                    done
+                    ;;
+                "n"|"N") # Select none
+                    for i in "${!selected[@]}"; do
+                        selected[$i]=0
+                    done
+                    ;;
+                "") # Enter - confirm
+                    break
+                    ;;
+            esac
+        done
+    fi
+    
+    # Return selected indices
+    SELECTED_AGENTS=()
+    for i in "${!selected[@]}"; do
+        if [ "${selected[$i]}" -eq 1 ]; then
+            SELECTED_AGENTS+=($i)
+        fi
+    done
+}
+
+main() {
+    print_header
+    
+    echo "This installer will configure skills for your AI coding assistants."
+    echo "You can choose which agents to install for."
+    
+    select_agents
+    
+    if [ ${#SELECTED_AGENTS[@]} -eq 0 ]; then
+        print_warning "No agents selected. Exiting."
+        exit 0
+    fi
+    
+    echo ""
+    echo -e "${BLUE}Installing for selected agents...${NC}"
+    
+    for idx in "${SELECTED_AGENTS[@]}"; do
+        case $idx in
+            0) install_claude ;;
+            1) install_opencode ;;
+            2) install_antigravity ;;
+            3) install_codex ;;
+            4) install_continue ;;
+        esac
+    done
+    
+    show_project_instructions
+    show_completion
 }
 
 main "$@"

@@ -47,9 +47,9 @@ export const Agents = () => {
 			iconRef: opencodeRef,
 		},
 		{
-			name: "Gemini CLI",
+			name: "Antigravity",
 			status: "Native",
-			config: ".gemini/",
+			config: ".gemini/antigravity/",
 			context: "GEMINI.md",
 			icon: <SparklesIcon ref={geminiRef} size={24} className="text-(--muted)" />,
 			iconRef: geminiRef,

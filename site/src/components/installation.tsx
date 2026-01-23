@@ -16,9 +16,7 @@ export const Installation = () => {
 	const zapRef = useRef<{ startAnimation: () => void; stopAnimation: () => void } | null>(null);
 	const linkRef = useRef<{ startAnimation: () => void; stopAnimation: () => void } | null>(null);
 
-	const installCommand = `git clone https://github.com/frankievalentine/powerhouse.git
-cd powerhouse
-./install.sh`;
+	const installCommand = `curl -fsSL https://raw.githubusercontent.com/frankievalentine/powerhouse/main/install.sh | bash`;
 
 	const handleCopy = async () => {
 		await navigator.clipboard.writeText(installCommand);
@@ -28,19 +26,19 @@ cd powerhouse
 
 	return (
 		<section id="install" className="relative py-24 scroll-mt-24">
-			<div className="relative mx-auto max-w-4xl px-6">
+			<div className="relative mx-auto max-w-6xl px-6">
 				<div className="rounded-2xl border border-(--border) bg-(--card)/80 backdrop-blur-sm p-8 md:p-12">
 					<div className="text-center">
 						<h2 className="mb-4 text-3xl font-bold text-pretty md:text-4xl">
 							Get Started in Seconds
 						</h2>
 						<p className="mb-8 text-(--muted)">
-							Clone the repository and run the installer. Skills and commands
-							will be automatically configured for all your AI assistants.
+							Run a single command to start the interactive installer.
+							Choose which agents to configure for your workflow.
 						</p>
 
 						{/* Code block */}
-						<div className="code-block relative mx-auto max-w-xl overflow-hidden text-left">
+						<div className="code-block relative mx-auto overflow-hidden text-left">
 							<div className="flex items-center justify-between border-b border-(--border) px-4 py-2">
 								<span className="text-xs text-(--muted) font-mono">Terminal</span>
 								<button
@@ -63,17 +61,14 @@ cd powerhouse
 									)}
 								</button>
 							</div>
-							<pre className="overflow-x-auto p-4 text-sm font-mono">
-								<code>
+							<pre className="overflow-x-auto p-4 text-xs md:text-sm font-mono text-center">
+								<code className="inline-block text-left whitespace-pre-wrap break-all md:whitespace-pre md:break-normal">
 									<span className="text-(--muted)">$</span>{" "}
-									<span className="text-foreground">git clone</span>{" "}
-									https://github.com/frankievalentine/powerhouse.git
-									{"\n"}
-									<span className="text-(--muted)">$</span>{" "}
-									<span className="text-foreground">cd</span> powerhouse
-									{"\n"}
-									<span className="text-(--muted)">$</span>{" "}
-									<span className="text-foreground">./install.sh</span>
+									<span className="text-foreground">curl</span>{" "}
+									<span className="text-(--muted)">-fsSL</span>{" "}
+									<span className="break-all">https://raw.githubusercontent.com/frankievalentine/powerhouse/main/install.sh</span>{" "}
+									<span className="text-(--muted)">|</span>{" "}
+									<span className="text-foreground">bash</span>
 								</code>
 							</pre>
 						</div>
@@ -86,9 +81,9 @@ cd powerhouse
 								onMouseLeave={() => packageRef.current?.stopAnimation()}
 							>
 								<PackageIcon ref={packageRef} size={24} className="mb-2 text-(--muted)" aria-hidden="true" />
-								<div className="text-sm font-medium font-mono">Skills Installed</div>
+								<div className="text-sm font-medium font-mono">Select Agents</div>
 								<div className="mt-1 text-xs text-(--muted)">
-									To all agent skill directories
+									Choose which AI assistants to configure
 								</div>
 							</div>
 							<div
@@ -97,9 +92,9 @@ cd powerhouse
 								onMouseLeave={() => zapRef.current?.stopAnimation()}
 							>
 								<ZapIcon ref={zapRef} size={24} className="mb-2 text-(--muted)" aria-hidden="true" />
-								<div className="text-sm font-medium font-mono">Commands Ready</div>
+								<div className="text-sm font-medium font-mono">Install Skills</div>
 								<div className="mt-1 text-xs text-(--muted)">
-									Slash commands for each agent
+									Skills & commands for your selected agents
 								</div>
 							</div>
 							<div
