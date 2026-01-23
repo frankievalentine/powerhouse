@@ -1,12 +1,9 @@
 #!/bin/bash
 
 # Powerhouse - Universal Agent Skills Installer
-# Installs skills and configurations for multiple AI coding assistants
+# Installs skills and configurations directly to each agent's config directory
 
 set -e
-
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-GLOBAL_SKILLS_DIR="$SCRIPT_DIR/global/skills"
 
 # Colors for output
 RED='\033[0;31m'
@@ -15,14 +12,22 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 CYAN='\033[0;36m'
 BOLD='\033[1m'
+DIM='\033[2m'
 NC='\033[0m' # No Color
 
+# GitHub raw content base URL
+GITHUB_RAW="https://raw.githubusercontent.com/frankievalentine/powerhouse/main"
+
+# Temporary directory for downloads
+TMP_DIR=$(mktemp -d)
+trap "rm -rf $TMP_DIR" EXIT
+
 print_header() {
-    echo -e "${BLUE}"
-    echo "╔═══════════════════════════════════════════════════════════╗"
-    echo "║           🚀 Powerhouse Agent Skills Installer            ║"
-    echo "╚═══════════════════════════════════════════════════════════╝"
-    echo -e "${NC}"
+    echo ""
+    echo -e "${BLUE}╔═══════════════════════════════════════════════════════════╗${NC}"
+    echo -e "${BLUE}║${NC}           ${BOLD}🚀 Powerhouse Agent Skills Installer${NC}            ${BLUE}║${NC}"
+    echo -e "${BLUE}╚═══════════════════════════════════════════════════════════╝${NC}"
+    echo ""
 }
 
 print_success() {
@@ -41,6 +46,48 @@ print_info() {
     echo -e "${BLUE}ℹ${NC} $1"
 }
 
+# Download a file from GitHub
+download_file() {
+    local path="$1"
+    local dest="$2"
+    local url="$GITHUB_RAW/$path"
+    
+    mkdir -p "$(dirname "$dest")"
+    if curl -fsSL "$url" -o "$dest" 2>/dev/null; then
+        return 0
+    else
+        return 1
+    fi
+}
+
+# Download a directory from GitHub (using git sparse checkout)
+download_directory() {
+    local path="$1"
+    local dest="$2"
+    
+    mkdir -p "$dest"
+    
+    # Clone with sparse checkout to get only the needed directory
+    cd "$TMP_DIR"
+    if [ ! -d "powerhouse" ]; then
+        git clone --quiet --depth 1 --filter=blob:none --sparse \
+            https://github.com/frankievalentine/powerhouse.git powerhouse 2>/dev/null || {
+            print_error "Failed to clone repository"
+            return 1
+        }
+    fi
+    
+    cd powerhouse
+    git sparse-checkout add "$path" 2>/dev/null || true
+    
+    if [ -d "$path" ]; then
+        cp -r "$path"/* "$dest/" 2>/dev/null || true
+        return 0
+    else
+        return 1
+    fi
+}
+
 # Backup existing directory if it exists
 backup_if_exists() {
     local dir="$1"
@@ -51,315 +98,194 @@ backup_if_exists() {
     fi
 }
 
-# Create symlink for skills directory
-create_skills_symlink() {
-    local target_dir="$1"
-    local skills_subdir="$2"
-    
-    mkdir -p "$target_dir"
-    
-    for skill_dir in "$GLOBAL_SKILLS_DIR"/*/; do
-        if [ -d "$skill_dir" ]; then
-            local skill_name=$(basename "$skill_dir")
-            local target_skill_dir="$target_dir/$skills_subdir/$skill_name"
-            
-            # Remove existing symlink or directory
-            if [ -L "$target_skill_dir" ]; then
-                rm "$target_skill_dir"
-            elif [ -d "$target_skill_dir" ]; then
-                backup_if_exists "$target_skill_dir"
-            fi
-            
-            mkdir -p "$(dirname "$target_skill_dir")"
-            ln -sf "$skill_dir" "$target_skill_dir"
-            print_success "Linked $skill_name → $target_skill_dir"
-        fi
-    done
-}
-
-# Copy files instead of symlink (for agents that don't support symlinks well)
-copy_skills() {
-    local target_dir="$1"
-    local skills_subdir="$2"
-    
-    mkdir -p "$target_dir/$skills_subdir"
-    cp -r "$GLOBAL_SKILLS_DIR"/* "$target_dir/$skills_subdir/"
-    print_success "Copied skills to $target_dir/$skills_subdir"
-}
-
 install_claude() {
-    echo ""
-    echo -e "${BLUE}Installing for Claude Code...${NC}"
+    print_info "Installing Claude Code..."
     
     local claude_dir="$HOME/.claude"
-    mkdir -p "$claude_dir/skills"
+    mkdir -p "$claude_dir/commands"
     
-    create_skills_symlink "$claude_dir" "skills"
+    # Download commands
+    download_directory "agents/claude/commands" "$claude_dir/commands"
     
-    # Copy commands if they exist
-    if [ -d "$SCRIPT_DIR/agents/claude/commands" ]; then
-        mkdir -p "$claude_dir/commands"
-        cp -r "$SCRIPT_DIR/agents/claude/commands"/* "$claude_dir/commands/" 2>/dev/null || true
-        print_success "Copied Claude commands"
-    fi
+    # Download global skills
+    download_directory "global/skills" "$claude_dir/skills"
     
-    print_success "Claude Code installation complete"
+    print_success "Claude Code configured → $claude_dir"
 }
 
 install_opencode() {
-    echo ""
-    echo -e "${BLUE}Installing for OpenCode...${NC}"
+    print_info "Installing OpenCode..."
     
     local opencode_dir="$HOME/.config/opencode"
-    mkdir -p "$opencode_dir/skills"
+    mkdir -p "$opencode_dir/commands"
     
-    create_skills_symlink "$opencode_dir" "skills"
+    # Download commands
+    download_directory "agents/opencode/commands" "$opencode_dir/commands"
     
-    if [ -d "$SCRIPT_DIR/agents/opencode/commands" ]; then
-        mkdir -p "$opencode_dir/commands"
-        cp -r "$SCRIPT_DIR/agents/opencode/commands"/* "$opencode_dir/commands/" 2>/dev/null || true
-        print_success "Copied OpenCode commands"
-    fi
+    # Download global skills
+    download_directory "global/skills" "$opencode_dir/skills"
     
-    print_success "OpenCode installation complete"
+    print_success "OpenCode configured → $opencode_dir"
 }
 
 install_antigravity() {
-    echo ""
-    echo -e "${BLUE}Installing for Antigravity...${NC}"
+    print_info "Installing Antigravity..."
     
     local antigravity_dir="$HOME/.gemini/antigravity"
-    mkdir -p "$antigravity_dir/skills"
+    mkdir -p "$antigravity_dir/commands"
     
-    create_skills_symlink "$antigravity_dir" "skills"
+    # Download commands
+    download_directory "agents/gemini/commands" "$antigravity_dir/commands"
     
-    if [ -d "$SCRIPT_DIR/agents/gemini/commands" ]; then
-        mkdir -p "$antigravity_dir/commands"
-        cp -r "$SCRIPT_DIR/agents/gemini/commands"/* "$antigravity_dir/commands/" 2>/dev/null || true
-        print_success "Copied Antigravity commands"
-    fi
+    # Download global skills
+    download_directory "global/skills" "$antigravity_dir/skills"
     
-    print_success "Antigravity installation complete"
+    print_success "Antigravity configured → $antigravity_dir"
 }
 
 install_codex() {
-    echo ""
-    echo -e "${BLUE}Installing for OpenAI Codex...${NC}"
+    print_info "Installing OpenAI Codex..."
     
     local codex_dir="$HOME/.codex"
-    mkdir -p "$codex_dir/skills"
+    mkdir -p "$codex_dir"
     
-    create_skills_symlink "$codex_dir" "skills"
+    # Download global skills
+    download_directory "global/skills" "$codex_dir/skills"
     
-    print_success "OpenAI Codex installation complete"
+    print_success "OpenAI Codex configured → $codex_dir"
 }
 
 install_continue() {
-    echo ""
-    echo -e "${BLUE}Installing for Continue.dev...${NC}"
+    print_info "Installing Continue.dev..."
     
     local continue_dir="$HOME/.continue"
-    mkdir -p "$continue_dir"
+    mkdir -p "$continue_dir/prompts"
     
-    if [ -f "$SCRIPT_DIR/agents/continue/config.yaml" ]; then
-        if [ -f "$continue_dir/config.yaml" ]; then
-            backup_if_exists "$continue_dir/config.yaml"
-        fi
-        cp "$SCRIPT_DIR/agents/continue/config.yaml" "$continue_dir/config.yaml"
-        print_success "Installed Continue.dev config.yaml"
-    fi
+    # Download config
+    download_file "agents/continue/config.yaml" "$continue_dir/config.yaml"
     
-    if [ -d "$SCRIPT_DIR/agents/continue/prompts" ]; then
-        mkdir -p "$continue_dir/prompts"
-        cp -r "$SCRIPT_DIR/agents/continue/prompts"/* "$continue_dir/prompts/" 2>/dev/null || true
-        print_success "Copied Continue.dev prompts"
-    fi
+    # Download prompts
+    download_directory "agents/continue/prompts" "$continue_dir/prompts"
     
-    print_success "Continue.dev installation complete"
+    print_success "Continue.dev configured → $continue_dir"
 }
 
-show_project_instructions() {
+install_cursor() {
+    print_info "Installing Cursor..."
+    
+    local cursor_dir="$HOME/.cursor"
+    mkdir -p "$cursor_dir/rules"
+    
+    # Download rules
+    download_directory "agents/cursor/rules" "$cursor_dir/rules"
+    
+    # Download global skills
+    download_directory "global/skills" "$cursor_dir/skills"
+    
+    print_success "Cursor configured → $cursor_dir"
+}
+
+install_copilot() {
+    print_info "Installing GitHub Copilot..."
+    
+    # Copilot is project-level, show instructions
     echo ""
-    echo -e "${YELLOW}═══════════════════════════════════════════════════════════${NC}"
-    echo -e "${YELLOW}  Project-Level Installation (run in your project root)${NC}"
-    echo -e "${YELLOW}═══════════════════════════════════════════════════════════${NC}"
+    echo -e "  ${DIM}GitHub Copilot requires project-level setup.${NC}"
+    echo -e "  ${DIM}Run in your project root:${NC}"
     echo ""
-    echo "For GitHub Copilot and Cursor, copy files to your project:"
+    echo -e "  mkdir -p .github"
+    echo -e "  curl -fsSL $GITHUB_RAW/agents/copilot/copilot-instructions.md -o .github/copilot-instructions.md"
     echo ""
-    echo "  # GitHub Copilot"
-    echo "  mkdir -p .github"
-    echo "  cp $SCRIPT_DIR/agents/copilot/copilot-instructions.md .github/"
-    echo ""
-    echo "  # Cursor"
-    echo "  mkdir -p .cursor/rules"
-    echo "  cp $SCRIPT_DIR/agents/cursor/rules/* .cursor/rules/"
-    echo ""
+    
+    print_success "GitHub Copilot instructions shown"
 }
 
 show_completion() {
     echo ""
-    echo -e "${GREEN}═══════════════════════════════════════════════════════════${NC}"
+    echo -e "${GREEN}───────────────────────────────────────────────────────────${NC}"
     echo -e "${GREEN}  ✓ Installation Complete!${NC}"
-    echo -e "${GREEN}═══════════════════════════════════════════════════════════${NC}"
+    echo -e "${GREEN}───────────────────────────────────────────────────────────${NC}"
     echo ""
-    echo "Available skills:"
-    for skill_dir in "$GLOBAL_SKILLS_DIR"/*/; do
-        if [ -d "$skill_dir" ]; then
-            echo "  • $(basename "$skill_dir")"
-        fi
-    done
-    echo ""
-    echo "Available commands (use with /command-name):"
-    echo "  • review-pr       - Review pull requests"
-    echo "  • create-component - Create React components"
-    echo "  • fix-tests       - Fix failing tests"
-    echo "  • commit          - Create conventional commits"
-    echo "  • add-shadcn      - Add shadcn/ui components"
-    echo "  • a11y-audit      - Audit accessibility"
+    echo -e "  ${BOLD}Available commands:${NC}"
+    echo -e "    ${DIM}/review-pr${NC}        Review pull requests"
+    echo -e "    ${DIM}/create-component${NC} Create React components"
+    echo -e "    ${DIM}/fix-tests${NC}        Fix failing tests"
+    echo -e "    ${DIM}/commit${NC}           Conventional commits"
     echo ""
 }
 
 # Interactive agent selection menu
-select_agents() {
-    local agents=("Claude Code" "OpenCode" "Antigravity" "OpenAI Codex" "Continue.dev")
-    local selected=(0 0 0 0 0)
-    local current=0
-    local total=${#agents[@]}
-    
+interactive_menu() {
+    echo -e "${BOLD}Select agents to install:${NC}"
     echo ""
-    echo -e "${BOLD}Select which agents to install:${NC}"
-    echo -e "${CYAN}(Use arrow keys to navigate, space to toggle, enter to confirm)${NC}"
+    echo -e "  ${CYAN}1)${NC} Claude Code      ${DIM}→ ~/.claude${NC}"
+    echo -e "  ${CYAN}2)${NC} OpenCode         ${DIM}→ ~/.config/opencode${NC}"
+    echo -e "  ${CYAN}3)${NC} Antigravity      ${DIM}→ ~/.gemini/antigravity${NC}"
+    echo -e "  ${CYAN}4)${NC} OpenAI Codex     ${DIM}→ ~/.codex${NC}"
+    echo -e "  ${CYAN}5)${NC} Continue.dev     ${DIM}→ ~/.continue${NC}"
+    echo -e "  ${CYAN}6)${NC} Cursor           ${DIM}→ ~/.cursor${NC}"
+    echo -e "  ${CYAN}7)${NC} GitHub Copilot   ${DIM}→ project-level${NC}"
     echo ""
+    echo -e "  ${CYAN}a)${NC} Install all"
+    echo -e "  ${CYAN}q)${NC} Quit"
+    echo ""
+    echo -e "${DIM}Enter choices separated by spaces (e.g., 1 3 6):${NC}"
     
-    # Check if we're in an interactive terminal
-    if [ ! -t 0 ]; then
-        # Non-interactive mode (piped from curl) - show simple numbered menu
-        echo "Available agents:"
+    # Read from /dev/tty to handle curl pipe
+    read -p "> " choices </dev/tty
+    
+    if [[ "$choices" == "q" || "$choices" == "Q" ]]; then
         echo ""
-        for i in "${!agents[@]}"; do
-            echo "  $((i+1)). ${agents[$i]}"
-        done
-        echo "  a. All agents"
-        echo "  q. Quit"
-        echo ""
-        read -p "Enter your choices (e.g., 1 3 5 or 'a' for all): " choices
-        
-        if [[ "$choices" == "q" ]]; then
-            echo "Installation cancelled."
-            exit 0
-        fi
-        
-        if [[ "$choices" == "a" ]]; then
-            selected=(1 1 1 1 1)
-        else
-            for choice in $choices; do
-                if [[ "$choice" =~ ^[1-5]$ ]]; then
-                    selected[$((choice-1))]=1
-                fi
-            done
-        fi
+        print_info "Installation cancelled."
+        exit 0
+    fi
+    
+    SELECTED=()
+    
+    if [[ "$choices" == "a" || "$choices" == "A" ]]; then
+        SELECTED=(1 2 3 4 5 6 7)
     else
-        # Interactive mode - use arrow keys and highlighting
-        while true; do
-            # Clear and redraw menu
-            tput cuu $((total + 2)) 2>/dev/null || true
-            
-            for i in "${!agents[@]}"; do
-                local checkbox="[ ]"
-                local prefix="  "
-                
-                if [ "${selected[$i]}" -eq 1 ]; then
-                    checkbox="[${GREEN}✓${NC}]"
-                fi
-                
-                if [ "$i" -eq "$current" ]; then
-                    prefix="${CYAN}▸${NC} "
-                    echo -e "${prefix}${checkbox} ${BOLD}${agents[$i]}${NC}"
-                else
-                    echo -e "${prefix}${checkbox} ${agents[$i]}"
-                fi
-            done
-            
-            echo ""
-            echo -e "  ${CYAN}[A]${NC} Select All  ${CYAN}[N]${NC} Select None  ${CYAN}[Enter]${NC} Confirm"
-            
-            # Read single character
-            read -rsn1 key
-            
-            case "$key" in
-                A|B|C|D)
-                    read -rsn2 key
-                    case "$key" in
-                        "[A") # Up arrow
-                            ((current--))
-                            [ $current -lt 0 ] && current=$((total-1))
-                            ;;
-                        "[B") # Down arrow
-                            ((current++))
-                            [ $current -ge $total ] && current=0
-                            ;;
-                    esac
-                    ;;
-                " ") # Space - toggle selection
-                    if [ "${selected[$current]}" -eq 1 ]; then
-                        selected[$current]=0
-                    else
-                        selected[$current]=1
-                    fi
-                    ;;
-                "a"|"A") # Select all
-                    for i in "${!selected[@]}"; do
-                        selected[$i]=1
-                    done
-                    ;;
-                "n"|"N") # Select none
-                    for i in "${!selected[@]}"; do
-                        selected[$i]=0
-                    done
-                    ;;
-                "") # Enter - confirm
-                    break
-                    ;;
+        for choice in $choices; do
+            case "$choice" in
+                1|2|3|4|5|6|7) SELECTED+=("$choice") ;;
             esac
         done
     fi
-    
-    # Return selected indices
-    SELECTED_AGENTS=()
-    for i in "${!selected[@]}"; do
-        if [ "${selected[$i]}" -eq 1 ]; then
-            SELECTED_AGENTS+=($i)
-        fi
-    done
 }
 
 main() {
     print_header
     
-    echo "This installer will configure skills for your AI coding assistants."
-    echo "You can choose which agents to install for."
+    # Check for git
+    if ! command -v git &> /dev/null; then
+        print_error "git is required but not installed."
+        exit 1
+    fi
     
-    select_agents
+    interactive_menu
     
-    if [ ${#SELECTED_AGENTS[@]} -eq 0 ]; then
+    if [ ${#SELECTED[@]} -eq 0 ]; then
+        echo ""
         print_warning "No agents selected. Exiting."
         exit 0
     fi
     
     echo ""
-    echo -e "${BLUE}Installing for selected agents...${NC}"
+    echo -e "${BLUE}Installing selected agents...${NC}"
+    echo ""
     
-    for idx in "${SELECTED_AGENTS[@]}"; do
-        case $idx in
-            0) install_claude ;;
-            1) install_opencode ;;
-            2) install_antigravity ;;
-            3) install_codex ;;
-            4) install_continue ;;
+    for choice in "${SELECTED[@]}"; do
+        case "$choice" in
+            1) install_claude ;;
+            2) install_opencode ;;
+            3) install_antigravity ;;
+            4) install_codex ;;
+            5) install_continue ;;
+            6) install_cursor ;;
+            7) install_copilot ;;
         esac
     done
     
-    show_project_instructions
     show_completion
 }
 
