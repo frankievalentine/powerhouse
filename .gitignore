@@ -1,5 +1,9 @@
+video
 .shared
 .agent
+.agents
+.cursor
+.gemini
 .env
 .env.local
 .env.production

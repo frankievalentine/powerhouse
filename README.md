@@ -4,15 +4,15 @@ A comprehensive repository of agent skills, workflows, and configurations for AI
 
 ## Supported AI Assistants
 
-| Assistant          | Config Directory | Context File              | Skills Location     | Status       |
-| ------------------ | ---------------- | ------------------------- | ------------------- | ------------ |
-| **Claude Code**    | `.claude/`       | `CLAUDE.md`               | `.claude/skills/`   | ✅ Native    |
-| **OpenCode**       | `.opencode/`     | `OPENCODE.md`             | `.opencode/skills/` | ✅ Native    |
-| **Gemini CLI**     | `.gemini/`       | `GEMINI.md`               | `.gemini/skills/`   | ✅ Native    |
-| **OpenAI Codex**   | `.codex/`        | `AGENTS.md`               | `~/.codex/skills/`  | ✅ Native    |
-| **Continue.dev**   | `.continue/`     | `config.yaml`             | Prompts             | 🔄 Converted |
-| **GitHub Copilot** | `.github/`       | `copilot-instructions.md` | Instructions        | 🔄 Converted |
-| **Cursor**         | `.cursor/`       | `.cursor/rules/*.mdc`     | Rules               | 🔄 Converted |
+| Assistant          | Config Directory | Context File          | Skills Location     | Status       |
+| ------------------ | ---------------- | --------------------- | ------------------- | ------------ |
+| **Claude Code**    | `.claude/`       | `CLAUDE.md`           | `.claude/skills/`   | ✅ Native    |
+| **OpenCode**       | `.opencode/`     | `OPENCODE.md`         | `.opencode/skills/` | ✅ Native    |
+| **Antigravity**    | `.gemini/`       | `GEMINI.md`           | `.gemini/skills/`   | ✅ Native    |
+| **OpenAI Codex**   | `.codex/`        | `AGENTS.md`           | `~/.codex/skills/`  | ✅ Native    |
+| **Continue.dev**   | `.continue/`     | `config.yaml`         | Prompts             | 🔄 Converted |
+| **GitHub Copilot** | `.copilot/`      | `.copilot/skills/`    | `.copilot/skills/`  | ✅ Native    |
+| **Cursor**         | `.cursor/`       | `.cursor/rules/*.mdc` | Rules               | ✅ Native    |
 
 ## What's Included
 
@@ -80,12 +80,12 @@ cp -r global/skills/* ~/.config/opencode/skills/
 cp -r agents/opencode/.opencode /path/to/your/project/
 ```
 
-#### Gemini CLI & Antigravity
+#### Antigravity (Gemini CLI)
 
 ```bash
 mkdir -p ~/.gemini/skills ~/.gemini/antigravity
 cp -r global/skills/* ~/.gemini/skills/
-cp -r global/antigravity/global_skills/* ~/.gemini/antigravity/
+cp -r agents/gemini/antigravity/* ~/.gemini/antigravity/
 
 cp -r agents/gemini/.gemini /path/to/your/project/
 cp agents/gemini/GEMINI.md /path/to/your/project/
@@ -109,8 +109,8 @@ cp agents/continue/config.yaml ~/.continue/config.yaml
 #### GitHub Copilot
 
 ```bash
-mkdir -p /path/to/your/project/.github
-cp agents/copilot/copilot-instructions.md /path/to/your/project/.github/
+mkdir -p /path/to/your/project/.copilot/skills
+cp -r agents/copilot/skills/* /path/to/your/project/.copilot/skills/
 ```
 
 #### Cursor
@@ -127,6 +127,8 @@ powerhouse/
 ├── README.md
 ├── install.sh                    # Universal installer
 ├── global/                       # Shared across all agents
+│   ├── rules/
+│   │   └── typescript.md
 │   ├── skills/
 │   │   ├── typescript-expert/
 │   │   ├── nextjs-app-router/
@@ -147,9 +149,8 @@ powerhouse/
 │   ├── continue/
 │   ├── copilot/
 │   └── cursor/
-└── templates/                    # Project starter templates
-    ├── nextjs/
-    └── react/
+└── site/                         # Next.js landing page
+
 ```
 
 ## Skill Format
