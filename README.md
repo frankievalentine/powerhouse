@@ -1,274 +1,123 @@
 # powerhouse
 
-`powerhouse` bootstraps AI-native development environments from a curated registry of tools, profiles, and domains.
-
-It is designed for people who want a repeatable way to set up an agent-friendly machine without hard-coding one giant shell script for every possible workflow. Instead of maintaining separate install docs for every stack, `powerhouse` resolves a plan from manifests, installs what is missing, and records enough state to explain what happened later.
-
-## What It Does
-
-- Boots a machine from a selected profile and domain.
-- Installs developer tools through manifest-defined backends.
-- Adds curated agent skills for the target workflow.
-- Persists active state and last-run metadata for `status`, `doctor`, and `update`.
-- Ships a docs site and a local CLI from the same monorepo.
-
-## Why The Project Exists
-
-Most machine setup flows break down in one of two ways:
-
-- They are simple, but too rigid to adapt to different agents or domains.
-- They are flexible, but spread across shell scripts, dotfiles, wiki pages, and tribal knowledge.
-
-`powerhouse` takes a middle path:
-
-- Profiles define the base workstation shape.
-- Domains layer on workflow-specific skill packages.
-- Tool manifests declare how to check and install each dependency.
-- The CLI stays small and inspectable so you can see the resolved plan before anything mutates your machine.
-
-## Current Scope
-
-Version `0.1.0` currently targets:
-
-- macOS
-- Linux
-
-The v1 implementation is intentionally CLI-first. GUI setup flows, plugin installers, MCP installers, and config symlink management are out of scope for now.
-
-## How Bootstrap Works
-
-The default entrypoint is [`install.sh`](./install.sh).
-
-High-level flow:
-
-1. Detect the platform and run platform-specific preflight checks.
-2. Install Homebrew if it is missing.
-3. Install Bun if it is missing.
-4. Install workspace dependencies for the local `powerhouse` repo.
-5. Install the `powerhouse` command wrapper.
-6. Hand off to the Bun-powered CLI.
-7. Resolve the selected profile and domain into a concrete install plan.
-8. Install missing tools.
-9. Install curated skills for the selected agent targets.
-10. Save state and the last-run report for later inspection.
-
-If you want to inspect the plan without changing the machine, use `plan` or `bootstrap --dry-run`.
-
-## Repository Layout
-
-- [`install.sh`](./install.sh): bootstrap entrypoint for end-user setup.
-- [`packages/cli`](./packages/cli): the `powerhouse` command surface and interactive UX.
-- [`packages/core`](./packages/core): registry loading, plan resolution, installers, doctor checks, status reporting, and state persistence.
-- [`registry`](./registry): source-of-truth manifests for tools, profiles, and domains.
-- [`apps/web`](./apps/web): Astro/Starlight docs site.
-- [`docs`](./docs): architecture and registry notes for contributors.
-- [`tests`](./tests): Vitest coverage for core resolution and state flows.
-- [`Brewfile`](./Brewfile): contributor dependencies for working on this repository.
-
-## Profiles, Domains, And Tools
-
-The registry is the core abstraction in this project.
-
-### Profiles
-
-Profiles define the base machine bundle:
-
-- default tools
-- default agent targets
-- supported platforms
-- notes about the intended workflow
-
-Current profiles include:
-
-- `claude`
-- `codex`
-- `local-models`
-- `cursor`
-- `goose`
-- `gemini`
-- `openclaw`
-- `antigravity`
-- `github-copilot`
-
-### Domains
-
-Domains extend a profile with workflow-specific skill packages and guidance.
-
-Current domains include:
-
-- `general`
-- `backend`
-- `web`
-- `content`
-- `data`
-- `design`
-- `devops`
-- `engineering`
-- `marketing`
-- `product-management`
-- `social-media`
-- `web-development`
-
-### Tools
-
-Tool manifests define:
-
-- identity and description
-- supported platforms
-- a `checkCommand` used for doctor/idempotency
-- one or more install steps per platform
-
-Supported install backends in v1:
-
-- `brew`
-- `npm`
-- `script`
-
-## Quick Start
-
-### End-user bootstrap
-
-Run the bootstrap script:
+One command to a productive AI environment.
 
 ```bash
 ./install.sh
 ```
 
-For a non-mutating preview:
+Preview what it will do first:
 
 ```bash
 ./install.sh --dry-run
 ```
 
-### Contributor setup
+## What it does
 
-Install dependencies for this repository:
+Powerhouse picks an AI agent profile and a workflow domain, then installs everything you need to start coding with it.
+
+- **Profiles** — the AI agent you want to use (Claude, Codex, OpenCode, Cursor, etc.)
+- **Domains** — the kind of work you do (web, backend, devops, data, etc.)
+- **Tools** — developer dependencies checked and installed per platform
+- **Integrations & MCPs** — plugins and servers configured for your agent
+- **Skills** — curated knowledge packages loaded into your agent
+
+Everything is declared in JSON manifests under [`registry/`](./registry). The CLI resolves a plan, shows it to you, then installs only what is missing.
+
+## Available profiles
+
+| Profile | Agent |
+|---|---|
+| `claude` | Anthropic Claude Code + desktop app |
+| `codex` | OpenAI Codex CLI + desktop app |
+| `opencode` | Provider-agnostic open source agent |
+| `cursor` | AI-native code editor |
+| `goose` | Block's open-source extensible agent |
+| `gemini` | Google's Gemini CLI |
+| `openclaw` | Personal AI assistant |
+| `antigravity` | Google's Antigravity ecosystem |
+| `github-copilot` | GitHub Copilot agent |
+
+## Available domains
+
+| Domain | Focus |
+|---|---|
+| `general` | Broad repository work |
+| `web` | UI, frontend, design, and modern web development |
+| `backend` | APIs, services, and security review |
+| `devops` | Rollout planning and infrastructure |
+| `engineering` | Architecture and testing strategy |
+| `design` | Interface design and design systems |
+| `data` | Analysis and exploratory workflows |
+| `content` | Content strategy and drafting |
+| `marketing` | SEO, copywriting, and strategy |
+| `product-management` | PRDs and prioritization |
+| `social-media` | Campaign planning and content |
+
+## Common commands
 
 ```bash
-bun install
+# Bootstrap a full setup
+powerhouse bootstrap --profile claude --domain web
+
+# Inspect a plan without installing
+powerhouse plan --profile codex --domain backend
+
+# Switch agent or workflow
+powerhouse profile use codex
+powerhouse domain use backend
+
+# Check environment health
+powerhouse doctor
+powerhouse status
+
+# Browse the catalog
+powerhouse integration list
+powerhouse mcp list
+powerhouse skills find typescript
+
+# Validate registry changes
+powerhouse registry validate
 ```
 
-If you use Homebrew locally, the committed [`Brewfile`](./Brewfile) can help install contributor tooling. It is not the end-user install contract; the registry manifests are.
+## Supported platforms
 
-## Local Development
+- macOS
+- Linux
+- WSL
+- Windows (plan/status/doctor only)
 
-Common commands:
+## Development
 
 ```bash
+# Install dependencies
+bun install
+
+# Run locally
 bun run cli --help
-bun run bootstrap --dry-run
-bun run doctor
-bun run cli status
-bun run cli plan --profile claude --domain web --platform darwin
-bun run cli profile use codex --dry-run --yes
-bun run cli domain use backend --dry-run --yes
-bun run cli profile list
-bun run cli domain list
-bun run cli tool list
-bun run cli registry validate
-bun run cli registry scaffold-domain content --dry-run
-bun run cli skills find typescript
+bun run web:dev
+
+# Before committing
 bun run test
 bun run typecheck
-bun run web:dev
+bun run cli registry validate
 ```
 
-## CLI Overview
+## Repository layout
 
-The current command surface is:
-
-- `bootstrap`: resolve and apply a full install plan from a profile + domain.
-- `doctor`: check the current environment and saved state.
-- `status`: summarize platform info, active selection, last run, and doctor results.
-- `plan`: resolve a plan without installing anything.
-- `skills`: list, find, install, remove, or update skills via the upstream skills CLI.
-- `profile`: inspect or apply profiles.
-- `domain`: inspect or apply domains.
-- `tool`: inspect available tools.
-- `registry`: validate registry consistency or scaffold new manifests.
-- `update`: sync the workspace, refresh dependencies, and update the active setup.
-
-Example plan inspection:
-
-```bash
-bun run cli plan --profile claude --domain web --platform darwin
-```
-
-Example bootstrap:
-
-```bash
-bun run cli bootstrap --profile codex --domain general --yes
-```
-
-Example registry scaffold:
-
-```bash
-bun run cli registry scaffold-domain content --dry-run
-```
-
-## Registry Authoring
-
-When you want to add a new curated profile, domain, or tool, start with the scaffold commands instead of hand-writing the JSON from scratch.
-
-Examples:
-
-```bash
-bun run cli registry scaffold-domain design --dry-run
-bun run cli registry scaffold-profile product-management
-bun run cli registry scaffold-tool figma-cli
-```
-
-This keeps new manifests aligned with the current schema before you fill in the actual tools, agents, and skill packages.
-
-## State And Diagnostics
-
-`powerhouse` stores machine state and run metadata in XDG-style directories under the current platform:
-
-- config: `.../powerhouse`
-- cache: `.../powerhouse`
-- state: `.../powerhouse`
-
-The state layer currently persists:
-
-- the active profile
-- the active domain
-- installed tool ids
-- installed agent targets
-- platform metadata
-- the most recent run report, including failures
-
-This gives `status`, `doctor`, and `update` enough context to explain what is healthy, what changed, and where a bootstrap failed.
+| Path | Purpose |
+|---|---|
+| [`install.sh`](./install.sh) | End-user bootstrap entrypoint |
+| [`packages/cli`](./packages/cli) | CLI commands and interactive UX |
+| [`packages/core`](./packages/core) | Registry, plans, installers, state |
+| [`registry`](./registry) | Manifests for tools, profiles, domains, integrations, MCPs |
+| [`apps/web`](./apps/web) | Astro docs site |
+| [`tests`](./tests) | Vitest suite |
 
 ## Docs
 
-The web/docs workspace lives in [`apps/web`](./apps/web) and uses Astro with Starlight.
+Full documentation lives at [powerhouse-pi.vercel.app](https://powerhouse-pi.vercel.app).
 
-Run it locally with:
+---
 
-```bash
-bun run web:dev
-```
-
-## Testing And Validation
-
-Before pushing changes, the baseline checks are:
-
-```bash
-bun run test
-bun run typecheck
-bun run cli registry validate
-```
-
-## Known Boundaries
-
-- macOS and Linux only
-- No WSL2 support yet
-- No GUI installer path
-- No plugin or MCP installer flow yet
-- No config symlink management yet
-
-## Additional Project Notes
-
-- [`docs/architecture.md`](./docs/architecture.md) outlines the main system split.
-- [`docs/registry.md`](./docs/registry.md) describes the registry contract.
-- The contributor `Brewfile` is intentionally separate from end-user install logic.
+See [`docs/architecture.md`](./docs/architecture.md) and [`docs/registry.md`](./docs/registry.md) for contributor details.
