@@ -34,8 +34,45 @@ export default defineConfig({
           items: ['getting-started']
         },
         {
-          label: 'Guides',
-          items: ['profiles', 'domains']
+          label: 'Profiles',
+          collapsed: true,
+          items: [
+            {
+              label: 'Overview',
+              slug: 'profiles'
+            },
+            'profiles/claude',
+            'profiles/codex',
+            'profiles/local-models',
+            'profiles/cursor',
+            'profiles/goose',
+            'profiles/gemini',
+            'profiles/openclaw',
+            'profiles/antigravity',
+            'profiles/github-copilot'
+          ]
+        },
+        {
+          label: 'Domains',
+          collapsed: true,
+          items: [
+            {
+              label: 'Overview',
+              slug: 'domains'
+            },
+            'domains/general',
+            'domains/web',
+            'domains/web-development',
+            'domains/backend',
+            'domains/devops',
+            'domains/engineering',
+            'domains/design',
+            'domains/data',
+            'domains/content',
+            'domains/marketing',
+            'domains/product-management',
+            'domains/social-media'
+          ]
         },
         {
           label: 'Reference',

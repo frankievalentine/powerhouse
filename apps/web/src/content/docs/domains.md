@@ -9,138 +9,18 @@ Domains are additive and independent. Switching domains doesn't touch your tools
 
 ## Available domains
 
-### `general`
-
-A conservative default for broad repository work. Installed when no domain is specified.
-
-| Skills | Source |
-|---|---|
-| `skill-creator` | `vercel-labs/agent-skills` |
-
----
-
-### `web`
-
-UI, frontend implementation, and design-heavy work.
-
-| Skills | Source |
-|---|---|
-| `frontend-design` | `anthropics/skills` |
-| `web-design-guidelines` | `vercel-labs/agent-skills` |
-
----
-
-### `web-development`
-
-Implementation-heavy web application work. Testing-oriented and framework-aware.
-
-| Skills | Source |
-|---|---|
-| `web-coder` | `github/awesome-copilot` |
-| `modern-web-development` | `mindrally/skills` |
-| `webapp-testing` | `anthropics/skills` |
-
----
-
-### `backend`
-
-APIs, services, and security-oriented code review.
-
-| Skills | Source |
-|---|---|
-| `security-review` | `github/awesome-copilot` |
-
----
-
-### `devops`
-
-Rollout planning, automation, and infrastructure operations.
-
-| Skills | Source |
-|---|---|
-| `devops-rollout-plan` | `github/awesome-copilot` |
-| `devops-engineer` | `jeffallan/claude-skills` |
-
----
-
-### `engineering`
-
-Architecture, technical decision-making, and testing strategy across stacks.
-
-| Skills | Source |
-|---|---|
-| `architecture-patterns` | `wshobson/agents` |
-| `architecture-decision-records` | `wshobson/agents` |
-| `testing-strategies` | `supercent-io/skills-template` |
-
----
-
-### `design`
-
-Interface design, visual exploration, and design system work.
-
-| Skills | Source |
-|---|---|
-| `frontend-design` | `anthropics/skills` |
-| `canvas-design` | `anthropics/skills` |
-| `extract-design-system` | `arvindrk/extract-design-system` |
-
----
-
-### `data`
-
-Analysis, reporting, and exploratory data workflows.
-
-| Skills | Source |
-|---|---|
-| `data-analysis` | `supercent-io/skills-template` |
-| `exploratory-data-analysis` | `davila7/claude-code-templates` |
-
----
-
-### `content`
-
-Content strategy, research, and drafting workflows.
-
-| Skills | Source |
-|---|---|
-| `content-strategy` | `coreyhaines31/marketingskills` |
-| `content-research-writer` | `composiohq/awesome-claude-skills` |
-
----
-
-### `marketing`
-
-SEO, copywriting, and marketing strategy.
-
-| Skills | Source |
-|---|---|
-| `seo-audit` | `coreyhaines31/marketingskills` |
-| `copywriting` | `coreyhaines31/marketingskills` |
-| `marketing-psychology` | `coreyhaines31/marketingskills` |
-
----
-
-### `product-management`
-
-PRDs, feature prioritization, and user feedback synthesis.
-
-| Skills | Source |
-|---|---|
-| `prd-writer` | `pmprompt/claude-plugin-product-management` |
-| `feature-prioritization-assistant` | `pmprompt/claude-plugin-product-management` |
-| `user-feedback-synthesizer` | `pmprompt/claude-plugin-product-management` |
-
----
-
-### `social-media`
-
-Social campaign planning and channel-ready content.
-
-| Skills | Source |
-|---|---|
-| `social-media-marketing` | `dengineproblem/agents-monorepo` |
-| `social-media-posts` | `jezweb/claude-skills` |
+- [General](/domains/general/) — Broad repository work
+- [Web](/domains/web/) — UI, frontend, and design-heavy work
+- [Web Development](/domains/web-development/) — Implementation-heavy web apps
+- [Backend](/domains/backend/) — APIs, services, and security review
+- [DevOps](/domains/devops/) — Rollout planning and infrastructure ops
+- [Engineering](/domains/engineering/) — Architecture and testing strategy
+- [Design](/domains/design/) — Interface design and design systems
+- [Data](/domains/data/) — Analysis and exploratory data workflows
+- [Content](/domains/content/) — Content strategy and drafting
+- [Marketing](/domains/marketing/) — SEO, copywriting, and strategy
+- [Product Management](/domains/product-management/) — PRDs and prioritization
+- [Social Media](/domains/social-media/) — Campaign planning and post generation
 
 ---
 

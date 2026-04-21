@@ -9,63 +9,17 @@ When you run `./install.sh`, you pick a profile interactively. You can also appl
 
 ## Available profiles
 
-### `claude`
+- [Claude](/profiles/claude/) — Anthropic's Claude Code agent
+- [Codex](/profiles/codex/) — OpenAI's Codex CLI
+- [Local Models](/profiles/local-models/) — OpenCode with Ollama for local inference
+- [Cursor](/profiles/cursor/) — The AI-native code editor
+- [Goose](/profiles/goose/) — Block's open-source extensible AI agent
+- [Gemini](/profiles/gemini/) — Google's Gemini CLI
+- [OpenClaw](/profiles/openclaw/) — Personal AI assistant
+- [Antigravity](/profiles/antigravity/) — Google's Antigravity ecosystem
+- [GitHub Copilot](/profiles/github-copilot/) — GitHub Copilot agent experience
 
-The default profile. Targets [Claude Code](https://claude.ai/code) — Anthropic's coding agent — with a full developer toolchain.
-
-| Tool | Purpose |
-|---|---|
-| `claude-code` | Anthropic's AI coding agent |
-| `git` | Version control |
-| `bun` | JavaScript runtime and package manager |
-| `node` | Node.js runtime |
-| `python` | Python runtime |
-| `uv` | Python package and project manager |
-| `gh` | GitHub CLI |
-| `jq` | JSON processor |
-| `curl` | HTTP client |
-| `ripgrep` | Fast recursive search |
-| `fd` | Fast file finder |
-| `fzf` | Fuzzy finder |
-| `bat` | Syntax-highlighted cat replacement |
-| `eza` | Modern ls replacement |
-
-Skills installed globally target Claude Code by default.
-
----
-
-### `codex`
-
-Targets [Codex CLI](https://github.com/openai/codex) — OpenAI's terminal coding agent. Identical base toolchain, wired for Codex instead.
-
-| Tool | Purpose |
-|---|---|
-| `codex` | OpenAI's AI coding agent |
-| `git`, `bun`, `node`, `python`, `uv` | Core runtimes |
-| `gh`, `jq`, `curl` | Developer utilities |
-| `ripgrep`, `fd`, `fzf`, `bat`, `eza` | Terminal productivity |
-
-Skills installed globally target Codex by default.
-
----
-
-### `local-models`
-
-For engineers who want provider-agnostic, fully local inference with no external API dependency. Pairs [OpenCode](https://opencode.ai) with [Ollama](https://ollama.com) for local model support.
-
-| Tool | Purpose |
-|---|---|
-| `opencode` | Provider-agnostic open source agent |
-| `ollama` | Local model runtime |
-| `git`, `bun`, `node`, `python`, `uv` | Core runtimes |
-| `gh`, `jq`, `curl` | Developer utilities |
-| `ripgrep`, `fd`, `fzf`, `bat`, `eza` | Terminal productivity |
-
----
-
-### Additional profiles
-
-Powerhouse also ships profiles for **Cursor**, **Goose**, **Gemini CLI**, **OpenClaw**, **Antigravity**, and **GitHub Copilot**, with skills installation supported for 45+ agents via the upstream [`skills`](https://github.com/vercel-labs/skills) CLI. Run `powerhouse profile list` to see every available profile.
+Run `powerhouse profile list` to see every available profile.
 
 ---
 
