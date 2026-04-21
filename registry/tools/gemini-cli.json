@@ -1,0 +1,14 @@
+{
+  "id": "gemini-cli",
+  "title": "Gemini CLI",
+  "description": "Google's open-source AI agent for terminal workflows.",
+  "kind": "ai-cli",
+  "priority": 60,
+  "supportedPlatforms": ["darwin", "linux"],
+  "checkCommand": "gemini --version",
+  "doctorHint": "Gemini CLI is expected by the gemini profile. Install via brew install gemini-cli or npm install -g @google/gemini-cli.",
+  "installs": {
+    "darwin": [{ "type": "brew", "name": "gemini-cli" }],
+    "linux": [{ "type": "npm", "package": "@google/gemini-cli" }]
+  }
+}

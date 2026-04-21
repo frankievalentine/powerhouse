@@ -1,0 +1,9 @@
+{
+  "id": "github-copilot",
+  "title": "GitHub Copilot",
+  "description": "Curated terminal toolchain optimized for the GitHub Copilot agent experience.",
+  "supportedPlatforms": ["darwin", "linux"],
+  "toolIds": ["git", "curl", "node", "bun", "jq", "gh", "python", "uv", "ripgrep", "fd", "fzf", "bat", "eza"],
+  "defaultAgents": ["github-copilot"],
+  "notes": ["Global skill installs target GitHub Copilot by default in this profile. Copilot is managed through your editor or the gh CLI extension."]
+}

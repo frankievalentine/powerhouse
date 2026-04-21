@@ -6,7 +6,7 @@
   "priority": 60,
   "supportedPlatforms": ["darwin", "linux"],
   "checkCommand": "claude --version",
-  "doctorHint": "Claude Code is expected by the claude-dev profile.",
+  "doctorHint": "Claude Code is expected by the claude profile.",
   "installs": {
     "darwin": [{ "type": "brew", "name": "claude-code", "packageType": "cask" }],
     "linux": [{ "type": "script", "url": "https://claude.ai/install.sh", "args": ["stable"] }]

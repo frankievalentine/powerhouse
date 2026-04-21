@@ -1,0 +1,9 @@
+{
+  "id": "goose",
+  "title": "Goose",
+  "description": "Goose CLI plus the same terminal-first foundation for extensible AI agent workflows.",
+  "supportedPlatforms": ["darwin", "linux"],
+  "toolIds": ["git", "curl", "node", "bun", "jq", "gh", "python", "uv", "ripgrep", "fd", "fzf", "bat", "eza", "goose"],
+  "defaultAgents": ["goose"],
+  "notes": ["Global skill installs target Goose by default in this profile."]
+}

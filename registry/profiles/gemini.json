@@ -1,0 +1,9 @@
+{
+  "id": "gemini",
+  "title": "Gemini",
+  "description": "Google's Gemini CLI plus a curated terminal toolchain for AI-powered development.",
+  "supportedPlatforms": ["darwin", "linux"],
+  "toolIds": ["git", "curl", "node", "bun", "jq", "gh", "python", "uv", "ripgrep", "fd", "fzf", "bat", "eza", "gemini-cli"],
+  "defaultAgents": ["gemini-cli"],
+  "notes": ["Global skill installs target Gemini CLI by default in this profile."]
+}

@@ -6,7 +6,7 @@
   "priority": 60,
   "supportedPlatforms": ["darwin", "linux"],
   "checkCommand": "codex --version",
-  "doctorHint": "Codex is expected by the codex-dev profile.",
+  "doctorHint": "Codex is expected by the codex profile.",
   "installs": {
     "darwin": [{ "type": "brew", "name": "codex", "packageType": "cask" }],
     "linux": [{ "type": "npm", "package": "@openai/codex" }]

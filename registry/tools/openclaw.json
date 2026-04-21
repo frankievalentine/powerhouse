@@ -1,0 +1,14 @@
+{
+  "id": "openclaw",
+  "title": "OpenClaw",
+  "description": "A personal AI assistant that runs on your own devices.",
+  "kind": "ai-cli",
+  "priority": 60,
+  "supportedPlatforms": ["darwin", "linux"],
+  "checkCommand": "openclaw --version",
+  "doctorHint": "OpenClaw is expected by the openclaw profile. Install via npm install -g openclaw@latest.",
+  "installs": {
+    "darwin": [{ "type": "npm", "package": "openclaw" }],
+    "linux": [{ "type": "npm", "package": "openclaw" }]
+  }
+}

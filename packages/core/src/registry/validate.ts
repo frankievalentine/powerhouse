@@ -34,11 +34,7 @@ export function validateRegistry(registry: RegistryData): RegistryValidationResu
     }
 
     for (const agent of profile.defaultAgents) {
-      if (!toolIds.has(agent)) {
-        errors.push(`Profile "${profile.id}" references missing default agent "${agent}".`);
-        continue;
-      }
-      if (!profile.toolIds.includes(agent)) {
+      if (toolIds.has(agent) && !profile.toolIds.includes(agent)) {
         errors.push(`Profile "${profile.id}" default agent "${agent}" is not included in the profile tool set.`);
       }
     }
