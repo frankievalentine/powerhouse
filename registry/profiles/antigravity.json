@@ -1,9 +1,11 @@
 {
   "id": "antigravity",
   "title": "Antigravity",
-  "description": "Curated terminal toolchain for Google's Antigravity agent ecosystem.",
+  "description": "Google's Antigravity agent ecosystem.",
+  "kind": "ecosystem",
+  "extends": "base",
   "supportedPlatforms": ["darwin", "linux"],
-  "toolIds": ["git", "curl", "node", "bun", "jq", "gh", "python", "uv", "ripgrep", "fd", "fzf", "bat", "eza"],
+  "toolIds": [],
   "defaultAgents": ["antigravity"],
-  "notes": ["Global skill installs target Antigravity by default in this profile. Antigravity itself is managed through the Gemini ecosystem."]
+  "notes": ["Skill installs target Antigravity by default. Antigravity itself is managed through the Gemini ecosystem."]
 }

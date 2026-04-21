@@ -1,0 +1,32 @@
+{
+  "id": "opencode-context7",
+  "title": "OpenCode Context7 MCP",
+  "description": "Configure the Context7 MCP server in OpenCode.",
+  "serverName": "context7",
+  "targetAgents": ["opencode"],
+  "supportedPlatforms": ["darwin", "linux", "win32", "wsl"],
+  "supportedScopes": ["global", "project"],
+  "serverKind": "http",
+  "source": "https://mcp.context7.com/mcp",
+  "tags": ["context7", "docs", "mcp"],
+  "install": {
+    "kind": "json-config",
+    "scopePaths": {
+      "global": "~/.config/opencode/opencode.json",
+      "project": "opencode.json"
+    },
+    "operations": [
+      {
+        "op": "set-object-entry",
+        "path": ["mcp"],
+        "key": "{{serverName}}",
+        "value": {
+          "type": "remote",
+          "url": "{{source}}",
+          "enabled": true
+        }
+      }
+    ],
+    "restartRequired": true
+  }
+}

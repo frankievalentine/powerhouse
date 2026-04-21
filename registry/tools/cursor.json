@@ -4,8 +4,11 @@
   "description": "The AI-native code editor with built-in agent capabilities.",
   "kind": "ai-cli",
   "priority": 60,
-  "supportedPlatforms": ["darwin", "linux"],
-  "checkCommand": "cursor --version",
+  "supportedPlatforms": ["darwin", "linux", "wsl"],
+  "check": {
+    "command": "cursor",
+    "args": ["--version"]
+  },
   "doctorHint": "Cursor is expected by the cursor profile. Install via brew install --cask cursor.",
   "installs": {
     "darwin": [{ "type": "brew", "name": "cursor", "packageType": "cask" }],

@@ -1,9 +1,11 @@
 {
   "id": "gemini",
   "title": "Gemini",
-  "description": "Google's Gemini CLI plus a curated terminal toolchain for AI-powered development.",
-  "supportedPlatforms": ["darwin", "linux"],
-  "toolIds": ["git", "curl", "node", "bun", "jq", "gh", "python", "uv", "ripgrep", "fd", "fzf", "bat", "eza", "gemini-cli"],
+  "description": "Google's Gemini CLI agent.",
+  "kind": "terminal-agent",
+  "extends": "base",
+  "supportedPlatforms": ["darwin", "linux", "win32", "wsl"],
+  "toolIds": ["node", "gemini-cli"],
   "defaultAgents": ["gemini-cli"],
-  "notes": ["Global skill installs target Gemini CLI by default in this profile."]
+  "notes": ["Skill installs target Gemini CLI by default."]
 }

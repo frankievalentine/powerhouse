@@ -1,9 +1,11 @@
 {
   "id": "openclaw",
   "title": "OpenClaw",
-  "description": "OpenClaw personal AI assistant plus a curated terminal toolchain.",
-  "supportedPlatforms": ["darwin", "linux"],
-  "toolIds": ["git", "curl", "node", "bun", "jq", "gh", "python", "uv", "ripgrep", "fd", "fzf", "bat", "eza", "openclaw"],
+  "description": "OpenClaw personal AI assistant.",
+  "kind": "terminal-agent",
+  "extends": "base",
+  "supportedPlatforms": ["darwin", "linux", "win32", "wsl"],
+  "toolIds": ["node", "openclaw"],
   "defaultAgents": ["openclaw"],
-  "notes": ["Global skill installs target OpenClaw by default in this profile."]
+  "notes": ["Skill installs target OpenClaw by default."]
 }

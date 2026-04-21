@@ -1,0 +1,10 @@
+{
+  "id": "base",
+  "title": "Base",
+  "description": "Universal tooling required by every Powerhouse profile and domain.",
+  "kind": "terminal-agent",
+  "supportedPlatforms": ["darwin", "linux", "win32", "wsl"],
+  "toolIds": ["git", "curl", "jq", "ripgrep", "fd"],
+  "defaultAgents": [],
+  "notes": ["This profile is not selectable directly; it provides the shared foundation for all other profiles."]
+}

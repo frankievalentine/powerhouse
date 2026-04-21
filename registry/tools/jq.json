@@ -4,12 +4,14 @@
   "description": "JSON processor for CLI automation and diagnostics.",
   "kind": "utility",
   "priority": 20,
-  "supportedPlatforms": ["darwin", "linux"],
-  "checkCommand": "jq --version",
+  "supportedPlatforms": ["darwin", "linux", "win32", "wsl"],
+  "check": {
+    "command": "jq",
+    "args": ["--version"]
+  },
   "doctorHint": "jq is expected by several shell-heavy workflows.",
   "installs": {
     "darwin": [{ "type": "brew", "name": "jq" }],
     "linux": [{ "type": "brew", "name": "jq" }]
   }
 }
-

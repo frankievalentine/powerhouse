@@ -4,12 +4,14 @@
   "description": "Fast Python package manager and virtualenv workflow.",
   "kind": "developer-tool",
   "priority": 20,
-  "supportedPlatforms": ["darwin", "linux"],
-  "checkCommand": "uv --version",
+  "supportedPlatforms": ["darwin", "linux", "win32", "wsl"],
+  "check": {
+    "command": "uv",
+    "args": ["--version"]
+  },
   "doctorHint": "uv is part of the default Python foundation.",
   "installs": {
     "darwin": [{ "type": "brew", "name": "uv" }],
     "linux": [{ "type": "brew", "name": "uv" }]
   }
 }
-

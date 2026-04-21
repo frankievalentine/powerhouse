@@ -1,0 +1,25 @@
+{
+  "id": "claude-github",
+  "title": "Claude GitHub Plugin",
+  "description": "Official GitHub plugin for Claude Code.",
+  "targetAgent": "claude-code",
+  "supportedPlatforms": ["darwin", "linux", "wsl"],
+  "supportedScopes": ["global", "project", "local"],
+  "installKind": "native-cli",
+  "source": "github@claude-plugins-official",
+  "tags": ["github", "official", "plugin"],
+  "bundledMcpIds": [],
+  "install": {
+    "kind": "native-cli",
+    "command": "claude",
+    "args": ["plugin", "install", "{{source}}", "--scope", "{{nativeScope}}"],
+    "cwd": "project",
+    "env": {},
+    "scopeMap": {
+      "global": "user",
+      "project": "project",
+      "local": "local"
+    },
+    "restartRequired": false
+  }
+}

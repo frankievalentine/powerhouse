@@ -1,0 +1,30 @@
+{
+  "id": "codex-context7",
+  "title": "Codex Context7 MCP",
+  "description": "Configure the Context7 MCP server in Codex.",
+  "serverName": "context7",
+  "targetAgents": ["codex"],
+  "supportedPlatforms": ["darwin", "linux", "win32", "wsl"],
+  "supportedScopes": ["global", "project"],
+  "serverKind": "stdio",
+  "source": "@upstash/context7-mcp",
+  "tags": ["context7", "docs", "mcp"],
+  "install": {
+    "kind": "toml-config",
+    "scopePaths": {
+      "global": "~/.codex/config.toml",
+      "project": ".codex/config.toml"
+    },
+    "operations": [
+      {
+        "op": "ensure-table",
+        "header": "mcp_servers.{{serverName}}",
+        "lines": [
+          "command = \"npx\"",
+          "args = [\"-y\", \"{{source}}\"]"
+        ]
+      }
+    ],
+    "restartRequired": true
+  }
+}

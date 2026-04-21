@@ -1,8 +1,8 @@
 {
   "id": "web",
   "title": "Web",
-  "description": "Curated skills for UI, frontend implementation, and design-heavy work.",
-  "extraToolIds": [],
+  "description": "Curated skills for UI, frontend implementation, design, and modern web development.",
+  "extraToolIds": ["node", "bun", "gh"],
   "skillPackages": [
     {
       "source": "anthropics/skills",
@@ -13,7 +13,22 @@
       "source": "vercel-labs/agent-skills",
       "skills": ["web-design-guidelines"],
       "description": "Web presentation and design direction."
+    },
+    {
+      "source": "github/awesome-copilot",
+      "skills": ["web-coder"],
+      "description": "General web implementation support."
+    },
+    {
+      "source": "mindrally/skills",
+      "skills": ["modern-web-development"],
+      "description": "Modern web-development patterns and implementation guidance."
+    },
+    {
+      "source": "anthropics/skills",
+      "skills": ["webapp-testing"],
+      "description": "Testing guidance for shipped web applications."
     }
   ],
-  "notes": ["The web domain starts with design and frontend guidance, not framework lock-in."]
+  "notes": ["The web domain covers design, frontend implementation, and modern web development patterns."]
 }

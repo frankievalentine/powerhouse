@@ -2,7 +2,7 @@
   "id": "engineering",
   "title": "Engineering",
   "description": "Curated skills for architecture, technical decision-making, and testing strategy.",
-  "extraToolIds": [],
+  "extraToolIds": ["python", "uv", "gh"],
   "skillPackages": [
     {
       "source": "wshobson/agents",

@@ -1,0 +1,25 @@
+{
+  "id": "claude-context7",
+  "title": "Claude Context7 MCP",
+  "description": "Install the Context7 MCP server for Claude Code.",
+  "serverName": "context7",
+  "targetAgents": ["claude-code"],
+  "supportedPlatforms": ["darwin", "linux", "wsl"],
+  "supportedScopes": ["global", "project", "local"],
+  "serverKind": "stdio",
+  "source": "@upstash/context7-mcp",
+  "tags": ["context7", "docs", "mcp"],
+  "install": {
+    "kind": "native-cli",
+    "command": "claude",
+    "args": ["mcp", "add", "{{serverName}}", "--scope", "{{nativeScope}}", "--", "npx", "-y", "{{source}}"],
+    "cwd": "project",
+    "env": {},
+    "scopeMap": {
+      "global": "user",
+      "project": "project",
+      "local": "local"
+    },
+    "restartRequired": false
+  }
+}

@@ -1,10 +1,11 @@
 {
   "id": "claude",
   "title": "Claude",
-  "description": "Claude Code plus a curated terminal toolchain for general software development.",
-  "supportedPlatforms": ["darwin", "linux"],
-  "toolIds": ["git", "curl", "node", "bun", "jq", "gh", "python", "uv", "ripgrep", "fd", "fzf", "bat", "eza", "claude-code"],
+  "description": "Anthropic's Claude Code agent and desktop app (macOS).",
+  "kind": "terminal-agent",
+  "extends": "base",
+  "supportedPlatforms": ["darwin", "linux", "win32", "wsl"],
+  "toolIds": ["claude-code", "claude-app"],
   "defaultAgents": ["claude-code"],
-  "notes": ["Global skill installs target Claude Code by default in this profile."]
+  "notes": ["Skill installs target Claude Code by default."]
 }
-

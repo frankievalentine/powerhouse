@@ -4,12 +4,14 @@
   "description": "Anthropic's coding agent CLI for terminal workflows.",
   "kind": "ai-cli",
   "priority": 60,
-  "supportedPlatforms": ["darwin", "linux"],
-  "checkCommand": "claude --version",
+  "supportedPlatforms": ["darwin", "linux", "win32", "wsl"],
+  "check": {
+    "command": "claude",
+    "args": ["--version"]
+  },
   "doctorHint": "Claude Code is expected by the claude profile.",
   "installs": {
     "darwin": [{ "type": "brew", "name": "claude-code", "packageType": "cask" }],
     "linux": [{ "type": "script", "url": "https://claude.ai/install.sh", "args": ["stable"] }]
   }
 }
-

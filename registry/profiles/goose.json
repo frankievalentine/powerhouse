@@ -1,9 +1,11 @@
 {
   "id": "goose",
   "title": "Goose",
-  "description": "Goose CLI plus the same terminal-first foundation for extensible AI agent workflows.",
-  "supportedPlatforms": ["darwin", "linux"],
-  "toolIds": ["git", "curl", "node", "bun", "jq", "gh", "python", "uv", "ripgrep", "fd", "fzf", "bat", "eza", "goose"],
+  "description": "Block's open-source extensible AI agent.",
+  "kind": "terminal-agent",
+  "extends": "base",
+  "supportedPlatforms": ["darwin", "linux", "win32", "wsl"],
+  "toolIds": ["goose"],
   "defaultAgents": ["goose"],
-  "notes": ["Global skill installs target Goose by default in this profile."]
+  "notes": ["Skill installs target Goose by default."]
 }

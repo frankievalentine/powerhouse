@@ -2,7 +2,7 @@
   "id": "data",
   "title": "Data",
   "description": "Curated skills for analysis, reporting, and exploratory data workflows.",
-  "extraToolIds": [],
+  "extraToolIds": ["python", "uv"],
   "skillPackages": [
     {
       "source": "supercent-io/skills-template",

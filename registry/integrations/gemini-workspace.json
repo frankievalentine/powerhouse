@@ -1,0 +1,21 @@
+{
+  "id": "gemini-workspace",
+  "title": "Gemini Workspace Extension",
+  "description": "Google Workspace access for Gemini CLI.",
+  "targetAgent": "gemini-cli",
+  "supportedPlatforms": ["darwin", "linux", "win32", "wsl"],
+  "supportedScopes": ["global"],
+  "installKind": "native-cli",
+  "source": "https://github.com/gemini-cli-extensions/workspace",
+  "tags": ["workspace", "official-gallery", "extension"],
+  "bundledMcpIds": [],
+  "install": {
+    "kind": "native-cli",
+    "command": "gemini",
+    "args": ["extensions", "install", "{{source}}", "--consent"],
+    "cwd": "project",
+    "env": {},
+    "scopeMap": {},
+    "restartRequired": true
+  }
+}

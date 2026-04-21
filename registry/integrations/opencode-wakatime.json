@@ -1,0 +1,27 @@
+{
+  "id": "opencode-wakatime",
+  "title": "OpenCode WakaTime Plugin",
+  "description": "Enable WakaTime tracking in OpenCode via npm plugin config.",
+  "targetAgent": "opencode",
+  "supportedPlatforms": ["darwin", "linux", "win32", "wsl"],
+  "supportedScopes": ["global", "project"],
+  "installKind": "json-config",
+  "source": "opencode-wakatime",
+  "tags": ["wakatime", "npm", "plugin"],
+  "bundledMcpIds": [],
+  "install": {
+    "kind": "json-config",
+    "scopePaths": {
+      "global": "~/.config/opencode/opencode.json",
+      "project": "opencode.json"
+    },
+    "operations": [
+      {
+        "op": "ensure-array-contains",
+        "path": ["plugin"],
+        "value": "{{source}}"
+      }
+    ],
+    "restartRequired": true
+  }
+}

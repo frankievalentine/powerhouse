@@ -4,12 +4,14 @@
   "description": "Version control foundation for all development workflows.",
   "kind": "developer-tool",
   "priority": 5,
-  "supportedPlatforms": ["darwin", "linux"],
-  "checkCommand": "git --version",
+  "supportedPlatforms": ["darwin", "linux", "win32", "wsl"],
+  "check": {
+    "command": "git",
+    "args": ["--version"]
+  },
   "doctorHint": "Git is required for most developer tooling and skill package installs.",
   "installs": {
     "darwin": [{ "type": "brew", "name": "git" }],
     "linux": [{ "type": "brew", "name": "git" }]
   }
 }
-

@@ -4,12 +4,14 @@
   "description": "HTTP transfer tool used for bootstrap and script-based installers.",
   "kind": "utility",
   "priority": 5,
-  "supportedPlatforms": ["darwin", "linux"],
-  "checkCommand": "curl --version",
+  "supportedPlatforms": ["darwin", "linux", "win32", "wsl"],
+  "check": {
+    "command": "curl",
+    "args": ["--version"]
+  },
   "doctorHint": "curl is required for bootstrap and script-driven installs.",
   "installs": {
     "darwin": [{ "type": "brew", "name": "curl" }],
     "linux": [{ "type": "brew", "name": "curl" }]
   }
 }
-

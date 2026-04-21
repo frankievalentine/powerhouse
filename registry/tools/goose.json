@@ -4,8 +4,11 @@
   "description": "An open-source, extensible AI agent for code, workflows, and automation.",
   "kind": "ai-cli",
   "priority": 60,
-  "supportedPlatforms": ["darwin", "linux"],
-  "checkCommand": "goose --version",
+  "supportedPlatforms": ["darwin", "linux", "win32", "wsl"],
+  "check": {
+    "command": "goose",
+    "args": ["--version"]
+  },
   "doctorHint": "Goose is expected by the goose profile. Install via the official download script.",
   "installs": {
     "darwin": [{ "type": "script", "url": "https://github.com/aaif-goose/goose/releases/download/stable/download_cli.sh", "args": [] }],

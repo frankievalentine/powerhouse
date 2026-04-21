@@ -4,12 +4,14 @@
   "description": "Fast JavaScript runtime and package manager used by powerhouse itself.",
   "kind": "runtime",
   "priority": 15,
-  "supportedPlatforms": ["darwin", "linux"],
-  "checkCommand": "bun --version",
+  "supportedPlatforms": ["darwin", "linux", "win32", "wsl"],
+  "check": {
+    "command": "bun",
+    "args": ["--version"]
+  },
   "doctorHint": "Install Bun before running the powerhouse CLI locally.",
   "installs": {
     "darwin": [{ "type": "brew", "name": "bun" }],
     "linux": [{ "type": "brew", "name": "bun" }]
   }
 }
-

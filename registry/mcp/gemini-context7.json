@@ -1,0 +1,24 @@
+{
+  "id": "gemini-context7",
+  "title": "Gemini Context7 MCP",
+  "description": "Install the Context7 MCP server for Gemini CLI.",
+  "serverName": "context7",
+  "targetAgents": ["gemini-cli"],
+  "supportedPlatforms": ["darwin", "linux", "win32", "wsl"],
+  "supportedScopes": ["global", "project"],
+  "serverKind": "stdio",
+  "source": "@upstash/context7-mcp",
+  "tags": ["context7", "docs", "mcp"],
+  "install": {
+    "kind": "native-cli",
+    "command": "gemini",
+    "args": ["mcp", "add", "--scope", "{{nativeScope}}", "{{serverName}}", "npx", "-y", "{{source}}"],
+    "cwd": "project",
+    "env": {},
+    "scopeMap": {
+      "global": "user",
+      "project": "project"
+    },
+    "restartRequired": false
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "id": "claude-app",
+  "title": "Claude App",
+  "description": "Anthropic's official Claude AI desktop app.",
+  "kind": "developer-tool",
+  "priority": 65,
+  "supportedPlatforms": ["darwin"],
+  "check": {
+    "command": "ls",
+    "args": ["/Applications/Claude.app"]
+  },
+  "doctorHint": "Claude App is expected by the claude profile on macOS. Install via brew install --cask claude.",
+  "installs": {
+    "darwin": [{ "type": "brew", "name": "claude", "packageType": "cask" }]
+  }
+}

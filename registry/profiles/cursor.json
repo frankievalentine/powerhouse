@@ -1,9 +1,11 @@
 {
   "id": "cursor",
   "title": "Cursor",
-  "description": "Cursor IDE plus a curated terminal toolchain for AI-native development.",
-  "supportedPlatforms": ["darwin", "linux"],
-  "toolIds": ["git", "curl", "node", "bun", "jq", "gh", "python", "uv", "ripgrep", "fd", "fzf", "bat", "eza", "cursor"],
+  "description": "The AI-native code editor with built-in agent capabilities.",
+  "kind": "editor-integrated",
+  "extends": "base",
+  "supportedPlatforms": ["darwin", "linux", "wsl"],
+  "toolIds": ["cursor"],
   "defaultAgents": ["cursor"],
-  "notes": ["Global skill installs target Cursor by default in this profile."]
+  "notes": ["Skill installs target Cursor by default."]
 }

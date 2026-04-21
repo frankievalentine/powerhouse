@@ -1,0 +1,20 @@
+{
+  "id": "codex-gmail",
+  "title": "Codex Gmail Plugin",
+  "description": "Official Gmail plugin for Codex.",
+  "targetAgent": "codex",
+  "supportedPlatforms": ["darwin", "linux", "win32", "wsl"],
+  "supportedScopes": ["global"],
+  "installKind": "manual",
+  "source": "gmail@openai-curated",
+  "tags": ["gmail", "official", "plugin"],
+  "bundledMcpIds": [],
+  "install": {
+    "kind": "manual",
+    "instructions": [
+      "Codex does not currently expose a documented non-interactive plugin install command.",
+      "Open Codex, run /plugins, search for {{source}}, then choose Install plugin."
+    ],
+    "restartRequired": false
+  }
+}

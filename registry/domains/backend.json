@@ -2,7 +2,7 @@
   "id": "backend",
   "title": "Backend",
   "description": "Curated skills and defaults for API, services, and infrastructure work.",
-  "extraToolIds": [],
+  "extraToolIds": ["python", "uv", "gh"],
   "skillPackages": [
     {
       "source": "vercel-labs/agent-skills",

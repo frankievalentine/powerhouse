@@ -4,12 +4,14 @@
   "description": "GitHub command line tooling for repository and PR workflows.",
   "kind": "developer-tool",
   "priority": 20,
-  "supportedPlatforms": ["darwin", "linux"],
-  "checkCommand": "gh --version",
+  "supportedPlatforms": ["darwin", "linux", "win32", "wsl"],
+  "check": {
+    "command": "gh",
+    "args": ["--version"]
+  },
   "doctorHint": "GitHub CLI is useful for repo and PR workflows.",
   "installs": {
     "darwin": [{ "type": "brew", "name": "gh" }],
     "linux": [{ "type": "brew", "name": "gh" }]
   }
 }
-

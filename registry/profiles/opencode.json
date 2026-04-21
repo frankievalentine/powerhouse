@@ -1,0 +1,11 @@
+{
+  "id": "opencode",
+  "title": "OpenCode",
+  "description": "Provider-agnostic open source coding agent for any development workflow.",
+  "kind": "terminal-agent",
+  "extends": "base",
+  "supportedPlatforms": ["darwin", "linux", "win32", "wsl"],
+  "toolIds": ["node", "opencode"],
+  "defaultAgents": ["opencode"],
+  "notes": ["Install Ollama alongside this profile if you want local LLM support."]
+}

@@ -4,12 +4,14 @@
   "description": "Fuzzy finder for fast interactive terminal selection.",
   "kind": "utility",
   "priority": 30,
-  "supportedPlatforms": ["darwin", "linux"],
-  "checkCommand": "fzf --version",
+  "supportedPlatforms": ["darwin", "linux", "win32", "wsl"],
+  "check": {
+    "command": "fzf",
+    "args": ["--version"]
+  },
   "doctorHint": "fzf is part of the default shell ergonomics bundle.",
   "installs": {
     "darwin": [{ "type": "brew", "name": "fzf" }],
     "linux": [{ "type": "brew", "name": "fzf" }]
   }
 }
-

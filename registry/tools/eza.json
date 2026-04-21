@@ -4,12 +4,14 @@
   "description": "Modern replacement for ls with good defaults for terminal work.",
   "kind": "utility",
   "priority": 30,
-  "supportedPlatforms": ["darwin", "linux"],
-  "checkCommand": "eza --version",
+  "supportedPlatforms": ["darwin", "linux", "win32", "wsl"],
+  "check": {
+    "command": "eza",
+    "args": ["--version"]
+  },
   "doctorHint": "Install eza for richer shell navigation.",
   "installs": {
     "darwin": [{ "type": "brew", "name": "eza" }],
     "linux": [{ "type": "brew", "name": "eza" }]
   }
 }
-
