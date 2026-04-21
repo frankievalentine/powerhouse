@@ -1,0 +1,19 @@
+{
+  "id": "design",
+  "title": "Design",
+  "description": "Curated skills for interface design, visual exploration, and design-system work.",
+  "extraToolIds": [],
+  "skillPackages": [
+    {
+      "source": "anthropics/skills",
+      "skills": ["frontend-design", "canvas-design"],
+      "description": "UI design direction and visual exploration guidance."
+    },
+    {
+      "source": "arvindrk/extract-design-system",
+      "skills": ["extract-design-system"],
+      "description": "Patterns for understanding and reusing existing design systems."
+    }
+  ],
+  "notes": ["Design is intentionally more visual and system-oriented than the implementation-heavy web-development domain."]
+}

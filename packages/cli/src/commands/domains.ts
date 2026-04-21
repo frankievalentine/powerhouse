@@ -1,6 +1,12 @@
 import { detectPlatform, getPowerhousePaths, loadRegistry, loadState } from '@powerhouse/core';
 
+import { DEFAULT_PROFILE_ID, runBootstrapCommand } from './bootstrap.ts';
 import { printCurrentSelection, printManifestList } from '../ui/output.ts';
+
+export interface DomainUseCommandOptions {
+  dryRun?: boolean;
+  yes?: boolean;
+}
 
 export async function runDomainListCommand(): Promise<void> {
   const registry = await loadRegistry();
@@ -44,4 +50,19 @@ export async function runDomainCurrentCommand(): Promise<void> {
   }
 
   printCurrentSelection('domain', domain, state.updatedAt);
+}
+
+export async function runDomainUseCommand(domainId: string, options: DomainUseCommandOptions): Promise<void> {
+  const platform = detectPlatform();
+  const state = await loadState(getPowerhousePaths(platform));
+  const profileId = state?.activeProfileId ?? DEFAULT_PROFILE_ID;
+
+  await runBootstrapCommand({
+    profile: profileId,
+    domain: domainId,
+    dryRun: options.dryRun,
+    yes: options.yes,
+    introText: `powerhouse domain use ${domainId}`,
+    interactive: false
+  });
 }

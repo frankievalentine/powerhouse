@@ -1,0 +1,19 @@
+{
+  "id": "content",
+  "title": "Content",
+  "description": "Curated skills for content strategy, research, and drafting workflows.",
+  "extraToolIds": [],
+  "skillPackages": [
+    {
+      "source": "coreyhaines31/marketingskills",
+      "skills": ["content-strategy"],
+      "description": "Editorial planning and high-level content strategy."
+    },
+    {
+      "source": "composiohq/awesome-claude-skills",
+      "skills": ["content-research-writer"],
+      "description": "Research-backed writing and synthesis support."
+    }
+  ],
+  "notes": ["Content stays focused on planning and drafting rather than channel-specific distribution."]
+}

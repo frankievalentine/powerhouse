@@ -93,6 +93,15 @@ Current domains include:
 - `general`
 - `backend`
 - `web`
+- `content`
+- `data`
+- `design`
+- `devops`
+- `engineering`
+- `marketing`
+- `product-management`
+- `social-media`
+- `web-development`
 
 ### Tools
 
@@ -145,10 +154,13 @@ bun run bootstrap --dry-run
 bun run doctor
 bun run cli status
 bun run cli plan --profile claude-dev --domain web --platform darwin
+bun run cli profile use codex-dev --dry-run --yes
+bun run cli domain use backend --dry-run --yes
 bun run cli profile list
 bun run cli domain list
 bun run cli tool list
 bun run cli registry validate
+bun run cli registry scaffold-domain content --dry-run
 bun run cli skills find typescript
 bun run test
 bun run typecheck
@@ -164,10 +176,10 @@ The current command surface is:
 - `status`: summarize platform info, active selection, last run, and doctor results.
 - `plan`: resolve a plan without installing anything.
 - `skills`: list, find, install, remove, or update skills via the upstream skills CLI.
-- `profile`: inspect available profiles.
-- `domain`: inspect available domains.
+- `profile`: inspect or apply profiles.
+- `domain`: inspect or apply domains.
 - `tool`: inspect available tools.
-- `registry`: validate registry consistency.
+- `registry`: validate registry consistency or scaffold new manifests.
 - `update`: sync the workspace, refresh dependencies, and update the active setup.
 
 Example plan inspection:
@@ -181,6 +193,26 @@ Example bootstrap:
 ```bash
 bun run cli bootstrap --profile codex-dev --domain general --yes
 ```
+
+Example registry scaffold:
+
+```bash
+bun run cli registry scaffold-domain content --dry-run
+```
+
+## Registry Authoring
+
+When you want to add a new curated profile, domain, or tool, start with the scaffold commands instead of hand-writing the JSON from scratch.
+
+Examples:
+
+```bash
+bun run cli registry scaffold-domain design --dry-run
+bun run cli registry scaffold-profile product-management
+bun run cli registry scaffold-tool figma-cli
+```
+
+This keeps new manifests aligned with the current schema before you fill in the actual tools, agents, and skill packages.
 
 ## State And Diagnostics
 

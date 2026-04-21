@@ -1,0 +1,19 @@
+{
+  "id": "social-media",
+  "title": "Social Media",
+  "description": "Curated skills for social campaign planning, post generation, and channel-ready content.",
+  "extraToolIds": [],
+  "skillPackages": [
+    {
+      "source": "dengineproblem/agents-monorepo",
+      "skills": ["social-media-marketing"],
+      "description": "Social-media planning and campaign framing."
+    },
+    {
+      "source": "jezweb/claude-skills",
+      "skills": ["social-media-posts"],
+      "description": "Drafting support for social posts and channel-friendly copy."
+    }
+  ],
+  "notes": ["Social Media is separated from the broader marketing domain so channel execution can stay opinionated and small."]
+}

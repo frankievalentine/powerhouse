@@ -4,6 +4,7 @@ export * from './install/resolve.ts';
 export * from './install/skills.ts';
 export * from './platform/detect.ts';
 export * from './registry/load.ts';
+export * from './registry/scaffold.ts';
 export * from './registry/schema.ts';
 export * from './registry/validate.ts';
 export * from './state/paths.ts';

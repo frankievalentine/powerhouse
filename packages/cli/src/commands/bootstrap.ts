@@ -16,18 +16,20 @@ import {
 
 import { formatExecutionSummary, formatPlan, formatPlanOverview, printInstallerLog } from '../ui/output.ts';
 
-const DEFAULT_PROFILE_ID = 'claude-dev';
-const DEFAULT_DOMAIN_ID = 'general';
+export const DEFAULT_PROFILE_ID = 'claude-dev';
+export const DEFAULT_DOMAIN_ID = 'general';
 
 export interface BootstrapCommandOptions {
   profile?: string;
   domain?: string;
   yes?: boolean;
   dryRun?: boolean;
+  introText?: string;
+  interactive?: boolean;
 }
 
 export async function runBootstrapCommand(options: BootstrapCommandOptions): Promise<void> {
-  intro('powerhouse bootstrap');
+  intro(options.introText ?? 'powerhouse bootstrap');
 
   const platform = detectPlatform();
   if (!isSupportedPlatform(platform)) {
@@ -37,8 +39,9 @@ export async function runBootstrapCommand(options: BootstrapCommandOptions): Pro
   }
 
   const registry = await loadRegistry();
-  const profile = await resolveProfileSelection(registry.profiles, options.profile, options.yes);
-  const domain = await resolveDomainSelection(registry.domains, options.domain, options.yes);
+  const interactive = options.interactive ?? true;
+  const profile = await resolveProfileSelection(registry.profiles, options.profile, options.yes, interactive);
+  const domain = await resolveDomainSelection(registry.domains, options.domain, options.yes, interactive);
   const plan = resolveBootstrapPlan(registry, platform, profile.id, domain.id);
   const startedAt = new Date().toISOString();
   const paths = getPowerhousePaths(platform);
@@ -138,7 +141,8 @@ export async function runBootstrapCommand(options: BootstrapCommandOptions): Pro
 async function resolveProfileSelection(
   profiles: ProfileManifest[],
   requestedProfileId: string | undefined,
-  nonInteractive: boolean | undefined
+  nonInteractive: boolean | undefined,
+  interactive: boolean
 ): Promise<ProfileManifest> {
   if (requestedProfileId) {
     const profile = profiles.find((entry) => entry.id === requestedProfileId);
@@ -148,7 +152,7 @@ async function resolveProfileSelection(
     return profile;
   }
 
-  if (nonInteractive || !process.stdout.isTTY) {
+  if (!interactive || nonInteractive || !process.stdout.isTTY) {
     return findDefault(profiles, DEFAULT_PROFILE_ID);
   }
 
@@ -172,7 +176,8 @@ async function resolveProfileSelection(
 async function resolveDomainSelection(
   domains: DomainManifest[],
   requestedDomainId: string | undefined,
-  nonInteractive: boolean | undefined
+  nonInteractive: boolean | undefined,
+  interactive: boolean
 ): Promise<DomainManifest> {
   if (requestedDomainId) {
     const domain = domains.find((entry) => entry.id === requestedDomainId);
@@ -182,7 +187,7 @@ async function resolveDomainSelection(
     return domain;
   }
 
-  if (nonInteractive || !process.stdout.isTTY) {
+  if (!interactive || nonInteractive || !process.stdout.isTTY) {
     return findDefault(domains, DEFAULT_DOMAIN_ID);
   }
 

@@ -1,0 +1,14 @@
+{
+  "id": "marketing",
+  "title": "Marketing",
+  "description": "Curated skills for messaging, SEO, and marketing strategy workflows.",
+  "extraToolIds": [],
+  "skillPackages": [
+    {
+      "source": "coreyhaines31/marketingskills",
+      "skills": ["seo-audit", "copywriting", "marketing-psychology"],
+      "description": "Core marketing workflows around SEO, messaging, and audience framing."
+    }
+  ],
+  "notes": ["Marketing stays broad in v1; social-specific work is split into the social-media domain."]
+}

@@ -1,0 +1,19 @@
+{
+  "id": "data",
+  "title": "Data",
+  "description": "Curated skills for analysis, reporting, and exploratory data workflows.",
+  "extraToolIds": [],
+  "skillPackages": [
+    {
+      "source": "supercent-io/skills-template",
+      "skills": ["data-analysis"],
+      "description": "General data analysis and reporting guidance."
+    },
+    {
+      "source": "davila7/claude-code-templates",
+      "skills": ["exploratory-data-analysis"],
+      "description": "Exploratory data analysis patterns for early investigation."
+    }
+  ],
+  "notes": ["The data domain starts with general analysis skills rather than warehouse-specific connectors."]
+}

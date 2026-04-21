@@ -5,16 +5,15 @@
   "extraToolIds": [],
   "skillPackages": [
     {
-      "source": "vercel-labs/agent-skills",
+      "source": "anthropics/skills",
       "skills": ["frontend-design"],
-      "description": "Frontend and UI implementation guidance."
+      "description": "Frontend and UI design guidance."
     },
     {
-      "source": "vercel/examples",
+      "source": "vercel-labs/agent-skills",
       "skills": ["web-design-guidelines"],
       "description": "Web presentation and design direction."
     }
   ],
   "notes": ["The web domain starts with design and frontend guidance, not framework lock-in."]
 }
-

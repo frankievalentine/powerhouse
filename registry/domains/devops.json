@@ -1,0 +1,19 @@
+{
+  "id": "devops",
+  "title": "DevOps",
+  "description": "Curated skills for rollout planning, automation, and infrastructure operations.",
+  "extraToolIds": [],
+  "skillPackages": [
+    {
+      "source": "github/awesome-copilot",
+      "skills": ["devops-rollout-plan"],
+      "description": "Rollout planning and operational sequencing guidance."
+    },
+    {
+      "source": "jeffallan/claude-skills",
+      "skills": ["devops-engineer"],
+      "description": "General DevOps execution support."
+    }
+  ],
+  "notes": ["The DevOps domain favors rollout and operations workflows over cloud-vendor-specific tooling."]
+}

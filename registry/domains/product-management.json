@@ -1,0 +1,14 @@
+{
+  "id": "product-management",
+  "title": "Product Management",
+  "description": "Curated skills for PRDs, prioritization, and feedback-driven planning.",
+  "extraToolIds": [],
+  "skillPackages": [
+    {
+      "source": "pmprompt/claude-plugin-product-management",
+      "skills": ["prd-writer", "feature-prioritization-assistant", "user-feedback-synthesizer"],
+      "description": "Core product-management planning and prioritization support."
+    }
+  ],
+  "notes": ["Product Management focuses on planning artifacts and decision support rather than implementation details."]
+}

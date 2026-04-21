@@ -2,9 +2,10 @@ import { Command } from 'commander';
 
 import { runBootstrapCommand } from './commands/bootstrap.ts';
 import { runDoctorCommand } from './commands/doctor.ts';
-import { runDomainCurrentCommand, runDomainListCommand, runDomainShowCommand } from './commands/domains.ts';
+import { runDomainCurrentCommand, runDomainListCommand, runDomainShowCommand, runDomainUseCommand } from './commands/domains.ts';
 import { runPlanCommand } from './commands/plan.ts';
-import { runProfileCurrentCommand, runProfileListCommand, runProfileShowCommand } from './commands/profiles.ts';
+import { runProfileCurrentCommand, runProfileListCommand, runProfileShowCommand, runProfileUseCommand } from './commands/profiles.ts';
+import { runRegistryScaffoldCommand } from './commands/registry-scaffold.ts';
 import { runRegistryValidateCommand } from './commands/registry.ts';
 import { runStatusCommand } from './commands/status.ts';
 import { runSkillsFindCommand, runSkillsInstallCommand, runSkillsListCommand, runSkillsRemoveCommand } from './commands/skills.ts';
@@ -72,11 +73,25 @@ const profile = program.command('profile').description('Inspect curated powerhou
 profile.command('list').description('List available profiles.').action(runProfileListCommand);
 profile.command('current').description('Show the currently saved active profile.').action(runProfileCurrentCommand);
 profile.command('show').description('Show one profile.').argument('<id>', 'profile id').action(runProfileShowCommand);
+profile
+  .command('use')
+  .description('Apply a profile while preserving the current domain when possible.')
+  .argument('<id>', 'profile id')
+  .option('--dry-run', 'resolve the change without mutating the machine', false)
+  .option('--yes', 'skip confirmation prompts', false)
+  .action(runProfileUseCommand);
 
 const domain = program.command('domain').description('Inspect curated powerhouse domains.');
 domain.command('list').description('List available domains.').action(runDomainListCommand);
 domain.command('current').description('Show the currently saved active domain.').action(runDomainCurrentCommand);
 domain.command('show').description('Show one domain.').argument('<id>', 'domain id').action(runDomainShowCommand);
+domain
+  .command('use')
+  .description('Apply a domain while preserving the current profile when possible.')
+  .argument('<id>', 'domain id')
+  .option('--dry-run', 'resolve the change without mutating the machine', false)
+  .option('--yes', 'skip confirmation prompts', false)
+  .action(runDomainUseCommand);
 
 const tool = program.command('tool').description('Inspect curated powerhouse tools.');
 tool.command('list').description('List available tools.').action(runToolListCommand);
@@ -84,6 +99,27 @@ tool.command('show').description('Show one tool.').argument('<id>', 'tool id').a
 
 const registry = program.command('registry').description('Validate and inspect the powerhouse registry.');
 registry.command('validate').description('Validate cross-manifest registry consistency.').action(runRegistryValidateCommand);
+registry
+  .command('scaffold-domain')
+  .description('Create a new domain manifest scaffold.')
+  .argument('<id>', 'domain id')
+  .option('--title <title>', 'optional display title')
+  .option('--dry-run', 'print the scaffold without writing it', false)
+  .action((id, options) => runRegistryScaffoldCommand('domain', id, options));
+registry
+  .command('scaffold-profile')
+  .description('Create a new profile manifest scaffold.')
+  .argument('<id>', 'profile id')
+  .option('--title <title>', 'optional display title')
+  .option('--dry-run', 'print the scaffold without writing it', false)
+  .action((id, options) => runRegistryScaffoldCommand('profile', id, options));
+registry
+  .command('scaffold-tool')
+  .description('Create a new tool manifest scaffold.')
+  .argument('<id>', 'tool id')
+  .option('--title <title>', 'optional display title')
+  .option('--dry-run', 'print the scaffold without writing it', false)
+  .action((id, options) => runRegistryScaffoldCommand('tool', id, options));
 
 program.command('update').description('Re-sync the active powerhouse selection and update installed skills.').action(runUpdateCommand);
 

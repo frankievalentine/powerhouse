@@ -1,0 +1,19 @@
+{
+  "id": "engineering",
+  "title": "Engineering",
+  "description": "Curated skills for architecture, technical decision-making, and testing strategy.",
+  "extraToolIds": [],
+  "skillPackages": [
+    {
+      "source": "wshobson/agents",
+      "skills": ["architecture-patterns", "architecture-decision-records"],
+      "description": "Architecture planning and ADR-style decision capture."
+    },
+    {
+      "source": "supercent-io/skills-template",
+      "skills": ["testing-strategies"],
+      "description": "Testing strategy guidance for broader engineering work."
+    }
+  ],
+  "notes": ["Engineering is the broad systems domain for architecture and quality concerns that cut across stacks."]
+}
