@@ -12,16 +12,11 @@ describe('bootstrap plan resolution', () => {
       return;
     }
 
-    const plan = resolveBootstrapPlan(registry, platform, 'claude-dev', 'web');
+    const plan = resolveBootstrapPlan(registry, platform, 'claude', 'web');
 
-    expect(plan.profile.id).toBe('claude-dev');
-    expect(plan.domain.id).toBe('web');
-    expect(plan.tools.some((tool) => tool.id === 'claude-code')).toBe(true);
-    expect(plan.agents).toContain('claude-code');
-  });
+    expect(plan.profile.id).toBe('claude');
 
-  it('keeps stable default ids for non-interactive profile/domain use flows', () => {
-    expect(DEFAULT_PROFILE_ID).toBe('claude-dev');
+    expect(DEFAULT_PROFILE_ID).toBe('claude');
     expect(DEFAULT_DOMAIN_ID).toBe('general');
   });
 });

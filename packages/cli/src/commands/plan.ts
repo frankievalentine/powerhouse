@@ -11,7 +11,7 @@ import {
 
 import { formatPlan, formatPlanOverview } from '../ui/output.ts';
 
-const DEFAULT_PROFILE_ID = 'claude-dev';
+const DEFAULT_PROFILE_ID = 'claude';
 const DEFAULT_DOMAIN_ID = 'general';
 
 export interface PlanCommandOptions {

@@ -12,7 +12,7 @@ describe('state persistence', () => {
 
     await saveState(paths, {
       schemaVersion: 1,
-      activeProfileId: 'claude-dev',
+      activeProfileId: 'claude',
       activeDomainId: 'general',
       updatedAt: '2026-04-20T00:00:00.000Z',
       installedToolIds: ['git', 'bun', 'git'],
@@ -38,7 +38,7 @@ describe('state persistence', () => {
       status: 'failed',
       startedAt: '2026-04-20T00:00:00.000Z',
       finishedAt: '2026-04-20T00:05:00.000Z',
-      profileId: 'claude-dev',
+      profileId: 'claude',
       domainId: 'general',
       platformOs: 'darwin',
       platformArch: 'arm64',

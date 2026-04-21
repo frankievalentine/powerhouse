@@ -16,7 +16,7 @@ import {
 
 import { formatExecutionSummary, formatPlan, formatPlanOverview, printInstallerLog } from '../ui/output.ts';
 
-export const DEFAULT_PROFILE_ID = 'claude-dev';
+export const DEFAULT_PROFILE_ID = 'claude';
 export const DEFAULT_DOMAIN_ID = 'general';
 
 export interface BootstrapCommandOptions {
