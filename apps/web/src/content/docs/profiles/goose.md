@@ -1,32 +1,24 @@
 ---
 title: Goose
-description: Block's open-source extensible AI agent for code, workflows, and automation.
+description: Block's open-source extensible AI agent.
 ---
 
-Block's open-source extensible AI agent. Goose CLI with a full toolchain for code, workflows, and automation.
+Block's open-source extensible AI agent.
 
 ## Tools
 
-| Tool | Purpose |
-|---|---|
-| `goose` | Extensible open-source AI agent |
-| `git` | Version control |
-| `bun` | JavaScript runtime and package manager |
-| `node` | Node.js runtime |
-| `python` | Python runtime |
-| `uv` | Python package and project manager |
-| `gh` | GitHub CLI |
-| `jq` | JSON processor |
-| `curl` | HTTP client |
-| `ripgrep` | Fast recursive search |
-| `fd` | Fast file finder |
-| `fzf` | Fuzzy finder |
-| `bat` | Syntax-highlighted cat replacement |
-| `eza` | Modern ls replacement |
+| Tool | Purpose | Source |
+|---|---|---|
+| `git` | Version control foundation | base profile |
+| `curl` | Network transfers and bootstrap support | base profile |
+| `jq` | JSON processor for APIs and configs | base profile |
+| `ripgrep` | Fast recursive text search | base profile |
+| `fd` | Fast file discovery | base profile |
+| `goose` | Extensible open-source AI agent | profile-specific |
 
 ## Platforms
 
-Supported on **macOS** and **Linux**.
+Supported on **macOS**, **Linux**, **WSL**, and native **Windows** for planning/reporting in the CLI.
 
 ## Default agent
 

@@ -24,6 +24,8 @@ powerhouse bootstrap --profile claude --domain engineering --dry-run
 |---|---|
 | `--profile <id>` | Profile to bootstrap. Prompts interactively if omitted. |
 | `--domain <id>` | Domain to apply. Prompts interactively if omitted. |
+| `--integration-scope <scope>` | Preferred integration scope: `auto`, `global`, `project`, or `local`. |
+| `--mcp-scope <scope>` | Preferred MCP scope: `auto`, `global`, `project`, or `local`. |
 | `--dry-run` | Resolve and print the full plan without installing anything. |
 | `--yes` | Skip confirmation prompts. |
 
@@ -48,7 +50,9 @@ powerhouse plan --profile claude --domain engineering --json
 |---|---|
 | `--profile <id>` | Profile to resolve. |
 | `--domain <id>` | Domain to resolve. |
-| `--platform <os>` | Target platform: `darwin` or `linux`. Defaults to current. |
+| `--platform <os>` | Target platform: `darwin`, `linux`, `win32`, or `wsl`. Defaults to current. |
+| `--integration-scope <scope>` | Preferred integration scope: `auto`, `global`, `project`, or `local`. |
+| `--mcp-scope <scope>` | Preferred MCP scope: `auto`, `global`, `project`, or `local`. |
 | `--json` | Output the resolved plan as JSON. |
 
 ---
@@ -67,7 +71,7 @@ powerhouse status
 
 ### `doctor`
 
-Check every tool in the active profile against the registry using each tool's `checkCommand`. Reports what's installed, what's missing, and what may have drifted.
+Check every tool in the active profile against the registry using each tool's typed `check` command. Reports what's installed, what's missing, and what may have drifted.
 
 ```bash
 powerhouse doctor
@@ -109,7 +113,7 @@ Show full details for a profile including its tools and default agents.
 
 ```bash
 powerhouse profile show claude
-powerhouse profile show local-models
+powerhouse profile show opencode
 ```
 
 ### `profile use <id>`
@@ -119,7 +123,7 @@ Apply a profile while preserving the current active domain.
 ```bash
 powerhouse profile use claude
 powerhouse profile use codex --dry-run
-powerhouse profile use local-models --yes
+powerhouse profile use opencode --yes
 ```
 
 **Flags**
@@ -195,6 +199,104 @@ Show full details for a tool — description, check command, install methods per
 powerhouse tool show claude-code
 powerhouse tool show ripgrep
 ```
+
+---
+
+## Integrations
+
+Integration commands let users discover curated plugins and extensions for the active profile or a specified agent.
+
+### `integration list`
+
+List all curated integrations compatible with the active profile's agents. Use `--profile` or `--agent` when you want to inspect another target explicitly.
+
+```bash
+powerhouse integration list
+powerhouse integration list --profile claude
+powerhouse integration list --agent codex
+```
+
+### `integration find [query]`
+
+Search the curated integration catalog. This is the main "what can I install for this agent?" entrypoint after choosing a profile.
+
+```bash
+powerhouse integration find github
+powerhouse integration find docs --profile gemini
+```
+
+### `integration show <id>`
+
+Show the full manifest for one curated integration.
+
+```bash
+powerhouse integration show claude-github
+```
+
+### `integration install <id>`
+
+Install one curated integration. If the manifest declares bundled MCP servers, Powerhouse installs those in the same run.
+
+```bash
+powerhouse integration install claude-github
+powerhouse integration install gemini-workspace --scope global
+powerhouse integration install opencode-wakatime --scope project --dry-run
+```
+
+**Flags**
+
+| Flag | Description |
+|---|---|
+| `--scope <scope>` | Install scope: `auto`, `global`, `project`, or `local`. |
+| `--dry-run` | Preview the native CLI/config changes without writing them. |
+
+---
+
+## MCP
+
+MCP commands expose the curated server catalog directly, again defaulting to the active profile when state is initialized.
+
+### `mcp list`
+
+List curated MCP servers for the active or specified profile.
+
+```bash
+powerhouse mcp list
+powerhouse mcp list --profile codex
+```
+
+### `mcp find [query]`
+
+Search curated MCP servers by name, description, source, or tags.
+
+```bash
+powerhouse mcp find context7
+powerhouse mcp find figma --agent claude-code
+```
+
+### `mcp show <id>`
+
+Show one MCP server manifest.
+
+```bash
+powerhouse mcp show claude-context7
+```
+
+### `mcp install <id>`
+
+Install one curated MCP server.
+
+```bash
+powerhouse mcp install claude-context7 --scope global
+powerhouse mcp install codex-context7 --scope project --dry-run
+```
+
+**Flags**
+
+| Flag | Description |
+|---|---|
+| `--scope <scope>` | Install scope: `auto`, `global`, `project`, or `local`. |
+| `--dry-run` | Preview the native CLI/config changes without writing them. |
 
 ---
 

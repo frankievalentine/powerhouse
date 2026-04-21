@@ -681,11 +681,11 @@ const description = 'The fastest AI workflow setup on any machine. One command b
         <span class="t-clack t-block">◆  Choose a profile</span>
         <span class="t-choice-active t-block">│  ●  Claude             <span class="t-hint">AI coding with Claude Code</span></span>
         <span class="t-choice t-block">│  ○  Codex              <span class="t-hint">AI coding with OpenAI Codex</span></span>
-        <span class="t-choice t-block">│  ○  Local Models       <span class="t-hint">Local inference via Ollama</span></span>
+        <span class="t-choice t-block">│  ○  OpenCode           <span class="t-hint">Provider-agnostic open source agent</span></span>
         <span class="t-gap"></span>
         <span class="t-clack t-block">◆  Choose a domain</span>
         <span class="t-choice t-block">│  ○  General</span>
-        <span class="t-choice-active t-block">│  ●  Web               <span class="t-hint">UI, frontend, and design work</span></span>
+        <span class="t-choice-active t-block">│  ●  Web               <span class="t-hint">UI, frontend, design, and modern web dev</span></span>
         <span class="t-choice t-block">│  ○  Backend</span>
         <span class="t-choice t-block">│  ○  Devops</span>
         <span class="t-gap"></span>
@@ -702,148 +702,127 @@ const description = 'The fastest AI workflow setup on any machine. One command b
   <section class="section">
     <p class="section-label">// profiles</p>
     <h2 class="section-heading">Pick the agent you want to use.</h2>
-    <p class="section-sub">Each profile installs a productive base — git, Bun, Node, Python, ripgrep, and more — then wires up whichever AI coding agent you work with.</p>
+    <p class="section-sub">Each profile inherits a universal base — git, curl, jq, ripgrep, and fd — then adds only the AI agent you choose. Domains layer in workflow-specific tools on top.</p>
     <div class="profiles-grid">
       <div class="profile-card">
         <span class="profile-agent">claude-code</span>
         <h3>Claude</h3>
-        <p>The default profile. Gets Anthropic's Claude Code agent running alongside a full developer toolchain — ready for skills and domains.</p>
+        <p>Anthropic's Claude Code agent and desktop app. Inherits the base profile plus the Claude Code binary and the Claude App on macOS.</p>
         <div class="profile-tools">
-          <span class="tool-pill">claude-code</span>
           <span class="tool-pill">git</span>
-          <span class="tool-pill">bun</span>
-          <span class="tool-pill">node</span>
-          <span class="tool-pill">python</span>
-          <span class="tool-pill">gh</span>
+          <span class="tool-pill">curl</span>
+          <span class="tool-pill">jq</span>
           <span class="tool-pill">ripgrep</span>
-          <span class="tool-pill">fzf</span>
-          <span class="tool-pill">uv</span>
+          <span class="tool-pill">fd</span>
+          <span class="tool-pill">claude-code</span>
+          <span class="tool-pill">claude-app</span>
         </div>
       </div>
       <div class="profile-card">
         <span class="profile-agent">codex-cli</span>
         <h3>Codex</h3>
-        <p>Built for OpenAI's Codex CLI. Same productive base toolchain, wired up for Codex with full macOS and Linux install support.</p>
+        <p>OpenAI's Codex CLI and desktop app. Inherits the base profile plus Node.js, the Codex CLI, and the Codex App on macOS.</p>
         <div class="profile-tools">
-          <span class="tool-pill">codex</span>
           <span class="tool-pill">git</span>
-          <span class="tool-pill">bun</span>
-          <span class="tool-pill">node</span>
-          <span class="tool-pill">python</span>
-          <span class="tool-pill">gh</span>
+          <span class="tool-pill">curl</span>
+          <span class="tool-pill">jq</span>
           <span class="tool-pill">ripgrep</span>
-          <span class="tool-pill">fzf</span>
-          <span class="tool-pill">uv</span>
+          <span class="tool-pill">fd</span>
+          <span class="tool-pill">node</span>
+          <span class="tool-pill">codex</span>
+          <span class="tool-pill">codex-app</span>
         </div>
       </div>
       <div class="profile-card">
-        <span class="profile-agent">opencode + ollama</span>
-        <h3>Local Models</h3>
-        <p>No API required. OpenCode with Ollama for fully local inference — provider-agnostic, runs on your hardware, no external dependency.</p>
+        <span class="profile-agent">opencode</span>
+        <h3>OpenCode</h3>
+        <p>Provider-agnostic open source coding agent. Use with cloud providers or add Ollama for fully local, offline inference.</p>
         <div class="profile-tools">
-          <span class="tool-pill">opencode</span>
-          <span class="tool-pill">ollama</span>
           <span class="tool-pill">git</span>
-          <span class="tool-pill">bun</span>
-          <span class="tool-pill">node</span>
-          <span class="tool-pill">python</span>
-          <span class="tool-pill">gh</span>
+          <span class="tool-pill">curl</span>
+          <span class="tool-pill">jq</span>
           <span class="tool-pill">ripgrep</span>
-          <span class="tool-pill">uv</span>
+          <span class="tool-pill">fd</span>
+          <span class="tool-pill">node</span>
+          <span class="tool-pill">opencode</span>
         </div>
       </div>
       <div class="profile-card">
         <span class="profile-agent">cursor</span>
         <h3>Cursor</h3>
-        <p>The AI-native code editor. Cursor plus the full developer toolchain, with skills wired into your agent context.</p>
+        <p>The AI-native code editor. Inherits the base profile plus the Cursor application.</p>
         <div class="profile-tools">
-          <span class="tool-pill">cursor</span>
           <span class="tool-pill">git</span>
-          <span class="tool-pill">bun</span>
-          <span class="tool-pill">node</span>
-          <span class="tool-pill">python</span>
-          <span class="tool-pill">gh</span>
+          <span class="tool-pill">curl</span>
+          <span class="tool-pill">jq</span>
           <span class="tool-pill">ripgrep</span>
-          <span class="tool-pill">fzf</span>
-          <span class="tool-pill">uv</span>
+          <span class="tool-pill">fd</span>
+          <span class="tool-pill">cursor</span>
         </div>
       </div>
       <div class="profile-card">
         <span class="profile-agent">goose</span>
         <h3>Goose</h3>
-        <p>Block's open-source extensible AI agent. Goose CLI with a full toolchain for code, workflows, and automation.</p>
+        <p>Block's open-source extensible AI agent. Inherits the base profile plus the Goose CLI.</p>
         <div class="profile-tools">
-          <span class="tool-pill">goose</span>
           <span class="tool-pill">git</span>
-          <span class="tool-pill">bun</span>
-          <span class="tool-pill">node</span>
-          <span class="tool-pill">python</span>
-          <span class="tool-pill">gh</span>
+          <span class="tool-pill">curl</span>
+          <span class="tool-pill">jq</span>
           <span class="tool-pill">ripgrep</span>
-          <span class="tool-pill">fzf</span>
-          <span class="tool-pill">uv</span>
+          <span class="tool-pill">fd</span>
+          <span class="tool-pill">goose</span>
         </div>
       </div>
       <div class="profile-card">
         <span class="profile-agent">gemini-cli</span>
         <h3>Gemini</h3>
-        <p>Google's Gemini CLI brings AI directly into your terminal. Full developer toolchain with Gemini-powered skills.</p>
+        <p>Google's Gemini CLI. Inherits the base profile plus Node.js and the Gemini CLI.</p>
         <div class="profile-tools">
-          <span class="tool-pill">gemini-cli</span>
           <span class="tool-pill">git</span>
-          <span class="tool-pill">bun</span>
-          <span class="tool-pill">node</span>
-          <span class="tool-pill">python</span>
-          <span class="tool-pill">gh</span>
+          <span class="tool-pill">curl</span>
+          <span class="tool-pill">jq</span>
           <span class="tool-pill">ripgrep</span>
-          <span class="tool-pill">fzf</span>
-          <span class="tool-pill">uv</span>
+          <span class="tool-pill">fd</span>
+          <span class="tool-pill">node</span>
+          <span class="tool-pill">gemini-cli</span>
         </div>
       </div>
       <div class="profile-card">
         <span class="profile-agent">openclaw</span>
         <h3>OpenClaw</h3>
-        <p>Your own personal AI assistant. OpenClaw gateway with a full developer toolchain and skill integration.</p>
+        <p>Your own personal AI assistant. Inherits the base profile plus Node.js and the OpenClaw gateway.</p>
         <div class="profile-tools">
-          <span class="tool-pill">openclaw</span>
           <span class="tool-pill">git</span>
-          <span class="tool-pill">bun</span>
-          <span class="tool-pill">node</span>
-          <span class="tool-pill">python</span>
-          <span class="tool-pill">gh</span>
+          <span class="tool-pill">curl</span>
+          <span class="tool-pill">jq</span>
           <span class="tool-pill">ripgrep</span>
-          <span class="tool-pill">fzf</span>
-          <span class="tool-pill">uv</span>
+          <span class="tool-pill">fd</span>
+          <span class="tool-pill">node</span>
+          <span class="tool-pill">openclaw</span>
         </div>
       </div>
       <div class="profile-card">
         <span class="profile-agent">antigravity</span>
         <h3>Antigravity</h3>
-        <p>Google's Antigravity agent ecosystem. Full developer toolchain with skills wired for Antigravity context.</p>
+        <p>Google's Antigravity agent ecosystem. Inherits the base profile. Managed through the Gemini ecosystem.</p>
         <div class="profile-tools">
           <span class="tool-pill">git</span>
-          <span class="tool-pill">bun</span>
-          <span class="tool-pill">node</span>
-          <span class="tool-pill">python</span>
-          <span class="tool-pill">gh</span>
+          <span class="tool-pill">curl</span>
+          <span class="tool-pill">jq</span>
           <span class="tool-pill">ripgrep</span>
-          <span class="tool-pill">fzf</span>
-          <span class="tool-pill">uv</span>
+          <span class="tool-pill">fd</span>
         </div>
       </div>
       <div class="profile-card">
         <span class="profile-agent">github-copilot</span>
         <h3>GitHub Copilot</h3>
-        <p>GitHub Copilot agent experience. Full developer toolchain with skills integrated into Copilot context.</p>
+        <p>GitHub Copilot agent experience. Inherits the base profile. Managed through your editor or the gh CLI extension.</p>
         <div class="profile-tools">
           <span class="tool-pill">git</span>
-          <span class="tool-pill">bun</span>
-          <span class="tool-pill">node</span>
-          <span class="tool-pill">python</span>
-          <span class="tool-pill">gh</span>
+          <span class="tool-pill">curl</span>
+          <span class="tool-pill">jq</span>
           <span class="tool-pill">ripgrep</span>
-          <span class="tool-pill">fzf</span>
-          <span class="tool-pill">uv</span>
+          <span class="tool-pill">fd</span>
         </div>
       </div>
     </div>
@@ -861,11 +840,7 @@ const description = 'The fastest AI workflow setup on any machine. One command b
     <div class="domains-grid">
       <div class="domain-item">
         <div class="domain-name">web</div>
-        <div class="domain-desc">UI, frontend implementation, and design-heavy work</div>
-      </div>
-      <div class="domain-item">
-        <div class="domain-name">web-development</div>
-        <div class="domain-desc">Modern web apps, testing, and implementation patterns</div>
+        <div class="domain-desc">UI, frontend, design, and modern web development</div>
       </div>
       <div class="domain-item">
         <div class="domain-name">backend</div>
@@ -917,7 +892,7 @@ const description = 'The fastest AI workflow setup on any machine. One command b
       <div class="feature">
         <p class="feature-num">01</p>
         <h3>Choose your agent</h3>
-        <p>Pick a profile for Claude, Codex, Cursor, Goose, Gemini, and more. Each one installs the agent plus a complete developer toolchain — git, Bun, Node, Python, ripgrep, and everything else you need.</p>
+        <p>Pick a profile for Claude, Codex, OpenCode, Cursor, Goose, Gemini, and more. Each one installs the agent plus a universal base of git, curl, jq, ripgrep, and fd.</p>
       </div>
       <div class="feature">
         <p class="feature-num">02</p>

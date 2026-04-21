@@ -1,27 +1,21 @@
 ---
 title: Antigravity
-description: Curated terminal toolchain for Google's Antigravity agent ecosystem.
+description: Google's Antigravity agent ecosystem.
 ---
 
-Google's Antigravity agent ecosystem. Full developer toolchain with skills wired for Antigravity context.
+Google's Antigravity agent ecosystem. Antigravity itself is managed through the Gemini ecosystem.
 
 ## Tools
 
-| Tool | Purpose |
-|---|---|
-| `git` | Version control |
-| `bun` | JavaScript runtime and package manager |
-| `node` | Node.js runtime |
-| `python` | Python runtime |
-| `uv` | Python package and project manager |
-| `gh` | GitHub CLI |
-| `jq` | JSON processor |
-| `curl` | HTTP client |
-| `ripgrep` | Fast recursive search |
-| `fd` | Fast file finder |
-| `fzf` | Fuzzy finder |
-| `bat` | Syntax-highlighted cat replacement |
-| `eza` | Modern ls replacement |
+| Tool | Purpose | Source |
+|---|---|---|
+| `git` | Version control foundation | base profile |
+| `curl` | Network transfers and bootstrap support | base profile |
+| `jq` | JSON processor for APIs and configs | base profile |
+| `ripgrep` | Fast recursive text search | base profile |
+| `fd` | Fast file discovery | base profile |
+
+No additional profile-specific tools. Antigravity is managed through the Gemini ecosystem.
 
 ## Platforms
 

@@ -10,42 +10,42 @@
 }
 
 /* Sidebar link hover and active states */
-.entry-link {
-  transition: background-color 0.15s ease, color 0.15s ease !important;
+.sidebar-content ul li a {
+  transition: background-color 0.15s ease, color 0.15s ease;
 }
 
-.entry-link:hover {
-  background-color: rgba(245, 158, 11, 0.10) !important;
-  color: #D97706 !important;
+.sidebar-content ul li a:hover,
+.sidebar-content ul li a:focus {
+  background-color: color-mix(in srgb, var(--sl-color-accent) 12%, transparent);
+  color: var(--sl-color-white);
 }
 
-.entry-link[aria-current='page'] {
-  background-color: rgba(245, 158, 11, 0.14) !important;
-  color: #B45309 !important;
-  font-weight: 600 !important;
+.sidebar-content ul li a[aria-current='page'] {
+  background-color: color-mix(in srgb, var(--sl-color-accent) 18%, transparent);
+  color: var(--sl-color-white);
+  font-weight: 600;
 }
 
-/* Dark mode sidebar states */
-html[data-theme="dark"] .entry-link:hover {
-  background-color: rgba(245, 158, 11, 0.16) !important;
-  color: #FBBF24 !important;
+.sidebar-content ul li a[aria-current='page']:hover,
+.sidebar-content ul li a[aria-current='page']:focus {
+  background-color: color-mix(in srgb, var(--sl-color-accent) 24%, transparent);
 }
 
-html[data-theme="dark"] .entry-link[aria-current='page'] {
-  background-color: rgba(245, 158, 11, 0.22) !important;
-  color: #F59E0B !important;
-}
-
-/* Group headers: only text color on hover, no background */
-.entry-title {
+/* Group headers (summary labels): only text color on hover, no background */
+.sidebar-content summary {
   transition: color 0.15s ease;
-  cursor: default;
 }
 
-.entry-title:hover {
-  color: #D97706;
+.sidebar-content summary:hover {
+  color: var(--sl-color-white);
 }
 
-html[data-theme="dark"] .entry-title:hover {
-  color: #FBBF24;
+/* Right sidebar (table of contents) hover states */
+.right-sidebar-panel a {
+  transition: color 0.15s ease;
+}
+
+.right-sidebar-panel a:hover,
+.right-sidebar-panel a:focus {
+  color: var(--sl-color-white);
 }

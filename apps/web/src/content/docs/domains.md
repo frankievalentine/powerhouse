@@ -10,8 +10,7 @@ Domains are additive and independent. Switching domains doesn't touch your tools
 ## Available domains
 
 - [General](/domains/general/) — Broad repository work
-- [Web](/domains/web/) — UI, frontend, and design-heavy work
-- [Web Development](/domains/web-development/) — Implementation-heavy web apps
+- [Web](/domains/web/) — UI, frontend, design, and modern web development
 - [Backend](/domains/backend/) — APIs, services, and security review
 - [DevOps](/domains/devops/) — Rollout planning and infrastructure ops
 - [Engineering](/domains/engineering/) — Architecture and testing strategy
@@ -47,7 +46,7 @@ powerhouse domain current
 **Switch to a different domain** (preserves your active profile):
 
 ```bash
-powerhouse domain use web-development
+powerhouse domain use web
 ```
 
 Preview what switching would do without applying it:

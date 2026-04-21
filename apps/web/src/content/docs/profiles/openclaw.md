@@ -1,32 +1,25 @@
 ---
 title: OpenClaw
-description: Your own personal AI assistant with a full developer toolchain.
+description: Your own personal AI assistant.
 ---
 
-Your own personal AI assistant. OpenClaw gateway with a full developer toolchain and skill integration.
+Your own personal AI assistant.
 
 ## Tools
 
-| Tool | Purpose |
-|---|---|
-| `openclaw` | Personal AI assistant gateway |
-| `git` | Version control |
-| `bun` | JavaScript runtime and package manager |
-| `node` | Node.js runtime |
-| `python` | Python runtime |
-| `uv` | Python package and project manager |
-| `gh` | GitHub CLI |
-| `jq` | JSON processor |
-| `curl` | HTTP client |
-| `ripgrep` | Fast recursive search |
-| `fd` | Fast file finder |
-| `fzf` | Fuzzy finder |
-| `bat` | Syntax-highlighted cat replacement |
-| `eza` | Modern ls replacement |
+| Tool | Purpose | Source |
+|---|---|---|
+| `git` | Version control foundation | base profile |
+| `curl` | Network transfers and bootstrap support | base profile |
+| `jq` | JSON processor for APIs and configs | base profile |
+| `ripgrep` | Fast recursive text search | base profile |
+| `fd` | Fast file discovery | base profile |
+| `node` | Node.js runtime (required for OpenClaw) | profile-specific |
+| `openclaw` | Personal AI assistant gateway | profile-specific |
 
 ## Platforms
 
-Supported on **macOS** and **Linux**.
+Supported on **macOS**, **Linux**, **WSL**, and native **Windows** for planning/reporting in the CLI.
 
 ## Default agent
 

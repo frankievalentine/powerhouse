@@ -1,32 +1,26 @@
 ---
 title: Codex
-description: Codex CLI plus the same terminal-first foundation for repo-centric work.
+description: OpenAI's Codex CLI agent and desktop app.
 ---
 
-Targets [Codex CLI](https://github.com/openai/codex) — OpenAI's terminal coding agent. Identical base toolchain, wired for Codex instead.
+Targets [Codex CLI](https://github.com/openai/codex) — OpenAI's terminal coding agent — and the [Codex App](https://openai.com/codex) on macOS.
 
 ## Tools
 
-| Tool | Purpose |
-|---|---|
-| `codex` | OpenAI's AI coding agent |
-| `git` | Version control |
-| `bun` | JavaScript runtime and package manager |
-| `node` | Node.js runtime |
-| `python` | Python runtime |
-| `uv` | Python package and project manager |
-| `gh` | GitHub CLI |
-| `jq` | JSON processor |
-| `curl` | HTTP client |
-| `ripgrep` | Fast recursive search |
-| `fd` | Fast file finder |
-| `fzf` | Fuzzy finder |
-| `bat` | Syntax-highlighted cat replacement |
-| `eza` | Modern ls replacement |
+| Tool | Purpose | Source |
+|---|---|---|
+| `git` | Version control foundation | base profile |
+| `curl` | Network transfers and bootstrap support | base profile |
+| `jq` | JSON processor for APIs and configs | base profile |
+| `ripgrep` | Fast recursive text search | base profile |
+| `fd` | Fast file discovery | base profile |
+| `node` | Node.js runtime (required for Codex on Linux) | profile-specific |
+| `codex` | OpenAI's AI coding agent (CLI) | profile-specific |
+| `codex-app` | OpenAI's Codex desktop app (macOS only) | profile-specific |
 
 ## Platforms
 
-Supported on **macOS** and **Linux**.
+Supported on **macOS**, **Linux**, and **WSL**. Native **Windows** is plan-capable in the CLI, but installs should run under WSL.
 
 ## Default agent
 

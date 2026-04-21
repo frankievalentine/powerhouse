@@ -1,32 +1,25 @@
 ---
 title: Gemini
-description: Google's Gemini CLI plus a full developer toolchain for AI-powered development.
+description: Google's Gemini CLI agent.
 ---
 
-Google's Gemini CLI brings AI directly into your terminal. Full developer toolchain with Gemini-powered skills.
+Google's Gemini CLI brings AI directly into your terminal.
 
 ## Tools
 
-| Tool | Purpose |
-|---|---|
-| `gemini-cli` | Google's AI terminal agent |
-| `git` | Version control |
-| `bun` | JavaScript runtime and package manager |
-| `node` | Node.js runtime |
-| `python` | Python runtime |
-| `uv` | Python package and project manager |
-| `gh` | GitHub CLI |
-| `jq` | JSON processor |
-| `curl` | HTTP client |
-| `ripgrep` | Fast recursive search |
-| `fd` | Fast file finder |
-| `fzf` | Fuzzy finder |
-| `bat` | Syntax-highlighted cat replacement |
-| `eza` | Modern ls replacement |
+| Tool | Purpose | Source |
+|---|---|---|
+| `git` | Version control foundation | base profile |
+| `curl` | Network transfers and bootstrap support | base profile |
+| `jq` | JSON processor for APIs and configs | base profile |
+| `ripgrep` | Fast recursive text search | base profile |
+| `fd` | Fast file discovery | base profile |
+| `node` | Node.js runtime (required for Gemini CLI on Linux) | profile-specific |
+| `gemini-cli` | Google's AI terminal agent | profile-specific |
 
 ## Platforms
 
-Supported on **macOS** and **Linux**.
+Supported on **macOS**, **Linux**, **WSL**, and native **Windows** for planning/reporting in the CLI.
 
 ## Default agent
 
