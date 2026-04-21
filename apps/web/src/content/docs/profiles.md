@@ -9,7 +9,7 @@ When you run `./install.sh`, you pick a profile interactively. You can also appl
 
 ## Available profiles
 
-### `claude-dev`
+### `claude`
 
 The default profile. Targets [Claude Code](https://claude.ai/code) — Anthropic's coding agent — with a full developer toolchain.
 
@@ -34,7 +34,7 @@ Skills installed globally target Claude Code by default.
 
 ---
 
-### `codex-dev`
+### `codex`
 
 Targets [Codex CLI](https://github.com/openai/codex) — OpenAI's terminal coding agent. Identical base toolchain, wired for Codex instead.
 
@@ -63,6 +63,12 @@ For engineers who want provider-agnostic, fully local inference with no external
 
 ---
 
+### Additional profiles
+
+Powerhouse also ships profiles for **Cursor**, **Goose**, **Gemini CLI**, **OpenClaw**, **Antigravity**, and **GitHub Copilot**, with skills installation supported for 45+ agents via the upstream [`skills`](https://github.com/vercel-labs/skills) CLI. Run `powerhouse profile list` to see every available profile.
+
+---
+
 ## Using profiles
 
 **List available profiles:**
@@ -74,7 +80,7 @@ powerhouse profile list
 **Show details for a specific profile:**
 
 ```bash
-powerhouse profile show claude-dev
+powerhouse profile show claude
 ```
 
 **Check which profile is currently active:**
@@ -86,19 +92,19 @@ powerhouse profile current
 **Switch to a different profile** (preserves your active domain):
 
 ```bash
-powerhouse profile use codex-dev
+powerhouse profile use codex
 ```
 
 Preview what switching would do without applying it:
 
 ```bash
-powerhouse profile use codex-dev --dry-run
+powerhouse profile use codex --dry-run
 ```
 
 Skip the confirmation prompt:
 
 ```bash
-powerhouse profile use codex-dev --yes
+powerhouse profile use codex --yes
 ```
 
 ---
@@ -108,7 +114,7 @@ powerhouse profile use codex-dev --yes
 A profile defines the agent and the base toolchain. A domain layers on workflow-specific skills for that agent. They're independent — switching one doesn't affect the other.
 
 ```
-profile: claude-dev    →  installs claude-code + core tools
+profile: claude    →  installs claude-code + core tools
 domain:  web           →  installs frontend-design + web-design-guidelines skills into claude-code
 ```
 

@@ -80,9 +80,15 @@ Profiles define the base machine bundle:
 
 Current profiles include:
 
-- `claude-dev`
-- `codex-dev`
+- `claude`
+- `codex`
 - `local-models`
+- `cursor`
+- `goose`
+- `gemini`
+- `openclaw`
+- `antigravity`
+- `github-copilot`
 
 ### Domains
 
@@ -153,8 +159,8 @@ bun run cli --help
 bun run bootstrap --dry-run
 bun run doctor
 bun run cli status
-bun run cli plan --profile claude-dev --domain web --platform darwin
-bun run cli profile use codex-dev --dry-run --yes
+bun run cli plan --profile claude --domain web --platform darwin
+bun run cli profile use codex --dry-run --yes
 bun run cli domain use backend --dry-run --yes
 bun run cli profile list
 bun run cli domain list
@@ -185,13 +191,13 @@ The current command surface is:
 Example plan inspection:
 
 ```bash
-bun run cli plan --profile claude-dev --domain web --platform darwin
+bun run cli plan --profile claude --domain web --platform darwin
 ```
 
 Example bootstrap:
 
 ```bash
-bun run cli bootstrap --profile codex-dev --domain general --yes
+bun run cli bootstrap --profile codex --domain general --yes
 ```
 
 Example registry scaffold:

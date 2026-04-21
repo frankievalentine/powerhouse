@@ -11,10 +11,16 @@ Nothing installs from a remote source at plan time — the registry is local, ve
 
 ```
 registry/
-├── profiles/
-│   ├── claude-dev.json
-│   ├── codex-dev.json
-│   └── local-models.json
+  ├── profiles/
+  │   ├── claude.json
+  │   ├── codex.json
+  │   ├── local-models.json
+  │   ├── cursor.json
+  │   ├── goose.json
+  │   ├── gemini.json
+  │   ├── openclaw.json
+  │   ├── antigravity.json
+  │   └── github-copilot.json
 ├── domains/
 │   ├── general.json
 │   ├── web.json
@@ -43,7 +49,7 @@ A profile declares its base tools, the default agents it targets for skill insta
 
 ```json
 {
-  "id": "claude-dev",
+  "id": "claude",
   "title": "Claude Dev",
   "description": "AI coding with Claude Code. Installs a full developer toolchain and targets Claude Code for global skill installs.",
   "defaultAgents": ["claude-code"],

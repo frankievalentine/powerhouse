@@ -13,9 +13,9 @@ Resolve and apply a full install plan from a profile and domain combination.
 
 ```bash
 powerhouse bootstrap
-powerhouse bootstrap --profile claude-dev --domain web
-powerhouse bootstrap --profile codex-dev --domain backend --yes
-powerhouse bootstrap --profile claude-dev --domain engineering --dry-run
+powerhouse bootstrap --profile claude --domain web
+powerhouse bootstrap --profile codex --domain backend --yes
+powerhouse bootstrap --profile claude --domain engineering --dry-run
 ```
 
 **Flags**
@@ -37,9 +37,9 @@ Resolve and print an install plan without running it. Useful for validating a pr
 
 ```bash
 powerhouse plan
-powerhouse plan --profile claude-dev --domain web
-powerhouse plan --profile codex-dev --domain devops --platform linux
-powerhouse plan --profile claude-dev --domain engineering --json
+powerhouse plan --profile claude --domain web
+powerhouse plan --profile codex --domain devops --platform linux
+powerhouse plan --profile claude --domain engineering --json
 ```
 
 **Flags**
@@ -108,7 +108,7 @@ powerhouse profile current
 Show full details for a profile including its tools and default agents.
 
 ```bash
-powerhouse profile show claude-dev
+powerhouse profile show claude
 powerhouse profile show local-models
 ```
 
@@ -117,8 +117,8 @@ powerhouse profile show local-models
 Apply a profile while preserving the current active domain.
 
 ```bash
-powerhouse profile use claude-dev
-powerhouse profile use codex-dev --dry-run
+powerhouse profile use claude
+powerhouse profile use codex --dry-run
 powerhouse profile use local-models --yes
 ```
 
