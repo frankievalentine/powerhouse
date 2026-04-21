@@ -1,4 +1,4 @@
-import { detectPlatform, getPowerhousePaths, loadLastRun, loadRegistry, loadState, runDoctor } from '@powerhouse/core';
+import { detectPlatform, getPowerhousePaths, loadLastRun, loadLedger, loadRegistry, loadState, runDoctor } from '@powerhouse/core';
 
 import { printDoctorChecks } from '../ui/output.ts';
 
@@ -8,7 +8,8 @@ export async function runDoctorCommand(): Promise<void> {
   const registry = await loadRegistry();
   const state = await loadState(paths);
   const lastRun = await loadLastRun(paths);
-  const checks = await runDoctor(platform, registry, state, lastRun);
+  const ledger = await loadLedger(paths);
+  const checks = await runDoctor(platform, registry, state, lastRun, ledger);
 
   printDoctorChecks(checks);
 

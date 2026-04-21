@@ -1,12 +1,15 @@
 import {
+  computePruneAnalysis,
   detectPlatform,
   getPowerhousePaths,
-  isSupportedPlatform,
+  isPlanPlatform,
+  loadLedger,
   loadRegistry,
   loadState,
   resolveBootstrapPlan,
+  summarizeToolOwnership,
   type DetectedPlatform,
-  type SupportedPlatform
+  type PlatformTarget
 } from '@powerhouse/core';
 
 import { formatPlan, formatPlanOverview } from '../ui/output.ts';
@@ -17,18 +20,24 @@ const DEFAULT_DOMAIN_ID = 'general';
 export interface PlanCommandOptions {
   profile?: string;
   domain?: string;
-  platform?: SupportedPlatform;
+  platform?: PlatformTarget;
   json?: boolean;
+  integrationScope?: 'auto' | 'global' | 'project' | 'local';
+  mcpScope?: 'auto' | 'global' | 'project' | 'local';
 }
 
 export async function runPlanCommand(options: PlanCommandOptions): Promise<void> {
   const detectedPlatform = detectPlatform();
   const registry = await loadRegistry();
-  const state = await loadState(getPowerhousePaths(detectedPlatform));
+  const paths = getPowerhousePaths(detectedPlatform);
+  const state = await loadState(paths);
+  const ledger = await loadLedger(paths);
   const platform = resolveRequestedPlatform(detectedPlatform, options.platform);
   const profileId = options.profile ?? state?.activeProfileId ?? DEFAULT_PROFILE_ID;
   const domainId = options.domain ?? state?.activeDomainId ?? DEFAULT_DOMAIN_ID;
   const plan = resolveBootstrapPlan(registry, platform, profileId, domainId);
+  const pruneAnalysis = computePruneAnalysis(ledger, plan);
+  const toolOwnership = summarizeToolOwnership(ledger);
 
   if (options.json) {
     console.log(
@@ -42,9 +51,41 @@ export async function runPlanCommand(options: PlanCommandOptions): Promise<void>
             id: tool.id,
             title: tool.title,
             kind: tool.kind,
-            checkCommand: tool.checkCommand
+            check: tool.check,
+            ownership: toolOwnership.managed.some((entry) => entry.toolId === tool.id) ? 'installed' : 'preexisting'
+          })),
+          integrations: plan.integrations.map((integration) => ({
+            id: integration.id,
+            title: integration.title,
+            targetAgent: integration.targetAgent,
+            scopes: integration.supportedScopes,
+            source: integration.source
+          })),
+          mcpServers: plan.mcpServers.map((server) => ({
+            id: server.id,
+            title: server.title,
+            targetAgents: server.targetAgents,
+            scopes: server.supportedScopes,
+            source: server.source
           })),
           skillPackages: plan.domain.skillPackages,
+          requestedScopes: {
+            integrations: options.integrationScope ?? 'auto',
+            mcp: options.mcpScope ?? 'auto'
+          },
+          trackedToolOwnership: {
+            managed: toolOwnership.managed.map((entry) => entry.toolId),
+            preexisting: toolOwnership.preexisting.map((entry) => entry.toolId)
+          },
+          pruneCandidates: {
+            tools: pruneAnalysis.tools.map((entry) => entry.toolId),
+            skills: pruneAnalysis.skills.map((entry) => `${entry.source}:${entry.skillName ?? '*'}`),
+            integrations: pruneAnalysis.integrations.map((entry) => entry.id),
+            mcpServers: pruneAnalysis.mcpServers.map((entry) => entry.id),
+            blocked: pruneAnalysis.blocked.map((entry) =>
+              entry.kind === 'tool' ? entry.toolId : entry.kind === 'skill' ? entry.source : entry.id
+            )
+          },
           notes: plan.notes
         },
         null,
@@ -62,8 +103,8 @@ export async function runPlanCommand(options: PlanCommandOptions): Promise<void>
 
 function resolveRequestedPlatform(
   detectedPlatform: DetectedPlatform,
-  requestedPlatform: SupportedPlatform | undefined
-): DetectedPlatform & { os: SupportedPlatform } {
+  requestedPlatform: PlatformTarget | undefined
+): DetectedPlatform & { os: PlatformTarget } {
   if (requestedPlatform) {
     return {
       ...detectedPlatform,
@@ -71,7 +112,7 @@ function resolveRequestedPlatform(
     };
   }
 
-  if (!isSupportedPlatform(detectedPlatform)) {
+  if (!isPlanPlatform(detectedPlatform)) {
     return {
       ...detectedPlatform,
       os: 'darwin'
@@ -80,4 +121,3 @@ function resolveRequestedPlatform(
 
   return detectedPlatform;
 }
-

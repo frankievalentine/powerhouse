@@ -6,6 +6,14 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=/dev/null
 source "$ROOT_DIR/scripts/bootstrap/ui.sh"
 
+resolve_data_home() {
+  echo "${XDG_DATA_HOME:-$HOME/.local/share}"
+}
+
+resolve_managed_runtime_dir() {
+  echo "$(resolve_data_home)/powerhouse/runtime"
+}
+
 fail() {
   ph_error "$1"
   exit 1
@@ -79,13 +87,10 @@ require_command() {
 }
 
 platform="$(detect_platform)"
+MANAGED_ROOT="$ROOT_DIR"
 
 if [[ "$platform" == "unsupported" ]]; then
-  fail "Unsupported platform. powerhouse currently targets macOS and Linux."
-fi
-
-if [[ "$platform" == "wsl" ]]; then
-  fail "WSL2 is planned but not implemented yet. Run powerhouse from a native macOS/Linux environment for now."
+  fail "Unsupported platform. powerhouse currently targets macOS, Linux, and WSL."
 fi
 
 require_command curl
@@ -102,13 +107,44 @@ install_workspace_dependencies() {
 }
 
 install_wrapper() {
-  "$ROOT_DIR/scripts/bootstrap/install-wrapper.sh" "$ROOT_DIR"
+  "$ROOT_DIR/scripts/bootstrap/install-wrapper.sh" "$MANAGED_ROOT"
 }
 
 configure_shell_startup() {
   local brew_bin
   brew_bin="$(resolve_brew_bin)" || fail "Homebrew is not available for shell configuration."
   "$ROOT_DIR/scripts/bootstrap/configure-shell.sh" "$brew_bin" "${POWERHOUSE_BIN_DIR:-${XDG_BIN_HOME:-$HOME/.local/bin}}" "${SHELL##*/}"
+}
+
+sync_managed_runtime() {
+  local source_root="$1"
+  local runtime_dir="$2"
+  local temp_runtime
+
+  if [[ "$source_root" == "$runtime_dir" ]]; then
+    MANAGED_ROOT="$source_root"
+    return 0
+  fi
+
+  temp_runtime="$(mktemp -d "${TMPDIR:-/tmp}/powerhouse-runtime.XXXXXX")"
+  mkdir -p "$(dirname "$runtime_dir")"
+
+  (
+    cd "$source_root"
+    tar \
+      --exclude='./node_modules' \
+      --exclude='./apps/web/node_modules' \
+      --exclude='./packages/cli/node_modules' \
+      --exclude='./packages/core/node_modules' \
+      -cf - .
+  ) | (
+    cd "$temp_runtime"
+    tar -xf -
+  )
+
+  rm -rf "$runtime_dir"
+  mv "$temp_runtime" "$runtime_dir"
+  MANAGED_ROOT="$runtime_dir"
 }
 
 ph_header
@@ -122,12 +158,12 @@ if [[ "$platform" == "macos" ]]; then
   ph_step "Preparing macOS prerequisites"
   platform_preflight
   ph_success "macOS prerequisites ready"
-elif [[ "$platform" == "linux" ]]; then
+elif [[ "$platform" == "linux" || "$platform" == "wsl" ]]; then
   # shellcheck source=/dev/null
   source "$ROOT_DIR/scripts/platform/linux.sh"
-  ph_step "Preparing Linux prerequisites"
+  ph_step "Preparing ${platform^^} prerequisites"
   platform_preflight
-  ph_success "Linux prerequisites ready"
+  ph_success "${platform^^} prerequisites ready"
 fi
 
 if ! has brew; then
@@ -147,7 +183,10 @@ else
   ph_skip "Bun already available"
 fi
 
-cd "$ROOT_DIR"
+ph_run "Preparing managed runtime" sync_managed_runtime "$ROOT_DIR" "$(resolve_managed_runtime_dir)"
+ph_info "Managed runtime: $MANAGED_ROOT"
+
+cd "$MANAGED_ROOT"
 ph_run "Installing workspace dependencies" install_workspace_dependencies
 
 if [[ -f "$ROOT_DIR/scripts/bootstrap/install-wrapper.sh" ]]; then
@@ -157,4 +196,4 @@ fi
 ph_run "Configuring shell startup" configure_shell_startup
 
 ph_info "Handing off to the interactive bootstrap CLI"
-exec bun "$ROOT_DIR/packages/cli/src/index.ts" bootstrap "$@"
+exec bun "$MANAGED_ROOT/packages/cli/src/index.ts" bootstrap "$@"

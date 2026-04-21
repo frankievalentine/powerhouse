@@ -1,20 +1,28 @@
 import { cancel, confirm, intro, isCancel, outro, select } from '@clack/prompts';
 import {
+  computePruneAnalysis,
   detectPlatform,
   executeToolPlan,
   getPowerhousePaths,
   installDomainSkills,
-  isSupportedPlatform,
+  installIntegrations,
+  installMcpServers,
+  isBootstrapPlatform,
+  loadLedger,
   loadRegistry,
+  mergeBootstrapLedger,
   resolveBootstrapPlan,
+  saveLedger,
   saveLastRun,
   saveState,
   ToolInstallError,
+  type BootstrapPlan,
   type DomainManifest,
-  type ProfileManifest
+  type ProfileManifest,
+  type RegistryData
 } from '@powerhouse/core';
 
-import { formatExecutionSummary, formatPlan, formatPlanOverview, printInstallerLog } from '../ui/output.ts';
+import { formatCatalogExecutionSummary, formatExecutionSummary, formatPlan, formatPlanOverview, printInstallerLog } from '../ui/output.ts';
 
 export const DEFAULT_PROFILE_ID = 'claude';
 export const DEFAULT_DOMAIN_ID = 'general';
@@ -24,6 +32,8 @@ export interface BootstrapCommandOptions {
   domain?: string;
   yes?: boolean;
   dryRun?: boolean;
+  integrationScope?: 'auto' | 'global' | 'project' | 'local';
+  mcpScope?: 'auto' | 'global' | 'project' | 'local';
   introText?: string;
   interactive?: boolean;
 }
@@ -32,19 +42,29 @@ export async function runBootstrapCommand(options: BootstrapCommandOptions): Pro
   intro(options.introText ?? 'powerhouse bootstrap');
 
   const platform = detectPlatform();
-  if (!isSupportedPlatform(platform)) {
-    cancel(`Unsupported platform: ${platform.os}. Use macOS or Linux for v1.`);
+  if (!isBootstrapPlatform(platform)) {
+    cancel(
+      platform.os === 'win32'
+        ? 'Native Windows planning is available, but bootstrap is not enabled yet. Use `powerhouse plan --platform win32` for planning or run powerhouse under WSL for installs.'
+        : `Unsupported platform: ${platform.os}.`
+    );
     process.exitCode = 1;
     return;
   }
 
   const registry = await loadRegistry();
   const interactive = options.interactive ?? true;
-  const profile = await resolveProfileSelection(registry.profiles, options.profile, options.yes, interactive);
+  const profile = await resolveProfileSelection(registry.profiles, platform.os, options.profile, options.yes, interactive);
   const domain = await resolveDomainSelection(registry.domains, options.domain, options.yes, interactive);
-  const plan = resolveBootstrapPlan(registry, platform, profile.id, domain.id);
+  let plan = resolveBootstrapPlan(registry, platform, profile.id, domain.id);
+
+  if (profile.id === 'opencode') {
+    plan = await promptOptionalOllama(registry, plan, interactive, options.yes);
+  }
+
   const startedAt = new Date().toISOString();
   const paths = getPowerhousePaths(platform);
+  const existingLedger = await loadLedger(paths);
 
   console.log(options.dryRun ? formatPlan(plan) : formatPlanOverview(plan));
 
@@ -60,16 +80,34 @@ export async function runBootstrapCommand(options: BootstrapCommandOptions): Pro
 
   const executionOptions = {
     dryRun: options.dryRun,
-    onLog: printInstallerLog
+    onLog: printInstallerLog,
+    knownManagedToolIds: existingLedger.entries.flatMap((entry) =>
+      entry.kind === 'tool' && entry.ownership === 'installed' ? [entry.toolId] : []
+    )
   };
 
   let results = [] as Awaited<ReturnType<typeof executeToolPlan>>;
-  let failureStage: 'tool-install' | 'skills-install' | 'state-save' = 'tool-install';
+  let integrationResults = [] as Awaited<ReturnType<typeof installIntegrations>>;
+  let mcpServerResults = [] as Awaited<ReturnType<typeof installMcpServers>>;
+  let skillRecords = [] as Awaited<ReturnType<typeof installDomainSkills>>;
+  let failureStage: 'tool-install' | 'integration-install' | 'mcp-install' | 'skills-install' | 'state-save' = 'tool-install';
 
   try {
     results = await executeToolPlan(plan, platform.os, executionOptions);
+    failureStage = 'integration-install';
+    integrationResults = await installIntegrations(plan.integrations, platform, {
+      dryRun: options.dryRun,
+      scope: options.integrationScope ?? 'auto',
+      onLog: executionOptions.onLog
+    });
+    failureStage = 'mcp-install';
+    mcpServerResults = await installMcpServers(plan.mcpServers, platform, {
+      dryRun: options.dryRun,
+      scope: options.mcpScope ?? 'auto',
+      onLog: executionOptions.onLog
+    });
     failureStage = 'skills-install';
-    await installDomainSkills(plan.domain, {
+    skillRecords = await installDomainSkills(plan.domain, {
       agents: plan.agents,
       dryRun: options.dryRun,
       onLog: executionOptions.onLog
@@ -77,18 +115,36 @@ export async function runBootstrapCommand(options: BootstrapCommandOptions): Pro
 
     if (!options.dryRun) {
       failureStage = 'state-save';
+      const updatedAt = new Date().toISOString();
       await saveState(paths, {
-        schemaVersion: 1,
+        schemaVersion: 2,
         activeProfileId: profile.id,
         activeDomainId: domain.id,
-        updatedAt: new Date().toISOString(),
+        updatedAt,
         installedToolIds: results.map((result) => result.toolId),
         installedAgents: plan.agents,
+        installedIntegrations: integrationResults,
+        installedMcpServers: mcpServerResults,
         platformOs: platform.os,
         platformArch: platform.arch
       });
+      const nextLedger = mergeBootstrapLedger(
+        existingLedger,
+        paths,
+        platform,
+        {
+          profileId: profile.id,
+          domainId: domain.id
+        },
+        results,
+        skillRecords,
+        integrationResults,
+        mcpServerResults,
+        updatedAt
+      );
+      await saveLedger(paths, nextLedger);
       await saveLastRun(paths, {
-        schemaVersion: 1,
+        schemaVersion: 2,
         command: 'bootstrap',
         status: 'success',
         startedAt,
@@ -99,11 +155,28 @@ export async function runBootstrapCommand(options: BootstrapCommandOptions): Pro
         platformArch: platform.arch,
         installedToolIds: results.filter((result) => result.status === 'installed').map((result) => result.toolId),
         skippedToolIds: results.filter((result) => result.status === 'skipped').map((result) => result.toolId),
-        installedAgents: plan.agents
+        installedAgents: plan.agents,
+        integrationResults,
+        mcpServerResults
       });
+
+      const pruneAnalysis = computePruneAnalysis(nextLedger, plan);
+      const pruneCount =
+        pruneAnalysis.tools.length + pruneAnalysis.skills.length + pruneAnalysis.integrations.length + pruneAnalysis.mcpServers.length;
+      if (pruneCount > 0 || pruneAnalysis.blocked.length > 0) {
+        console.log(
+          `Prune candidates: ${pruneCount} removable, ${pruneAnalysis.blocked.length} blocked. Run \`powerhouse prune\` to clean out-of-plan managed assets.`
+        );
+      }
     }
 
     console.log(formatExecutionSummary(results));
+    if (integrationResults.length > 0) {
+      console.log(formatCatalogExecutionSummary('Integrations', integrationResults));
+    }
+    if (mcpServerResults.length > 0) {
+      console.log(formatCatalogExecutionSummary('MCP', mcpServerResults));
+    }
     outro(options.dryRun ? 'Dry run complete.' : 'Bootstrap complete.');
   } catch (error) {
     if (!options.dryRun) {
@@ -113,7 +186,7 @@ export async function runBootstrapCommand(options: BootstrapCommandOptions): Pro
 
       try {
         await saveLastRun(paths, {
-          schemaVersion: 1,
+          schemaVersion: 2,
           command: 'bootstrap',
           status: 'failed',
           startedAt,
@@ -125,6 +198,8 @@ export async function runBootstrapCommand(options: BootstrapCommandOptions): Pro
           installedToolIds: partialResults.filter((result) => result.status === 'installed').map((result) => result.toolId),
           skippedToolIds: partialResults.filter((result) => result.status === 'skipped').map((result) => result.toolId),
           installedAgents: plan.agents,
+          integrationResults,
+          mcpServerResults,
           failedToolId,
           failureStage,
           errorMessage: message
@@ -140,25 +215,31 @@ export async function runBootstrapCommand(options: BootstrapCommandOptions): Pro
 
 async function resolveProfileSelection(
   profiles: ProfileManifest[],
+  platform: ProfileManifest['supportedPlatforms'][number],
   requestedProfileId: string | undefined,
   nonInteractive: boolean | undefined,
   interactive: boolean
 ): Promise<ProfileManifest> {
+  const selectableProfiles = profiles.filter((profile) => profile.id !== 'base' && profile.supportedPlatforms.includes(platform));
+
   if (requestedProfileId) {
     const profile = profiles.find((entry) => entry.id === requestedProfileId);
     if (!profile) {
       throw new Error(`Unknown profile "${requestedProfileId}".`);
     }
+    if (!profile.supportedPlatforms.includes(platform)) {
+      throw new Error(`Profile "${requestedProfileId}" does not support ${platform}.`);
+    }
     return profile;
   }
 
   if (!interactive || nonInteractive || !process.stdout.isTTY) {
-    return findDefault(profiles, DEFAULT_PROFILE_ID);
+    return findDefault(selectableProfiles, DEFAULT_PROFILE_ID);
   }
 
   const selection = await select({
     message: 'Choose a profile',
-    options: profiles.map((profile) => ({
+    options: selectableProfiles.map((profile) => ({
       label: profile.title,
       value: profile.id,
       hint: profile.description
@@ -170,7 +251,7 @@ async function resolveProfileSelection(
     process.exit(1);
   }
 
-  return findDefault(profiles, selection);
+  return findDefault(selectableProfiles, selection);
 }
 
 async function resolveDomainSelection(
@@ -210,4 +291,42 @@ async function resolveDomainSelection(
 
 function findDefault<T extends { id: string }>(entries: T[], preferredId: string): T {
   return entries.find((entry) => entry.id === preferredId) ?? entries[0];
+}
+
+async function promptOptionalOllama(
+  registry: RegistryData,
+  plan: BootstrapPlan,
+  interactive: boolean,
+  nonInteractive: boolean | undefined
+): Promise<BootstrapPlan> {
+  if (!interactive || nonInteractive || !process.stdout.isTTY) {
+    return plan;
+  }
+
+  const installOllama = await confirm({
+    message: 'Install Ollama for local LLM support with OpenCode?'
+  });
+
+  if (isCancel(installOllama) || !installOllama) {
+    return plan;
+  }
+
+  const ollamaTool = registry.tools.find((tool) => tool.id === 'ollama');
+  if (!ollamaTool) {
+    console.warn('Ollama tool manifest not found in registry. Skipping.');
+    return plan;
+  }
+
+  const alreadyInPlan = plan.tools.some((tool) => tool.id === 'ollama');
+  if (alreadyInPlan) {
+    return plan;
+  }
+
+  const updatedTools = [...plan.tools, ollamaTool];
+  updatedTools.sort((left, right) => left.priority - right.priority || left.title.localeCompare(right.title));
+
+  return {
+    ...plan,
+    tools: updatedTools
+  };
 }

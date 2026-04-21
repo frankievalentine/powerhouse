@@ -1,19 +1,46 @@
-import { detectPlatform, getPowerhousePaths, loadRegistry, loadState } from '@powerhouse/core';
+import {
+  detectPlatform,
+  findIntegrations,
+  findMcpServers,
+  getPowerhousePaths,
+  loadRegistry,
+  loadState,
+  resolveProfileIntegrationIds,
+  resolveProfileMcpServerIds,
+  resolveProfileToolIds,
+  type PlatformTarget
+} from '@powerhouse/core';
 
 import { DEFAULT_DOMAIN_ID, runBootstrapCommand } from './bootstrap.ts';
-import { printCurrentSelection, printManifestList } from '../ui/output.ts';
+import { printCurrentSelection } from '../ui/output.ts';
 
 export interface ProfileUseCommandOptions {
   dryRun?: boolean;
   yes?: boolean;
 }
 
-export async function runProfileListCommand(): Promise<void> {
-  const registry = await loadRegistry();
-  printManifestList(registry.profiles);
+export interface ProfileListCommandOptions {
+  platform?: PlatformTarget;
 }
 
-export async function runProfileShowCommand(profileId: string): Promise<void> {
+export interface ProfileShowCommandOptions {
+  platform?: PlatformTarget;
+}
+
+export async function runProfileListCommand(options: ProfileListCommandOptions = {}): Promise<void> {
+  const registry = await loadRegistry();
+  const selectableProfiles = registry.profiles.filter(
+    (profile) => profile.id !== 'base' && (!options.platform || profile.supportedPlatforms.includes(options.platform))
+  );
+
+  for (const profile of selectableProfiles) {
+    console.log(`${profile.id.padEnd(14)} ${profile.title}`);
+    console.log(`  ${profile.description}`);
+    console.log(`  platforms: ${profile.supportedPlatforms.join(', ')}`);
+  }
+}
+
+export async function runProfileShowCommand(profileId: string, options: ProfileShowCommandOptions = {}): Promise<void> {
   const registry = await loadRegistry();
   const profile = registry.profiles.find((entry) => entry.id === profileId);
 
@@ -21,12 +48,37 @@ export async function runProfileShowCommand(profileId: string): Promise<void> {
     throw new Error(`Unknown profile "${profileId}".`);
   }
 
+  const resolvedToolIds = resolveProfileToolIds(registry, profileId);
+  const resolvedIntegrationIds = resolveProfileIntegrationIds(registry, profileId);
+  const resolvedMcpServerIds = resolveProfileMcpServerIds(registry, profileId);
+  const availableIntegrations = findIntegrations(registry, {
+    agents: profile.defaultAgents,
+    platform: options.platform
+  }).map((entry) => entry.id);
+  const availableMcpServers = findMcpServers(registry, {
+    agents: profile.defaultAgents,
+    platform: options.platform
+  }).map((entry) => entry.id);
+
   console.log(`id: ${profile.id}`);
   console.log(`title: ${profile.title}`);
   console.log(`description: ${profile.description}`);
+  if (profile.kind) {
+    console.log(`kind: ${profile.kind}`);
+  }
+  if (profile.extends) {
+    console.log(`extends: ${profile.extends}`);
+  }
   console.log(`platforms: ${profile.supportedPlatforms.join(', ')}`);
-  console.log(`tools: ${profile.toolIds.join(', ')}`);
+  if (options.platform) {
+    console.log(`supported on ${options.platform}: ${profile.supportedPlatforms.includes(options.platform) ? 'yes' : 'no'}`);
+  }
+  console.log(`tools: ${resolvedToolIds.join(', ')}`);
   console.log(`agents: ${profile.defaultAgents.join(', ') || 'none'}`);
+  console.log(`integrations in plan: ${resolvedIntegrationIds.join(', ') || 'none'}`);
+  console.log(`mcp servers in plan: ${resolvedMcpServerIds.join(', ') || 'none'}`);
+  console.log(`available integrations: ${availableIntegrations.join(', ') || 'none'}`);
+  console.log(`available mcp servers: ${availableMcpServers.join(', ') || 'none'}`);
 }
 
 export async function runProfileCurrentCommand(): Promise<void> {
