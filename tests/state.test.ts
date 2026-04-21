@@ -11,12 +11,14 @@ describe('state persistence', () => {
     const paths = await makePaths();
 
     await saveState(paths, {
-      schemaVersion: 1,
+      schemaVersion: 2,
       activeProfileId: 'claude',
       activeDomainId: 'general',
       updatedAt: '2026-04-20T00:00:00.000Z',
       installedToolIds: ['git', 'bun', 'git'],
       installedAgents: ['claude-code', 'claude-code'],
+      installedIntegrations: [],
+      installedMcpServers: [],
       platformOs: 'darwin',
       platformArch: 'arm64'
     });
@@ -24,7 +26,7 @@ describe('state persistence', () => {
     const state = await loadState(paths);
 
     expect(state).not.toBeNull();
-    expect(state?.schemaVersion).toBe(1);
+    expect(state?.schemaVersion).toBe(2);
     expect(state?.installedToolIds).toEqual(['bun', 'git']);
     expect(state?.installedAgents).toEqual(['claude-code']);
   });
@@ -33,7 +35,7 @@ describe('state persistence', () => {
     const paths = await makePaths();
 
     await saveLastRun(paths, {
-      schemaVersion: 1,
+      schemaVersion: 2,
       command: 'bootstrap',
       status: 'failed',
       startedAt: '2026-04-20T00:00:00.000Z',
@@ -45,6 +47,8 @@ describe('state persistence', () => {
       installedToolIds: ['git', 'bun', 'git'],
       skippedToolIds: ['curl', 'curl'],
       installedAgents: ['claude-code', 'claude-code'],
+      integrationResults: [],
+      mcpServerResults: [],
       failedToolId: 'claude-code',
       failureStage: 'tool-install',
       errorMessage: 'Failed to install "claude-code"'
@@ -53,7 +57,7 @@ describe('state persistence', () => {
     const report = await loadLastRun(paths);
 
     expect(report).not.toBeNull();
-    expect(report?.schemaVersion).toBe(1);
+    expect(report?.schemaVersion).toBe(2);
     expect(report?.installedToolIds).toEqual(['bun', 'git']);
     expect(report?.skippedToolIds).toEqual(['curl']);
     expect(report?.installedAgents).toEqual(['claude-code']);
@@ -65,9 +69,12 @@ async function makePaths(): Promise<PowerhousePaths> {
   const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'powerhouse-state-'));
   return {
     configDir: path.join(tempDir, 'config'),
+    dataDir: path.join(tempDir, 'data'),
+    runtimeDir: path.join(tempDir, 'data', 'runtime'),
     cacheDir: path.join(tempDir, 'cache'),
     stateDir: path.join(tempDir, 'state'),
     stateFile: path.join(tempDir, 'state', 'state.json'),
-    lastRunFile: path.join(tempDir, 'state', 'last-run.json')
+    lastRunFile: path.join(tempDir, 'state', 'last-run.json'),
+    ledgerFile: path.join(tempDir, 'state', 'ledger.json')
   };
 }

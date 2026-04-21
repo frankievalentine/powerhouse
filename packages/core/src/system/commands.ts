@@ -1,34 +1,34 @@
 import { execa } from 'execa';
 
-export async function commandExists(command: string): Promise<boolean> {
-  try {
-    await execa('bash', ['-lc', `command -v ${shellEscape(command)}`], {
-      stdout: 'ignore',
-      stderr: 'ignore'
-    });
-    return true;
-  } catch {
-    return false;
-  }
+import { detectPlatform, type PlatformTarget } from '../platform/detect.ts';
+import type { CommandCheck } from '../registry/schema.ts';
+
+export async function commandExists(command: string, platform = currentPlatform()): Promise<boolean> {
+  return (await resolveCommandPath(command, platform)) !== null;
 }
 
-export async function resolveCommandPath(command: string): Promise<string | null> {
+export async function resolveCommandPath(command: string, platform = currentPlatform()): Promise<string | null> {
   try {
-    const result = await execa('bash', ['-lc', `command -v ${shellEscape(command)}`], {
+    const result = await execa(platform === 'win32' ? 'where' : 'which', [command], {
       stdout: 'pipe',
-      stderr: 'ignore'
+      stderr: 'ignore',
+      windowsHide: true
     });
-    return result.stdout.trim() || null;
+    return result.stdout
+      .split(/\r?\n/)
+      .map((line) => line.trim())
+      .find((line) => line.length > 0) ?? null;
   } catch {
     return null;
   }
 }
 
-export async function shellCommandSucceeds(command: string): Promise<boolean> {
+export async function commandCheckSucceeds(check: CommandCheck, platform = currentPlatform()): Promise<boolean> {
   try {
-    await execa('bash', ['-lc', command], {
+    await execa(check.command, check.args, {
       stdout: 'ignore',
-      stderr: 'ignore'
+      stderr: 'ignore',
+      windowsHide: platform === 'win32'
     });
     return true;
   } catch {
@@ -36,17 +36,17 @@ export async function shellCommandSucceeds(command: string): Promise<boolean> {
   }
 }
 
-export async function resolveSkillsRunner(): Promise<'npx' | 'bunx' | null> {
-  if (await commandExists('npx')) {
+export async function resolveSkillsRunner(platform = currentPlatform()): Promise<'npx' | 'bunx' | null> {
+  if (await commandExists('npx', platform)) {
     return 'npx';
   }
-  if (await commandExists('bunx')) {
+  if (await commandExists('bunx', platform)) {
     return 'bunx';
   }
   return null;
 }
 
-function shellEscape(value: string): string {
-  return `'${value.replace(/'/g, `'\\''`)}'`;
+function currentPlatform(): PlatformTarget {
+  const detected = detectPlatform();
+  return detected.os === 'unknown' ? 'linux' : detected.os;
 }
-

@@ -2,6 +2,5 @@
 
 set -euo pipefail
 
-printf '[powerhouse] Windows bootstrap is not implemented yet. Use WSL2 in the future or a native macOS/Linux host for v1.\n'
+printf '[powerhouse] Native Windows bootstrap is not implemented yet. Use `powerhouse plan --platform win32` for planning or run powerhouse under WSL for installs.\n'
 exit 1
-

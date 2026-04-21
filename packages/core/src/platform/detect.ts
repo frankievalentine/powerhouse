@@ -1,8 +1,12 @@
 import os from 'node:os';
 import path from 'node:path';
 
-export type SupportedPlatform = 'darwin' | 'linux';
-export type Platform = SupportedPlatform | 'wsl' | 'unknown';
+export const PLATFORM_TARGETS = ['darwin', 'linux', 'win32', 'wsl'] as const;
+export const BOOTSTRAP_PLATFORMS = ['darwin', 'linux', 'wsl'] as const;
+
+export type PlatformTarget = (typeof PLATFORM_TARGETS)[number];
+export type BootstrapPlatform = (typeof BOOTSTRAP_PLATFORMS)[number];
+export type Platform = PlatformTarget | 'unknown';
 
 export interface DetectedPlatform {
   os: Platform;
@@ -10,23 +14,30 @@ export interface DetectedPlatform {
   shell: string;
   homeDir: string;
   xdgConfigHome: string;
+  xdgDataHome: string;
   xdgCacheHome: string;
   xdgStateHome: string;
 }
 
-export function detectPlatform(env: NodeJS.ProcessEnv = process.env): DetectedPlatform {
-  const shell = env.SHELL ?? 'unknown';
+export function detectPlatform(
+  env: NodeJS.ProcessEnv = process.env,
+  runtimePlatform: NodeJS.Platform = process.platform,
+  release: string = os.release()
+): DetectedPlatform {
+  const shell = env.SHELL ?? env.ComSpec ?? 'unknown';
   const homeDir = os.homedir();
   const xdgConfigHome = env.XDG_CONFIG_HOME ?? path.join(homeDir, '.config');
+  const xdgDataHome = env.XDG_DATA_HOME ?? path.join(homeDir, '.local', 'share');
   const xdgCacheHome = env.XDG_CACHE_HOME ?? path.join(homeDir, '.cache');
   const xdgStateHome = env.XDG_STATE_HOME ?? path.join(homeDir, '.local', 'state');
 
   let detected: Platform = 'unknown';
-  if (process.platform === 'darwin') {
+  if (runtimePlatform === 'darwin') {
     detected = 'darwin';
-  } else if (process.platform === 'linux') {
-    const release = os.release().toLowerCase();
-    detected = release.includes('microsoft') ? 'wsl' : 'linux';
+  } else if (runtimePlatform === 'win32') {
+    detected = 'win32';
+  } else if (runtimePlatform === 'linux') {
+    detected = release.toLowerCase().includes('microsoft') ? 'wsl' : 'linux';
   }
 
   return {
@@ -35,12 +46,20 @@ export function detectPlatform(env: NodeJS.ProcessEnv = process.env): DetectedPl
     shell,
     homeDir,
     xdgConfigHome,
+    xdgDataHome,
     xdgCacheHome,
     xdgStateHome
   };
 }
 
-export function isSupportedPlatform(platform: DetectedPlatform): platform is DetectedPlatform & { os: SupportedPlatform } {
-  return platform.os === 'darwin' || platform.os === 'linux';
+export function isPlanPlatform(platform: DetectedPlatform): platform is DetectedPlatform & { os: PlatformTarget } {
+  return PLATFORM_TARGETS.includes(platform.os as PlatformTarget);
 }
 
+export function isBootstrapPlatform(platform: DetectedPlatform): platform is DetectedPlatform & { os: BootstrapPlatform } {
+  return BOOTSTRAP_PLATFORMS.includes(platform.os as BootstrapPlatform);
+}
+
+export function isNativeWindowsPlatform(platform: DetectedPlatform): platform is DetectedPlatform & { os: 'win32' } {
+  return platform.os === 'win32';
+}

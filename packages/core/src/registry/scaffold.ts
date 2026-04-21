@@ -3,7 +3,7 @@ import path from 'node:path';
 
 import { findWorkspaceRoot } from '../workspace.ts';
 
-export type RegistryScaffoldKind = 'domain' | 'profile' | 'tool';
+export type RegistryScaffoldKind = 'domain' | 'profile' | 'tool' | 'integration' | 'mcp';
 
 export interface ScaffoldOptions {
   dryRun?: boolean;
@@ -25,7 +25,8 @@ export async function scaffoldRegistryManifest(
   assertManifestId(id);
 
   const rootDir = await findWorkspaceRoot(startDir);
-  const filePath = path.join(rootDir, 'registry', `${kind}s`, `${id}.json`);
+  const directory = kind === 'mcp' ? 'mcp' : `${kind}s`;
+  const filePath = path.join(rootDir, 'registry', directory, `${id}.json`);
 
   try {
     await fs.access(filePath);
@@ -77,10 +78,62 @@ function renderManifest(kind: RegistryScaffoldKind, id: string, title?: string):
           id,
           title: manifestTitle,
           description: `${manifestTitle} workstation profile.`,
-          supportedPlatforms: ['darwin', 'linux'],
+          supportedPlatforms: ['darwin', 'linux', 'win32', 'wsl'],
           toolIds: [],
           defaultAgents: [],
           notes: []
+        },
+        null,
+        2
+      ) + '\n'
+    );
+  }
+
+  if (kind === 'integration') {
+    return (
+      JSON.stringify(
+        {
+          id,
+          title: manifestTitle,
+          description: `${manifestTitle} integration.`,
+          targetAgent: 'claude-code',
+          supportedPlatforms: ['darwin', 'linux', 'win32', 'wsl'],
+          supportedScopes: ['global'],
+          installKind: 'manual',
+          source: 'replace-me',
+          tags: [],
+          bundledMcpIds: [],
+          install: {
+            kind: 'manual',
+            instructions: [`Document how to install ${manifestTitle}.`],
+            restartRequired: false
+          }
+        },
+        null,
+        2
+      ) + '\n'
+    );
+  }
+
+  if (kind === 'mcp') {
+    return (
+      JSON.stringify(
+        {
+          id,
+          title: manifestTitle,
+          description: `${manifestTitle} MCP server.`,
+          serverName: id,
+          targetAgents: ['claude-code'],
+          supportedPlatforms: ['darwin', 'linux', 'win32', 'wsl'],
+          supportedScopes: ['global'],
+          serverKind: 'stdio',
+          source: 'replace-me',
+          tags: [],
+          install: {
+            kind: 'manual',
+            instructions: [`Document how to configure ${manifestTitle} for each target agent.`],
+            restartRequired: false
+          }
         },
         null,
         2
@@ -96,12 +149,17 @@ function renderManifest(kind: RegistryScaffoldKind, id: string, title?: string):
         description: `${manifestTitle} tool manifest.`,
         kind: 'utility',
         priority: 100,
-        supportedPlatforms: ['darwin', 'linux'],
-        checkCommand: `${id} --version`,
+        supportedPlatforms: ['darwin', 'linux', 'win32', 'wsl'],
+        check: {
+          command: id,
+          args: ['--version']
+        },
         doctorHint: `Install ${manifestTitle} or update this manifest with the correct detection command.`,
         installs: {
           darwin: [],
-          linux: []
+          linux: [],
+          win32: [],
+          wsl: []
         }
       },
       null,
@@ -123,4 +181,3 @@ function assertManifestId(id: string): void {
     throw new Error(`Invalid manifest id "${id}". Use lowercase letters, numbers, and hyphens only.`);
   }
 }
-
