@@ -1,0 +1,10 @@
+{
+  "id": "local-models",
+  "title": "Local Models",
+  "description": "OpenCode with Ollama for users who want a local-first coding stack.",
+  "supportedPlatforms": ["darwin", "linux"],
+  "toolIds": ["git", "curl", "node", "bun", "jq", "gh", "python", "uv", "ripgrep", "fd", "fzf", "bat", "eza", "opencode", "ollama"],
+  "defaultAgents": ["opencode"],
+  "notes": ["This profile assumes you want a provider-agnostic agent with local model support."]
+}
+

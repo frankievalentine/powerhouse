@@ -1,0 +1,20 @@
+{
+  "id": "web",
+  "title": "Web",
+  "description": "Curated skills for UI, frontend implementation, and design-heavy work.",
+  "extraToolIds": [],
+  "skillPackages": [
+    {
+      "source": "vercel-labs/agent-skills",
+      "skills": ["frontend-design"],
+      "description": "Frontend and UI implementation guidance."
+    },
+    {
+      "source": "vercel/examples",
+      "skills": ["web-design-guidelines"],
+      "description": "Web presentation and design direction."
+    }
+  ],
+  "notes": ["The web domain starts with design and frontend guidance, not framework lock-in."]
+}
+

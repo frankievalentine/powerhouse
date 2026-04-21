@@ -1,0 +1,15 @@
+{
+  "id": "bat",
+  "title": "bat",
+  "description": "A cat clone with syntax highlighting for terminal workflows.",
+  "kind": "utility",
+  "priority": 30,
+  "supportedPlatforms": ["darwin", "linux"],
+  "checkCommand": "bat --version",
+  "doctorHint": "Install bat for better file previews inside terminal-first workflows.",
+  "installs": {
+    "darwin": [{ "type": "brew", "name": "bat" }],
+    "linux": [{ "type": "brew", "name": "bat" }]
+  }
+}
+

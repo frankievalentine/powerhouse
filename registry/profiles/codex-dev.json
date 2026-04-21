@@ -1,0 +1,10 @@
+{
+  "id": "codex-dev",
+  "title": "Codex Dev",
+  "description": "Codex CLI plus the same terminal-first foundation for repo-centric work.",
+  "supportedPlatforms": ["darwin", "linux"],
+  "toolIds": ["git", "curl", "node", "bun", "jq", "gh", "python", "uv", "ripgrep", "fd", "fzf", "bat", "eza", "codex"],
+  "defaultAgents": ["codex"],
+  "notes": ["Global skill installs target Codex by default in this profile."]
+}
+

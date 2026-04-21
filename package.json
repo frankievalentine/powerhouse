@@ -1,0 +1,27 @@
+{
+  "name": "powerhouse",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "packageManager": "bun@1.3.13",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "bootstrap": "bun run cli bootstrap",
+    "cli": "bun packages/cli/src/index.ts",
+    "doctor": "bun run cli doctor",
+    "domains": "bun run cli domain list",
+    "profiles": "bun run cli profile list",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit",
+    "web:dev": "bun --cwd apps/web run dev"
+  },
+  "devDependencies": {
+    "@types/node": "^24.6.0",
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.7"
+  }
+}

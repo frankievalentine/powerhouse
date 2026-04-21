@@ -1,0 +1,15 @@
+{
+  "id": "backend",
+  "title": "Backend",
+  "description": "Curated skills and defaults for API, services, and infrastructure work.",
+  "extraToolIds": [],
+  "skillPackages": [
+    {
+      "source": "vercel-labs/agent-skills",
+      "skills": ["security-review"],
+      "description": "Security-oriented backend guidance."
+    }
+  ],
+  "notes": ["Backend keeps the skill set tight and review oriented in v1."]
+}
+

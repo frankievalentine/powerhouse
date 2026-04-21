@@ -1,0 +1,15 @@
+{
+  "id": "node",
+  "title": "Node.js",
+  "description": "Required for npm-based agent tooling and parts of the web workspace.",
+  "kind": "runtime",
+  "priority": 15,
+  "supportedPlatforms": ["darwin", "linux"],
+  "checkCommand": "node --version",
+  "doctorHint": "Node is required for npm and some upstream AI CLIs.",
+  "installs": {
+    "darwin": [{ "type": "brew", "name": "node" }],
+    "linux": [{ "type": "brew", "name": "node" }]
+  }
+}
+

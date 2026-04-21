@@ -1,0 +1,15 @@
+{
+  "id": "general",
+  "title": "General",
+  "description": "A small default skill bundle for broad repository work.",
+  "extraToolIds": [],
+  "skillPackages": [
+    {
+      "source": "vercel-labs/agent-skills",
+      "skills": ["skill-creator"],
+      "description": "Useful when you want to extend your agent setup over time."
+    }
+  ],
+  "notes": ["The general domain intentionally stays conservative in v1."]
+}
+

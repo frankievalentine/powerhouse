@@ -1,0 +1,15 @@
+{
+  "id": "ripgrep",
+  "title": "ripgrep",
+  "description": "Fast recursive search used heavily by AI coding agents and developers.",
+  "kind": "utility",
+  "priority": 25,
+  "supportedPlatforms": ["darwin", "linux"],
+  "checkCommand": "rg --version",
+  "doctorHint": "ripgrep is part of the default shell ergonomics bundle.",
+  "installs": {
+    "darwin": [{ "type": "brew", "name": "ripgrep" }],
+    "linux": [{ "type": "brew", "name": "ripgrep" }]
+  }
+}
+

@@ -1,0 +1,15 @@
+{
+  "id": "opencode",
+  "title": "OpenCode",
+  "description": "Provider-agnostic open source coding agent for terminal workflows.",
+  "kind": "ai-cli",
+  "priority": 60,
+  "supportedPlatforms": ["darwin", "linux"],
+  "checkCommand": "opencode --version",
+  "doctorHint": "OpenCode is expected by the local-models profile.",
+  "installs": {
+    "darwin": [{ "type": "brew", "name": "opencode", "tap": "anomalyco/tap" }],
+    "linux": [{ "type": "brew", "name": "opencode", "tap": "anomalyco/tap" }]
+  }
+}
+

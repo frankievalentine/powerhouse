@@ -1,0 +1,15 @@
+{
+  "id": "jq",
+  "title": "jq",
+  "description": "JSON processor for CLI automation and diagnostics.",
+  "kind": "utility",
+  "priority": 20,
+  "supportedPlatforms": ["darwin", "linux"],
+  "checkCommand": "jq --version",
+  "doctorHint": "jq is expected by several shell-heavy workflows.",
+  "installs": {
+    "darwin": [{ "type": "brew", "name": "jq" }],
+    "linux": [{ "type": "brew", "name": "jq" }]
+  }
+}
+

@@ -1,0 +1,15 @@
+{
+  "id": "git",
+  "title": "Git",
+  "description": "Version control foundation for all development workflows.",
+  "kind": "developer-tool",
+  "priority": 5,
+  "supportedPlatforms": ["darwin", "linux"],
+  "checkCommand": "git --version",
+  "doctorHint": "Git is required for most developer tooling and skill package installs.",
+  "installs": {
+    "darwin": [{ "type": "brew", "name": "git" }],
+    "linux": [{ "type": "brew", "name": "git" }]
+  }
+}
+

@@ -1,0 +1,15 @@
+{
+  "id": "ollama",
+  "title": "Ollama",
+  "description": "Local model runtime for workstation profiles that prefer on-device inference.",
+  "kind": "ai-cli",
+  "priority": 50,
+  "supportedPlatforms": ["darwin", "linux"],
+  "checkCommand": "ollama --version",
+  "doctorHint": "Ollama is expected by the local-models profile.",
+  "installs": {
+    "darwin": [{ "type": "brew", "name": "ollama" }],
+    "linux": [{ "type": "brew", "name": "ollama" }]
+  }
+}
+

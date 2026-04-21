@@ -1,0 +1,15 @@
+{
+  "id": "python",
+  "title": "Python 3",
+  "description": "Python runtime for agent tooling and general development utilities.",
+  "kind": "runtime",
+  "priority": 20,
+  "supportedPlatforms": ["darwin", "linux"],
+  "checkCommand": "python3 --version",
+  "doctorHint": "Python is part of the default runtime foundation.",
+  "installs": {
+    "darwin": [{ "type": "brew", "name": "python" }],
+    "linux": [{ "type": "brew", "name": "python" }]
+  }
+}
+
