@@ -1,0 +1,97 @@
+/* Theme 4: Blueprint — deep navy, electric blue, precise grid */
+@layer starlight, powerhouse;
+
+@layer powerhouse {
+  :root {
+    --sl-font: -apple-system, 'Inter', 'Helvetica Neue', sans-serif;
+    --sl-font-mono: 'SF Mono', 'Cascadia Mono', 'IBM Plex Mono', monospace;
+    --sl-content-width: 48rem;
+    --sl-text-5xl: clamp(2.75rem, 5.5vw, 4.75rem);
+
+    /* Blueprint: electric blue */
+    --sl-color-accent-low: hsl(217, 60%, 14%);
+    --sl-color-accent: hsl(217, 92%, 60%);
+    --sl-color-accent-high: hsl(214, 95%, 80%);
+  }
+
+  :root[data-theme='light'] {
+    --sl-color-accent-low: hsl(217, 80%, 94%);
+    --sl-color-accent: hsl(217, 80%, 46%);
+    --sl-color-accent-high: hsl(217, 70%, 24%);
+  }
+
+  :where(h1, h2, h3, h4) {
+    letter-spacing: -0.04em;
+    font-weight: 800;
+  }
+
+  [data-has-hero] .content-panel:first-of-type {
+    background: none;
+  }
+
+  [data-has-hero] .content-panel:first-of-type .sl-container {
+    max-width: 64rem;
+  }
+
+  [data-has-hero] .hero {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1.75rem;
+    padding-block: clamp(3.5rem, 12vw, 8rem);
+  }
+
+  [data-has-hero] .hero .copy {
+    gap: 1.5rem;
+  }
+
+  [data-has-hero] .hero h1 {
+    max-width: 20ch;
+    font-weight: 800;
+    letter-spacing: -0.045em;
+  }
+
+  [data-has-hero] .hero .tagline {
+    max-width: 48ch;
+    font-size: clamp(1rem, 0.9rem + 0.65vw, 1.1875rem);
+  }
+
+  .sl-link-button.primary,
+  .sl-link-button.secondary {
+    border-radius: 4px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+  }
+
+  .card,
+  .sl-link-card {
+    background: color-mix(in srgb, var(--sl-color-black) 85%, hsl(217, 50%, 18%) 15%);
+    box-shadow: none;
+    border-radius: 4px;
+    border: 1px solid color-mix(in srgb, hsl(217, 92%, 60%) 15%, transparent);
+  }
+
+  :root[data-theme='light'] .card,
+  :root[data-theme='light'] .sl-link-card {
+    background: hsl(217, 40%, 97%);
+    border: 1px solid hsl(217, 30%, 88%);
+  }
+
+  .card .title,
+  .sl-link-card .title {
+    letter-spacing: -0.025em;
+    font-weight: 700;
+  }
+
+  .sl-link-card .description,
+  .card .body {
+    max-width: 36ch;
+  }
+
+  .sl-markdown-content pre {
+    border-radius: 6px;
+  }
+
+  .sl-markdown-content code:not(pre code) {
+    border-radius: 3px;
+    padding-inline: 0.45em;
+  }
+}

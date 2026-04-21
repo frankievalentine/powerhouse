@@ -1,0 +1,104 @@
+/* Theme 5: Limestone — warm off-white, ultra-minimal, ruled layout */
+@layer starlight, powerhouse;
+
+@layer powerhouse {
+  :root {
+    --sl-font: -apple-system, 'Inter', 'Helvetica Neue', sans-serif;
+    --sl-font-mono: 'SF Mono', 'Cascadia Mono', 'IBM Plex Mono', monospace;
+    --sl-content-width: 48rem;
+    --sl-text-5xl: clamp(2.5rem, 5.5vw, 5rem);
+
+    /* Limestone: achromatic warm — near-black on warm white */
+    --sl-color-accent-low: hsl(30, 8%, 14%);
+    --sl-color-accent: hsl(30, 6%, 50%);
+    --sl-color-accent-high: hsl(30, 5%, 85%);
+  }
+
+  :root[data-theme='light'] {
+    --sl-color-accent-low: hsl(36, 15%, 92%);
+    --sl-color-accent: hsl(30, 8%, 32%);
+    --sl-color-accent-high: hsl(30, 8%, 14%);
+  }
+
+  :where(h1, h2, h3, h4) {
+    letter-spacing: -0.04em;
+    font-weight: 500;
+  }
+
+  [data-has-hero] .content-panel:first-of-type {
+    background: none;
+  }
+
+  [data-has-hero] .content-panel:first-of-type .sl-container {
+    max-width: 60rem;
+  }
+
+  [data-has-hero] .hero {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1.75rem;
+    padding-block: clamp(4rem, 14vw, 10rem);
+  }
+
+  [data-has-hero] .hero .copy {
+    gap: 1.5rem;
+  }
+
+  [data-has-hero] .hero h1 {
+    max-width: 18ch;
+    font-weight: 500;
+    letter-spacing: -0.045em;
+    font-size: clamp(2.5rem, 5.5vw, 5rem);
+  }
+
+  [data-has-hero] .hero .tagline {
+    max-width: 42ch;
+    font-size: clamp(1rem, 0.9rem + 0.6vw, 1.175rem);
+  }
+
+  .sl-link-button.primary {
+    border-radius: 999px;
+    font-weight: 500;
+  }
+
+  .sl-link-button.secondary,
+  .sl-link-button.minimal {
+    border-radius: 999px;
+    font-weight: 400;
+  }
+
+  .card,
+  .sl-link-card {
+    background: color-mix(in srgb, var(--sl-color-black) 94%, hsl(30, 10%, 20%) 6%);
+    box-shadow: none;
+    border-radius: 0;
+    border: none;
+    border-top: 1px solid color-mix(in srgb, var(--sl-color-white) 8%, transparent);
+  }
+
+  :root[data-theme='light'] .card,
+  :root[data-theme='light'] .sl-link-card {
+    background: hsl(36, 15%, 96%);
+    border: none;
+    border-top: 1px solid hsl(36, 15%, 88%);
+  }
+
+  .card .title,
+  .sl-link-card .title {
+    letter-spacing: -0.03em;
+    font-weight: 500;
+  }
+
+  .sl-link-card .description,
+  .card .body {
+    max-width: 36ch;
+  }
+
+  .sl-markdown-content pre {
+    border-radius: 6px;
+  }
+
+  .sl-markdown-content code:not(pre code) {
+    border-radius: 3px;
+    padding-inline: 0.4em;
+  }
+}

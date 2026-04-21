@@ -1,0 +1,915 @@
+---
+const title = 'powerhouse';
+const description = 'The fastest AI workflow setup on any machine. One command bootstraps your tools, installs your agent, and configures curated skills for how you work.';
+---
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content={description} />
+  <title>{title}</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <!-- Runs before paint to avoid flash of wrong theme -->
+  <script is:inline>
+    (function () {
+      const stored = localStorage.getItem('ph-theme');
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      const theme = stored ?? (prefersDark ? 'dark' : 'light');
+      document.documentElement.setAttribute('data-theme', theme);
+    })();
+  </script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:            #0A0A0A;
+      --bg-card:       #111111;
+      --bg-elevated:   #1A1A1A;
+      --nav-bg:        rgba(10, 10, 10, 0.92);
+      --text:          #CDD9E5;
+      --text-muted:    #768390;
+      --text-dim:      #444C56;
+      --accent:        #F59E0B;
+      --accent-dim:    rgba(245, 158, 11, 0.1);
+      --accent-border: rgba(245, 158, 11, 0.22);
+      --border:        #30363D;
+      --border-subtle: rgba(205, 217, 229, 0.06);
+      --font-sans:     -apple-system, 'Inter', 'Segoe UI', sans-serif;
+      --font-mono:     'Geist Mono', 'SF Mono', 'Cascadia Code', monospace;
+    }
+
+    [data-theme='light'] .btn-primary {
+      color: #FFFFFF;
+    }
+
+    [data-theme='light'] {
+      --bg:            #F4F4F5;
+      --bg-card:       #EBEBEC;
+      --bg-elevated:   #E0E0E2;
+      --nav-bg:        rgba(244, 244, 245, 0.92);
+      --text:          #1C2128;
+      --text-muted:    #57606A;
+      --text-dim:      #8C959F;
+      --accent:        #B45309;
+      --accent-dim:    rgba(180, 83, 9, 0.08);
+      --accent-border: rgba(180, 83, 9, 0.2);
+      --border:        #D0D7DE;
+      --border-subtle: rgba(27, 31, 36, 0.08);
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: var(--font-sans);
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      font-size: 16px;
+      -webkit-font-smoothing: antialiased;
+      transition: background 0.2s, color 0.2s;
+    }
+
+    /* ─── NAV ─── */
+    nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1rem 2rem;
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      background: var(--nav-bg);
+      backdrop-filter: blur(8px);
+      transition: background 0.2s, border-color 0.2s;
+      z-index: 20;
+    }
+
+    .nav-left {
+      display: flex;
+      align-items: center;
+      gap: 2.5rem;
+    }
+
+    .nav-brand {
+      font-family: var(--font-mono);
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--accent);
+      text-decoration: none;
+      letter-spacing: -0.02em;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 2rem;
+      list-style: none;
+    }
+
+    .nav-links a {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 0.875rem;
+      transition: color 0.15s;
+    }
+
+    .nav-links a:hover { color: var(--text); }
+
+    .nav-right {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    /* ─── THEME TOGGLE (segmented pill) ─── */
+    .theme-toggle {
+      display: flex;
+      align-items: center;
+      gap: 2px;
+      padding: 3px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      flex-shrink: 0;
+    }
+
+    .toggle-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      border: none;
+      background: transparent;
+      color: var(--text-dim);
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+      padding: 0;
+    }
+
+    .toggle-btn svg { display: block; pointer-events: none; }
+
+    .toggle-btn.is-active {
+      background: var(--bg-elevated);
+      color: var(--text);
+    }
+
+    .toggle-btn:not(.is-active):hover { color: var(--text-muted); }
+
+    .nav-version {
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      color: var(--text-dim);
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      padding: 0.25rem 0.65rem;
+      border-radius: 999px;
+    }
+
+    /* ─── HERO ─── */
+    .hero {
+      max-width: 72rem;
+      margin: 0 auto;
+      padding: clamp(4.5rem, 12vw, 8.5rem) 2rem clamp(3rem, 6vw, 5rem);
+    }
+
+    .hero h1 {
+      font-size: clamp(2.5rem, 5.5vw, 4.5rem);
+      font-weight: 700;
+      letter-spacing: -0.045em;
+      line-height: 1.06;
+      max-width: 15ch;
+      margin-bottom: 1.5rem;
+    }
+
+    .hero-tagline {
+      font-size: clamp(1rem, 1.4vw, 1.125rem);
+      color: var(--text-muted);
+      max-width: 46ch;
+      margin-bottom: 2.75rem;
+      line-height: 1.8;
+    }
+
+    .hero-tagline code {
+      font-family: var(--font-mono);
+      font-size: 0.875em;
+      color: var(--accent);
+      background: var(--accent-dim);
+      padding: 0.1em 0.4em;
+      border-radius: 4px;
+    }
+
+    .hero-actions {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.375rem;
+      padding: 0.7rem 1.5rem;
+      background: var(--accent);
+      color: #0D1117;
+      font-weight: 600;
+      font-size: 0.875rem;
+      font-family: var(--font-sans);
+      text-decoration: none;
+      border-radius: 6px;
+      transition: opacity 0.15s;
+    }
+
+    .btn-primary:hover { opacity: 0.88; }
+
+    .btn-secondary {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.375rem;
+      padding: 0.7rem 1.5rem;
+      color: var(--text-muted);
+      font-size: 0.875rem;
+      text-decoration: none;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      transition: border-color 0.15s, color 0.15s;
+    }
+
+    .btn-secondary:hover { border-color: var(--text-muted); color: var(--text); }
+
+    /* ─── SECTION SHARED ─── */
+    .section {
+      max-width: 72rem;
+      margin: 0 auto;
+      padding: clamp(3.5rem, 7vw, 5.5rem) 2rem;
+      border-top: 1px solid var(--border-subtle);
+    }
+
+    .section-label {
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      margin-bottom: 1rem;
+    }
+
+    .section-heading {
+      font-size: clamp(1.25rem, 2.5vw, 1.75rem);
+      font-weight: 600;
+      letter-spacing: -0.035em;
+      margin-bottom: 0.625rem;
+      line-height: 1.25;
+    }
+
+    .section-sub {
+      font-size: 0.9375rem;
+      color: var(--text-muted);
+      max-width: 52ch;
+      line-height: 1.7;
+      margin-bottom: 2.5rem;
+    }
+
+    /* ─── TERMINAL ─── */
+    .terminal {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    .terminal-bar {
+      background: var(--bg-elevated);
+      padding: 0.75rem 1.25rem;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .dot {
+      width: 11px;
+      height: 11px;
+      border-radius: 50%;
+      background: var(--text-dim);
+    }
+
+    .terminal-title {
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      margin-left: 0.5rem;
+    }
+
+    .terminal-body {
+      padding: 1.5rem 1.75rem;
+      font-family: var(--font-mono);
+      font-size: 0.8125rem;
+      line-height: 1.75;
+      overflow-x: auto;
+    }
+
+    .t-block  { display: block; }
+    .t-gap    { display: block; height: 0.375rem; }
+    .t-ps     { color: var(--accent); }
+    .t-cmd    { color: var(--text); }
+    .t-flag   { color: #79C0FF; }
+    .t-val    { color: #FFA657; }
+    .t-comment { color: var(--text-dim); }
+    .t-out    { color: var(--text-muted); display: block; padding-left: 1.5rem; }
+    .t-ok     { color: #3FB950; }
+    /* clack prompt styles */
+    .t-clack  { color: var(--text); }
+    .t-branch { color: var(--text-dim); }
+    .t-choice { color: var(--text-dim); padding-left: 0.25rem; }
+    .t-choice-active { color: var(--text); padding-left: 0.25rem; }
+    .t-hint   { color: var(--text-dim); padding-left: 0.5rem; }
+
+    /* ─── PROFILES ─── */
+    .profiles-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 1rem;
+    }
+
+    .profile-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1.75rem;
+      transition: border-color 0.15s;
+    }
+
+    .profile-card:hover { border-color: var(--accent-border); }
+
+    .profile-agent {
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      color: var(--accent);
+      background: var(--accent-dim);
+      border: 1px solid var(--accent-border);
+      padding: 0.2em 0.65em;
+      border-radius: 4px;
+      display: inline-block;
+      margin-bottom: 1.125rem;
+      letter-spacing: 0.04em;
+    }
+
+    .profile-card h3 {
+      font-size: 1rem;
+      font-weight: 600;
+      letter-spacing: -0.025em;
+      margin-bottom: 0.5rem;
+      display: flex;
+      align-items: baseline;
+      gap: 0.625rem;
+    }
+
+    .profile-id {
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      color: var(--text-dim);
+      font-weight: 400;
+    }
+
+    .profile-card p {
+      font-size: 0.84375rem;
+      color: var(--text-muted);
+      line-height: 1.7;
+      margin-bottom: 1.125rem;
+    }
+
+    .profile-tools {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.375rem;
+    }
+
+    .tool-pill {
+      font-family: var(--font-mono);
+      font-size: 0.68rem;
+      color: var(--text-dim);
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      padding: 0.15em 0.55em;
+      border-radius: 3px;
+    }
+
+    /* ─── DOMAINS ─── */
+    .domains-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 1px;
+      background: var(--border-subtle);
+      border: 1px solid var(--border-subtle);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    .domain-item {
+      background: var(--bg);
+      padding: 1.375rem 1.5rem;
+      transition: background 0.15s;
+    }
+
+    .domain-item:hover { background: var(--bg-card); }
+
+    .domain-name {
+      font-family: var(--font-mono);
+      font-size: 0.8125rem;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 0.3rem;
+      letter-spacing: -0.01em;
+    }
+
+    .domain-desc {
+      font-size: 0.8125rem;
+      color: var(--text-muted);
+      line-height: 1.55;
+    }
+
+    /* ─── FEATURES ─── */
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1px;
+      background: var(--border-subtle);
+      border: 1px solid var(--border-subtle);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    .feature {
+      background: var(--bg);
+      padding: 2rem;
+      transition: background 0.15s;
+    }
+
+    .feature:hover { background: var(--bg-card); }
+
+    .feature-num {
+      font-family: var(--font-mono);
+      font-size: 0.68rem;
+      color: var(--text-dim);
+      margin-bottom: 1.125rem;
+      letter-spacing: 0.08em;
+    }
+
+    .feature h3 {
+      font-size: 0.9375rem;
+      font-weight: 600;
+      letter-spacing: -0.025em;
+      margin-bottom: 0.5rem;
+    }
+
+    .feature p {
+      font-size: 0.84375rem;
+      color: var(--text-muted);
+      line-height: 1.7;
+    }
+
+    .feature p code {
+      font-family: var(--font-mono);
+      font-size: 0.85em;
+      color: var(--accent);
+      background: var(--accent-dim);
+      padding: 0.1em 0.35em;
+      border-radius: 3px;
+    }
+
+    /* ─── WHY ─── */
+    .why-grid {
+      display: grid;
+      grid-template-columns: 1fr 1.75fr;
+      gap: 5rem;
+      align-items: start;
+    }
+
+    .why-left {
+      position: sticky;
+      top: 5rem;
+    }
+
+    .why-left h2 {
+      font-size: clamp(1.25rem, 2.5vw, 1.625rem);
+      font-weight: 600;
+      letter-spacing: -0.035em;
+      line-height: 1.3;
+    }
+
+    .why-right p {
+      font-size: 0.9375rem;
+      color: var(--text-muted);
+      line-height: 1.85;
+      max-width: 52ch;
+    }
+
+    .why-right p + p { margin-top: 1.125rem; }
+
+    .why-right strong {
+      color: var(--text);
+      font-weight: 500;
+    }
+
+    /* ─── CTA ─── */
+    .cta-inner {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: clamp(2.5rem, 5vw, 4rem) clamp(2rem, 4vw, 3rem);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 2rem;
+      flex-wrap: wrap;
+    }
+
+    .cta-text h2 {
+      font-size: clamp(1.25rem, 2.5vw, 1.625rem);
+      font-weight: 600;
+      letter-spacing: -0.03em;
+      margin-bottom: 0.375rem;
+    }
+
+    .cta-text p {
+      font-size: 0.875rem;
+      color: var(--text-muted);
+    }
+
+    .cta-actions {
+      display: flex;
+      gap: 0.875rem;
+      flex-wrap: wrap;
+      flex-shrink: 0;
+    }
+
+    /* ─── FOOTER ─── */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 1.5rem 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1.5rem;
+    }
+
+    .footer-brand {
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      color: var(--text-dim);
+    }
+
+    .footer-brand span { color: var(--accent); }
+
+    .footer-links {
+      display: flex;
+      gap: 2rem;
+      list-style: none;
+    }
+
+    .footer-links a {
+      font-size: 0.8rem;
+      color: var(--text-dim);
+      text-decoration: none;
+      transition: color 0.15s;
+    }
+
+    .footer-links a:hover { color: var(--text-muted); }
+
+    /* ─── RESPONSIVE ─── */
+    @media (max-width: 768px) {
+      .nav-links    { display: none; }
+      .why-grid     { grid-template-columns: 1fr; gap: 2rem; }
+      .why-left     { position: static; }
+      .cta-inner    { flex-direction: column; align-items: flex-start; }
+      .features-grid { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 480px) {
+      nav, .hero, .section { padding-left: 1.25rem; padding-right: 1.25rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ─── NAV ─── -->
+  <nav>
+    <div class="nav-left">
+      <a href="/" class="nav-brand">powerhouse</a>
+      <ul class="nav-links">
+        <li><a href="/getting-started/">Docs</a></li>
+      </ul>
+    </div>
+    <div class="nav-right">
+      <div class="theme-toggle" role="group" aria-label="Color theme">
+        <!-- moon: active when dark -->
+        <button class="toggle-btn" id="btn-dark" aria-label="Dark mode" aria-pressed="true">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3a7 7 0 0 0 9.79 9.79z"/>
+          </svg>
+        </button>
+        <!-- sun: active when light -->
+        <button class="toggle-btn" id="btn-light" aria-label="Light mode" aria-pressed="false">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="4"/>
+            <line x1="12" y1="2" x2="12" y2="5"/>
+            <line x1="12" y1="19" x2="12" y2="22"/>
+            <line x1="4.22" y1="4.22" x2="6.34" y2="6.34"/>
+            <line x1="17.66" y1="17.66" x2="19.78" y2="19.78"/>
+            <line x1="2" y1="12" x2="5" y2="12"/>
+            <line x1="19" y1="12" x2="22" y2="12"/>
+            <line x1="4.22" y1="19.78" x2="6.34" y2="17.66"/>
+            <line x1="17.66" y1="6.34" x2="19.78" y2="4.22"/>
+          </svg>
+        </button>
+      </div>
+      <span class="nav-version">v0.1.0</span>
+    </div>
+  </nav>
+
+  <!-- ─── HERO ─── -->
+  <section class="hero">
+    <h1>The fastest AI workflow setup on any machine.</h1>
+    <p class="hero-tagline">
+      One command bootstraps your tools, installs your AI agent, and configures curated skills
+      for the way you work — and shows you exactly what it's going to do before anything runs.
+    </p>
+    <div class="hero-actions">
+      <a href="/getting-started/" class="btn-primary">→ Get started</a>
+      <a href="https://github.com/frankievalentine/powerhouse" class="btn-secondary">GitHub</a>
+    </div>
+  </section>
+
+  <!-- ─── TERMINAL ─── -->
+  <div class="section" style="padding-top: 0; border-top: none;">
+    <div class="terminal">
+      <div class="terminal-bar">
+        <div class="dot"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+        <span class="terminal-title">bash — powerhouse bootstrap</span>
+      </div>
+      <div class="terminal-body">
+        <span class="t-comment t-block"># clone the repo</span>
+        <span class="t-block"><span class="t-ps">$</span> <span class="t-cmd">git clone https://github.com/frankievalentine/powerhouse</span></span>
+        <span class="t-out">Cloning into 'powerhouse'...</span>
+        <span class="t-gap"></span>
+        <span class="t-block"><span class="t-ps">$</span> <span class="t-cmd">cd powerhouse &amp;&amp; ./install.sh</span></span>
+        <span class="t-gap"></span>
+        <span class="t-clack t-block">◆  powerhouse bootstrap</span>
+        <span class="t-gap"></span>
+        <span class="t-clack t-block">◆  Choose a profile</span>
+        <span class="t-choice-active t-block">│  ●  Claude Dev         <span class="t-hint">AI coding with Claude Code</span></span>
+        <span class="t-choice t-block">│  ○  Codex Dev          <span class="t-hint">AI coding with OpenAI Codex</span></span>
+        <span class="t-choice t-block">│  ○  Local Models       <span class="t-hint">Local inference via Ollama</span></span>
+        <span class="t-branch t-block">└</span>
+        <span class="t-gap"></span>
+        <span class="t-clack t-block">◆  Choose a domain</span>
+        <span class="t-choice t-block">│  ○  General</span>
+        <span class="t-choice-active t-block">│  ●  Web               <span class="t-hint">UI, frontend, and design work</span></span>
+        <span class="t-choice t-block">│  ○  Backend</span>
+        <span class="t-choice t-block">│  ○  Devops</span>
+        <span class="t-branch t-block">└</span>
+        <span class="t-gap"></span>
+        <span class="t-clack t-block">◇  Apply this bootstrap plan now?</span>
+        <span class="t-choice-active t-block">│  Yes</span>
+        <span class="t-branch t-block">└</span>
+        <span class="t-gap"></span>
+        <span class="t-ok t-block">◇  Installing 14 tools and 2 skill packages...</span>
+        <span class="t-ok t-block">◆  Bootstrap complete.</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── PROFILES ─── -->
+  <section class="section">
+    <p class="section-label">// profiles</p>
+    <h2 class="section-heading">Pick the agent you already use.</h2>
+    <p class="section-sub">Each profile installs a productive base — git, Bun, Node, Python, ripgrep, and more — then wires up whichever AI coding agent you work with.</p>
+    <div class="profiles-grid">
+      <div class="profile-card">
+        <span class="profile-agent">claude-code</span>
+        <h3>Claude Dev <span class="profile-id">claude-dev</span></h3>
+        <p>The default profile. Gets Anthropic's Claude Code agent running alongside a full developer toolchain — ready for skills and domains.</p>
+        <div class="profile-tools">
+          <span class="tool-pill">claude-code</span>
+          <span class="tool-pill">git</span>
+          <span class="tool-pill">bun</span>
+          <span class="tool-pill">node</span>
+          <span class="tool-pill">python</span>
+          <span class="tool-pill">gh</span>
+          <span class="tool-pill">ripgrep</span>
+          <span class="tool-pill">fzf</span>
+          <span class="tool-pill">uv</span>
+        </div>
+      </div>
+      <div class="profile-card">
+        <span class="profile-agent">codex-cli</span>
+        <h3>Codex Dev <span class="profile-id">codex-dev</span></h3>
+        <p>Built for OpenAI's Codex CLI. Same productive base toolchain, wired up for Codex with full macOS and Linux install support.</p>
+        <div class="profile-tools">
+          <span class="tool-pill">codex</span>
+          <span class="tool-pill">git</span>
+          <span class="tool-pill">bun</span>
+          <span class="tool-pill">node</span>
+          <span class="tool-pill">python</span>
+          <span class="tool-pill">gh</span>
+          <span class="tool-pill">ripgrep</span>
+          <span class="tool-pill">fzf</span>
+          <span class="tool-pill">uv</span>
+        </div>
+      </div>
+      <div class="profile-card">
+        <span class="profile-agent">opencode + ollama</span>
+        <h3>Local Models <span class="profile-id">local-models</span></h3>
+        <p>No API required. OpenCode with Ollama for fully local inference — provider-agnostic, runs on your hardware, no external dependency.</p>
+        <div class="profile-tools">
+          <span class="tool-pill">opencode</span>
+          <span class="tool-pill">ollama</span>
+          <span class="tool-pill">git</span>
+          <span class="tool-pill">bun</span>
+          <span class="tool-pill">node</span>
+          <span class="tool-pill">python</span>
+          <span class="tool-pill">gh</span>
+          <span class="tool-pill">ripgrep</span>
+          <span class="tool-pill">uv</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── DOMAINS ─── -->
+  <section class="section">
+    <p class="section-label">// domains</p>
+    <h2 class="section-heading">Layer in skills for your workflow.</h2>
+    <p class="section-sub">Domains install curated skill packages from the community into your active AI agent — without changing anything about your base profile.</p>
+    <div class="domains-grid">
+      <div class="domain-item">
+        <div class="domain-name">web</div>
+        <div class="domain-desc">UI, frontend implementation, and design-heavy work</div>
+      </div>
+      <div class="domain-item">
+        <div class="domain-name">web-development</div>
+        <div class="domain-desc">Modern web apps, testing, and implementation patterns</div>
+      </div>
+      <div class="domain-item">
+        <div class="domain-name">backend</div>
+        <div class="domain-desc">APIs, services, and security-oriented review</div>
+      </div>
+      <div class="domain-item">
+        <div class="domain-name">devops</div>
+        <div class="domain-desc">Rollout planning, automation, and infrastructure ops</div>
+      </div>
+      <div class="domain-item">
+        <div class="domain-name">engineering</div>
+        <div class="domain-desc">Architecture decisions, ADRs, and testing strategy</div>
+      </div>
+      <div class="domain-item">
+        <div class="domain-name">design</div>
+        <div class="domain-desc">Interface design, visual exploration, design systems</div>
+      </div>
+      <div class="domain-item">
+        <div class="domain-name">data</div>
+        <div class="domain-desc">Analysis, reporting, and exploratory data workflows</div>
+      </div>
+      <div class="domain-item">
+        <div class="domain-name">content</div>
+        <div class="domain-desc">Content strategy, research, and drafting workflows</div>
+      </div>
+      <div class="domain-item">
+        <div class="domain-name">marketing</div>
+        <div class="domain-desc">SEO, copywriting, and marketing psychology</div>
+      </div>
+      <div class="domain-item">
+        <div class="domain-name">product-management</div>
+        <div class="domain-desc">PRDs, feature prioritization, user feedback synthesis</div>
+      </div>
+      <div class="domain-item">
+        <div class="domain-name">social-media</div>
+        <div class="domain-desc">Campaign planning and channel-ready content</div>
+      </div>
+      <div class="domain-item">
+        <div class="domain-name">general</div>
+        <div class="domain-desc">A conservative default for broad repository work</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── FEATURES ─── -->
+  <section class="section">
+    <p class="section-label">// how it works</p>
+    <div class="features-grid">
+      <div class="feature">
+        <p class="feature-num">01</p>
+        <h3>Inspect before you install</h3>
+        <p><code>--dry-run</code> resolves the full plan — every tool, every skill, in order — and prints it without touching your machine. Run it first. Always.</p>
+      </div>
+      <div class="feature">
+        <p class="feature-num">02</p>
+        <h3>Skills from the community</h3>
+        <p>Domains pull curated skill packages from upstream repos like <code>anthropics/skills</code>, <code>vercel-labs/agent-skills</code>, and <code>github/awesome-copilot</code> — not a proprietary bundle.</p>
+      </div>
+      <div class="feature">
+        <p class="feature-num">03</p>
+        <h3>Switch without starting over</h3>
+        <p>Change your profile with <code>profile use</code> or swap domains with <code>domain use</code>. powerhouse re-applies only what changed — no full rebootstrap needed.</p>
+      </div>
+      <div class="feature">
+        <p class="feature-num">04</p>
+        <h3>Always know your state</h3>
+        <p><code>status</code> shows what's active and installed. <code>doctor</code> checks every tool against the registry and surfaces anything that drifted or failed.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── WHY ─── -->
+  <section class="section">
+    <div class="why-grid">
+      <div class="why-left">
+        <p class="section-label">// why it exists</p>
+        <h2 class="section-heading">AI tooling is multiplying. Your setup isn't keeping up.</h2>
+      </div>
+      <div class="why-right">
+        <p>
+          Every new agent, every new skill package, every workflow shift — it's another thing to configure by hand.
+          You're juggling agent CLIs, API keys, curated prompts, and a pile of tools that all need to be <strong>just right</strong>
+          before any of it actually works together.
+        </p>
+        <p>
+          Most setups are one person's dotfiles that half-work on other machines, install commands copied from a README
+          that hasn't been touched in months, or tribal knowledge that lives in one Slack thread and nowhere else.
+          The everyday engineer shouldn't have to spend hours getting their AI environment ready to use.
+        </p>
+        <p>
+          powerhouse is a registry that knows what you need. Pick your agent. Add a domain for the work you're doing.
+          Inspect the plan. Run it. <strong>No guessing, no drift, no "works on my machine."</strong>
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── CTA ─── -->
+  <section class="section">
+    <div class="cta-inner">
+      <div class="cta-text">
+        <h2>Set up your machine right, once.</h2>
+        <p>Walk through your first bootstrap in a few minutes.</p>
+      </div>
+      <div class="cta-actions">
+        <a href="/getting-started/" class="btn-primary">→ Read the docs</a>
+        <a href="https://github.com/frankievalentine/powerhouse" class="btn-secondary">GitHub ↗</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── FOOTER ─── -->
+  <footer>
+    <span class="footer-brand"><span>$</span> powerhouse v0.1.0</span>
+    <ul class="footer-links">
+      <li><a href="/getting-started/">Docs</a></li>
+      <li><a href="https://github.com/frankievalentine/powerhouse">GitHub</a></li>
+    </ul>
+  </footer>
+
+  <script>
+    const html     = document.documentElement;
+    const btnDark  = document.getElementById('btn-dark')  as HTMLButtonElement;
+    const btnLight = document.getElementById('btn-light') as HTMLButtonElement;
+
+    function applyTheme(theme: string) {
+      html.setAttribute('data-theme', theme);
+      const isDark = theme === 'dark';
+      btnDark.classList.toggle('is-active', isDark);
+      btnLight.classList.toggle('is-active', !isDark);
+      btnDark.setAttribute('aria-pressed', String(isDark));
+      btnLight.setAttribute('aria-pressed', String(!isDark));
+    }
+
+    // Sync initial active state to whatever the inline script already set
+    applyTheme(html.getAttribute('data-theme') ?? 'dark');
+
+    btnDark.addEventListener('click', () => {
+      applyTheme('dark');
+      localStorage.setItem('ph-theme', 'dark');
+    });
+
+    btnLight.addEventListener('click', () => {
+      applyTheme('light');
+      localStorage.setItem('ph-theme', 'light');
+    });
+
+    // Keep in sync if OS preference changes and user hasn't overridden
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+      if (!localStorage.getItem('ph-theme')) {
+        applyTheme(e.matches ? 'dark' : 'light');
+      }
+    });
+  </script>
+</body>
+</html>

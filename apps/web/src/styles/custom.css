@@ -1,0 +1,114 @@
+@import url('https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500;600;700&display=swap');
+
+@layer starlight, powerhouse;
+
+@layer powerhouse {
+  :root {
+    --sl-font: -apple-system, 'Inter', 'Segoe UI', sans-serif;
+    --sl-font-mono: 'Geist Mono', 'SF Mono', 'Cascadia Code', monospace;
+    --sl-content-width: 48rem;
+    --sl-text-5xl: clamp(2.5rem, 5.5vw, 4.5rem);
+
+    /* Console — indigo accent */
+    --sl-color-accent-low: hsl(250, 50%, 16%);
+    --sl-color-accent: hsl(250, 85%, 65%);
+    --sl-color-accent-high: hsl(250, 90%, 82%);
+  }
+
+  :root[data-theme='light'] {
+    --sl-color-accent-low: hsl(250, 80%, 95%);
+    --sl-color-accent: hsl(250, 75%, 48%);
+    --sl-color-accent-high: hsl(250, 65%, 22%);
+  }
+
+  /* Geist Mono for the nav brand */
+  .site-title {
+    font-family: 'Geist Mono', 'SF Mono', monospace;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+  }
+
+  :where(h1, h2, h3, h4) {
+    letter-spacing: -0.04em;
+    font-weight: 700;
+  }
+
+  /* No background on hero */
+  [data-has-hero] .content-panel:first-of-type {
+    background: none;
+  }
+
+  [data-has-hero] .content-panel:first-of-type .sl-container {
+    max-width: 60rem;
+  }
+
+  [data-has-hero] .hero {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1.5rem;
+    padding-block: clamp(3rem, 10vw, 7rem);
+  }
+
+  [data-has-hero] .hero .copy {
+    gap: 1.25rem;
+  }
+
+  [data-has-hero] .hero h1 {
+    max-width: 18ch;
+    font-weight: 700;
+    letter-spacing: -0.045em;
+  }
+
+  [data-has-hero] .hero .tagline {
+    max-width: 42ch;
+    font-size: clamp(1rem, 0.9rem + 0.6vw, 1.15rem);
+  }
+
+  .sl-link-button.primary,
+  .sl-link-button.secondary,
+  .sl-link-button.minimal {
+    border-radius: 6px;
+  }
+
+  .card,
+  .sl-link-card,
+  .sl-markdown-content pre {
+    border-radius: 8px;
+  }
+
+  .card,
+  .sl-link-card {
+    background: color-mix(in srgb, var(--sl-color-black) 85%, hsl(250, 50%, 14%) 15%);
+    box-shadow: none;
+    border: 1px solid color-mix(in srgb, hsl(250, 85%, 65%) 14%, transparent);
+  }
+
+  :root[data-theme='light'] .card,
+  :root[data-theme='light'] .sl-link-card {
+    background: hsl(250, 40%, 97%);
+    border: 1px solid hsl(250, 30%, 88%);
+  }
+
+  .card .title,
+  .sl-link-card .title {
+    letter-spacing: -0.025em;
+  }
+
+  .sl-link-card .description,
+  .card .body {
+    max-width: 36ch;
+  }
+
+  .sl-markdown-content code:not(pre code) {
+    font-family: 'Geist Mono', 'SF Mono', monospace;
+    border-radius: 4px;
+    padding-inline: 0.45em;
+    color: var(--sl-color-accent-high);
+    background: color-mix(in srgb, hsl(250, 85%, 65%) 12%, transparent);
+  }
+
+  @media (max-width: 50rem) {
+    [data-has-hero] .hero h1 {
+      max-width: 15ch;
+    }
+  }
+}

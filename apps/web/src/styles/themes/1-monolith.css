@@ -1,0 +1,101 @@
+/* Theme 1: Monolith — pure black/white, stark typography */
+@layer starlight, powerhouse;
+
+@layer powerhouse {
+  :root {
+    --sl-font: -apple-system, 'Inter', 'Helvetica Neue', sans-serif;
+    --sl-font-mono: 'SF Mono', 'Cascadia Mono', 'IBM Plex Mono', monospace;
+    --sl-content-width: 48rem;
+    --sl-text-5xl: clamp(2.75rem, 6vw, 5rem);
+
+    /* Monolith: achromatic accent — white on dark */
+    --sl-color-accent-low: hsl(0, 0%, 10%);
+    --sl-color-accent: hsl(0, 0%, 80%);
+    --sl-color-accent-high: hsl(0, 0%, 96%);
+  }
+
+  :root[data-theme='light'] {
+    --sl-color-accent-low: hsl(0, 0%, 94%);
+    --sl-color-accent: hsl(0, 0%, 16%);
+    --sl-color-accent-high: hsl(0, 0%, 8%);
+  }
+
+  :where(h1, h2, h3, h4) {
+    letter-spacing: -0.04em;
+    font-weight: 700;
+  }
+
+  /* No background treatment on hero */
+  [data-has-hero] .content-panel:first-of-type {
+    background: none;
+  }
+
+  [data-has-hero] .content-panel:first-of-type .sl-container {
+    max-width: 60rem;
+  }
+
+  [data-has-hero] .hero {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1.5rem;
+    padding-block: clamp(3rem, 10vw, 7rem);
+  }
+
+  [data-has-hero] .hero .copy {
+    gap: 1.25rem;
+  }
+
+  [data-has-hero] .hero h1 {
+    max-width: 16ch;
+    font-weight: 700;
+    letter-spacing: -0.045em;
+  }
+
+  [data-has-hero] .hero .tagline {
+    max-width: 44ch;
+    font-size: clamp(1rem, 0.9rem + 0.6vw, 1.2rem);
+  }
+
+  .sl-link-button.primary {
+    border-radius: 4px;
+    font-weight: 600;
+  }
+
+  .sl-link-button.secondary,
+  .sl-link-button.minimal {
+    border-radius: 4px;
+  }
+
+  .card,
+  .sl-link-card {
+    background: color-mix(in srgb, var(--sl-color-black) 96%, white 4%);
+    box-shadow: none;
+    border-radius: 0;
+    border: 1px solid color-mix(in srgb, var(--sl-color-white) 10%, transparent);
+  }
+
+  :root[data-theme='light'] .card,
+  :root[data-theme='light'] .sl-link-card {
+    background: var(--sl-color-gray-7);
+    border: 1px solid var(--sl-color-gray-5);
+  }
+
+  .card .title,
+  .sl-link-card .title {
+    letter-spacing: -0.03em;
+    font-weight: 700;
+  }
+
+  .sl-link-card .description,
+  .card .body {
+    max-width: 36ch;
+  }
+
+  .sl-markdown-content pre {
+    border-radius: 4px;
+  }
+
+  .sl-markdown-content code:not(pre code) {
+    border-radius: 3px;
+    padding-inline: 0.4em;
+  }
+}

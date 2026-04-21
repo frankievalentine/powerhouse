@@ -1,0 +1,99 @@
+/* Theme 2: Studio — warm parchment, amber accent, serif headings */
+@layer starlight, powerhouse;
+
+@layer powerhouse {
+  :root {
+    --sl-font: -apple-system, 'Inter', 'Helvetica Neue', sans-serif;
+    --sl-font-mono: 'SF Mono', 'Cascadia Mono', 'IBM Plex Mono', monospace;
+    --sl-content-width: 48rem;
+    --sl-text-5xl: clamp(2.5rem, 5vw, 4rem);
+
+    /* Studio: amber/sienna on dark parchment */
+    --sl-color-accent-low: hsl(26, 30%, 18%);
+    --sl-color-accent: hsl(26, 60%, 48%);
+    --sl-color-accent-high: hsl(28, 70%, 78%);
+  }
+
+  :root[data-theme='light'] {
+    --sl-color-accent-low: hsl(30, 60%, 94%);
+    --sl-color-accent: hsl(26, 58%, 40%);
+    --sl-color-accent-high: hsl(24, 52%, 22%);
+  }
+
+  :where(h1, h2, h3, h4) {
+    letter-spacing: -0.03em;
+  }
+
+  :where(.hero h1, .sl-markdown-content h2, .sl-markdown-content h3) {
+    font-family: Georgia, 'Book Antiqua', 'Palatino Linotype', serif;
+    font-weight: 700;
+  }
+
+  [data-has-hero] .content-panel:first-of-type {
+    background: none;
+  }
+
+  [data-has-hero] .content-panel:first-of-type .sl-container {
+    max-width: 60rem;
+  }
+
+  [data-has-hero] .hero {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1.5rem;
+    padding-block: clamp(3rem, 9vw, 6rem);
+  }
+
+  [data-has-hero] .hero .copy {
+    gap: 1.25rem;
+  }
+
+  [data-has-hero] .hero h1 {
+    max-width: 18ch;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    font-family: Georgia, 'Book Antiqua', serif;
+  }
+
+  [data-has-hero] .hero .tagline {
+    max-width: 44ch;
+    font-size: clamp(1rem, 0.95rem + 0.6vw, 1.15rem);
+  }
+
+  .sl-link-button.primary,
+  .sl-link-button.secondary {
+    border-radius: 3px;
+  }
+
+  .card,
+  .sl-link-card {
+    background: color-mix(in srgb, var(--sl-color-black) 90%, hsl(26, 40%, 30%) 10%);
+    box-shadow: none;
+    border-radius: 4px;
+  }
+
+  :root[data-theme='light'] .card,
+  :root[data-theme='light'] .sl-link-card {
+    background: hsl(36, 30%, 94%);
+    border: 1px solid hsl(36, 20%, 86%);
+  }
+
+  .card .title,
+  .sl-link-card .title {
+    letter-spacing: -0.02em;
+    font-family: Georgia, serif;
+  }
+
+  .sl-link-card .description,
+  .card .body {
+    max-width: 36ch;
+  }
+
+  .sl-markdown-content pre {
+    border-radius: 4px;
+  }
+
+  .sl-markdown-content code:not(pre code) {
+    border-radius: 3px;
+    padding-inline: 0.4em;
+  }
+}

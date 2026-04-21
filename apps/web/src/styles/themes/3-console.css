@@ -1,0 +1,98 @@
+/* Theme 3: Console — dark GitHub-inspired, terminal green accent */
+@layer starlight, powerhouse;
+
+@layer powerhouse {
+  :root {
+    --sl-font: -apple-system, 'Inter', 'Segoe UI', sans-serif;
+    --sl-font-mono: 'SF Mono', 'Cascadia Code', 'IBM Plex Mono', monospace;
+    --sl-content-width: 48rem;
+    --sl-text-5xl: clamp(2.5rem, 5.5vw, 4.5rem);
+
+    /* Console: terminal green */
+    --sl-color-accent-low: hsl(133, 50%, 10%);
+    --sl-color-accent: hsl(133, 60%, 45%);
+    --sl-color-accent-high: hsl(133, 60%, 76%);
+  }
+
+  :root[data-theme='light'] {
+    --sl-color-accent-low: hsl(133, 55%, 92%);
+    --sl-color-accent: hsl(133, 55%, 32%);
+    --sl-color-accent-high: hsl(133, 50%, 16%);
+  }
+
+  :where(h1, h2, h3, h4) {
+    letter-spacing: -0.04em;
+    font-weight: 700;
+  }
+
+  [data-has-hero] .content-panel:first-of-type {
+    background: none;
+  }
+
+  [data-has-hero] .content-panel:first-of-type .sl-container {
+    max-width: 60rem;
+  }
+
+  [data-has-hero] .hero {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1.5rem;
+    padding-block: clamp(3rem, 10vw, 7rem);
+  }
+
+  [data-has-hero] .hero .copy {
+    gap: 1.25rem;
+  }
+
+  [data-has-hero] .hero h1 {
+    max-width: 18ch;
+    font-weight: 700;
+    letter-spacing: -0.045em;
+  }
+
+  [data-has-hero] .hero .tagline {
+    max-width: 44ch;
+    font-size: clamp(1rem, 0.9rem + 0.6vw, 1.15rem);
+  }
+
+  .sl-link-button.primary,
+  .sl-link-button.secondary {
+    border-radius: 6px;
+    font-family: var(--sl-font-mono);
+    font-size: 0.875em;
+  }
+
+  .card,
+  .sl-link-card {
+    background: color-mix(in srgb, var(--sl-color-black) 85%, hsl(133, 30%, 12%) 15%);
+    box-shadow: none;
+    border-radius: 8px;
+    border: 1px solid color-mix(in srgb, hsl(133, 60%, 45%) 15%, transparent);
+  }
+
+  :root[data-theme='light'] .card,
+  :root[data-theme='light'] .sl-link-card {
+    background: var(--sl-color-gray-7);
+    border: 1px solid hsl(133, 20%, 88%);
+  }
+
+  .card .title,
+  .sl-link-card .title {
+    letter-spacing: -0.025em;
+  }
+
+  .sl-link-card .description,
+  .card .body {
+    max-width: 36ch;
+  }
+
+  .sl-markdown-content pre {
+    border-radius: 8px;
+  }
+
+  .sl-markdown-content code:not(pre code) {
+    border-radius: 3px;
+    padding-inline: 0.4em;
+    color: var(--sl-color-accent);
+    background: color-mix(in srgb, hsl(133, 60%, 45%) 12%, transparent);
+  }
+}
