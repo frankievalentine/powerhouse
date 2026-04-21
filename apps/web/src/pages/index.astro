@@ -370,13 +370,6 @@ const description = 'The fastest AI workflow setup on any machine. One command b
       gap: 0.625rem;
     }
 
-    .profile-id {
-      font-family: var(--font-mono);
-      font-size: 0.72rem;
-      color: var(--text-dim);
-      font-weight: 400;
-    }
-
     .profile-card p {
       font-size: 0.84375rem;
       color: var(--text-muted);
@@ -398,6 +391,27 @@ const description = 'The fastest AI workflow setup on any machine. One command b
       border: 1px solid var(--border);
       padding: 0.15em 0.55em;
       border-radius: 3px;
+    }
+
+    .profiles-more {
+      margin-top: 1.5rem;
+      text-align: center;
+    }
+
+    .profiles-more p {
+      font-size: 0.875rem;
+      color: var(--text-muted);
+      line-height: 1.6;
+      max-width: 48ch;
+      margin: 0 auto;
+    }
+
+    .profiles-more-count {
+      font-family: var(--font-mono);
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--accent);
+      margin-bottom: 0.375rem;
     }
 
     /* ─── DOMAINS ─── */
@@ -635,10 +649,10 @@ const description = 'The fastest AI workflow setup on any machine. One command b
 
   <!-- ─── HERO ─── -->
   <section class="hero">
-    <h1>The fastest AI workflow setup on any machine.</h1>
+    <h1>One command to a productive AI environment.</h1>
     <p class="hero-tagline">
-      One command bootstraps your tools, installs your AI agent, and configures curated skills
-      for the way you work — and shows you exactly what it's going to do before anything runs.
+      Pick the agent you already use and the kind of work you do. We handle the tools, the skills,
+      and the setup — you just start coding.
     </p>
     <div class="hero-actions">
       <a href="/getting-started/" class="btn-primary">→ Get started</a>
@@ -665,21 +679,18 @@ const description = 'The fastest AI workflow setup on any machine. One command b
         <span class="t-clack t-block">◆  powerhouse bootstrap</span>
         <span class="t-gap"></span>
         <span class="t-clack t-block">◆  Choose a profile</span>
-        <span class="t-choice-active t-block">│  ●  Claude Dev         <span class="t-hint">AI coding with Claude Code</span></span>
-        <span class="t-choice t-block">│  ○  Codex Dev          <span class="t-hint">AI coding with OpenAI Codex</span></span>
+        <span class="t-choice-active t-block">│  ●  Claude             <span class="t-hint">AI coding with Claude Code</span></span>
+        <span class="t-choice t-block">│  ○  Codex              <span class="t-hint">AI coding with OpenAI Codex</span></span>
         <span class="t-choice t-block">│  ○  Local Models       <span class="t-hint">Local inference via Ollama</span></span>
-        <span class="t-branch t-block">└</span>
         <span class="t-gap"></span>
         <span class="t-clack t-block">◆  Choose a domain</span>
         <span class="t-choice t-block">│  ○  General</span>
         <span class="t-choice-active t-block">│  ●  Web               <span class="t-hint">UI, frontend, and design work</span></span>
         <span class="t-choice t-block">│  ○  Backend</span>
         <span class="t-choice t-block">│  ○  Devops</span>
-        <span class="t-branch t-block">└</span>
         <span class="t-gap"></span>
         <span class="t-clack t-block">◇  Apply this bootstrap plan now?</span>
         <span class="t-choice-active t-block">│  Yes</span>
-        <span class="t-branch t-block">└</span>
         <span class="t-gap"></span>
         <span class="t-ok t-block">◇  Installing 14 tools and 2 skill packages...</span>
         <span class="t-ok t-block">◆  Bootstrap complete.</span>
@@ -695,7 +706,7 @@ const description = 'The fastest AI workflow setup on any machine. One command b
     <div class="profiles-grid">
       <div class="profile-card">
         <span class="profile-agent">claude-code</span>
-        <h3>Claude Dev <span class="profile-id">claude-dev</span></h3>
+        <h3>Claude</h3>
         <p>The default profile. Gets Anthropic's Claude Code agent running alongside a full developer toolchain — ready for skills and domains.</p>
         <div class="profile-tools">
           <span class="tool-pill">claude-code</span>
@@ -711,7 +722,7 @@ const description = 'The fastest AI workflow setup on any machine. One command b
       </div>
       <div class="profile-card">
         <span class="profile-agent">codex-cli</span>
-        <h3>Codex Dev <span class="profile-id">codex-dev</span></h3>
+        <h3>Codex</h3>
         <p>Built for OpenAI's Codex CLI. Same productive base toolchain, wired up for Codex with full macOS and Linux install support.</p>
         <div class="profile-tools">
           <span class="tool-pill">codex</span>
@@ -727,7 +738,7 @@ const description = 'The fastest AI workflow setup on any machine. One command b
       </div>
       <div class="profile-card">
         <span class="profile-agent">opencode + ollama</span>
-        <h3>Local Models <span class="profile-id">local-models</span></h3>
+        <h3>Local Models</h3>
         <p>No API required. OpenCode with Ollama for fully local inference — provider-agnostic, runs on your hardware, no external dependency.</p>
         <div class="profile-tools">
           <span class="tool-pill">opencode</span>
@@ -741,6 +752,104 @@ const description = 'The fastest AI workflow setup on any machine. One command b
           <span class="tool-pill">uv</span>
         </div>
       </div>
+      <div class="profile-card">
+        <span class="profile-agent">cursor</span>
+        <h3>Cursor</h3>
+        <p>The AI-native code editor. Cursor plus the full developer toolchain, with skills wired into your agent context.</p>
+        <div class="profile-tools">
+          <span class="tool-pill">cursor</span>
+          <span class="tool-pill">git</span>
+          <span class="tool-pill">bun</span>
+          <span class="tool-pill">node</span>
+          <span class="tool-pill">python</span>
+          <span class="tool-pill">gh</span>
+          <span class="tool-pill">ripgrep</span>
+          <span class="tool-pill">fzf</span>
+          <span class="tool-pill">uv</span>
+        </div>
+      </div>
+      <div class="profile-card">
+        <span class="profile-agent">goose</span>
+        <h3>Goose</h3>
+        <p>Block's open-source extensible AI agent. Goose CLI with a full toolchain for code, workflows, and automation.</p>
+        <div class="profile-tools">
+          <span class="tool-pill">goose</span>
+          <span class="tool-pill">git</span>
+          <span class="tool-pill">bun</span>
+          <span class="tool-pill">node</span>
+          <span class="tool-pill">python</span>
+          <span class="tool-pill">gh</span>
+          <span class="tool-pill">ripgrep</span>
+          <span class="tool-pill">fzf</span>
+          <span class="tool-pill">uv</span>
+        </div>
+      </div>
+      <div class="profile-card">
+        <span class="profile-agent">gemini-cli</span>
+        <h3>Gemini</h3>
+        <p>Google's Gemini CLI brings AI directly into your terminal. Full developer toolchain with Gemini-powered skills.</p>
+        <div class="profile-tools">
+          <span class="tool-pill">gemini-cli</span>
+          <span class="tool-pill">git</span>
+          <span class="tool-pill">bun</span>
+          <span class="tool-pill">node</span>
+          <span class="tool-pill">python</span>
+          <span class="tool-pill">gh</span>
+          <span class="tool-pill">ripgrep</span>
+          <span class="tool-pill">fzf</span>
+          <span class="tool-pill">uv</span>
+        </div>
+      </div>
+      <div class="profile-card">
+        <span class="profile-agent">openclaw</span>
+        <h3>OpenClaw</h3>
+        <p>Your own personal AI assistant. OpenClaw gateway with a full developer toolchain and skill integration.</p>
+        <div class="profile-tools">
+          <span class="tool-pill">openclaw</span>
+          <span class="tool-pill">git</span>
+          <span class="tool-pill">bun</span>
+          <span class="tool-pill">node</span>
+          <span class="tool-pill">python</span>
+          <span class="tool-pill">gh</span>
+          <span class="tool-pill">ripgrep</span>
+          <span class="tool-pill">fzf</span>
+          <span class="tool-pill">uv</span>
+        </div>
+      </div>
+      <div class="profile-card">
+        <span class="profile-agent">antigravity</span>
+        <h3>Antigravity</h3>
+        <p>Google's Antigravity agent ecosystem. Full developer toolchain with skills wired for Antigravity context.</p>
+        <div class="profile-tools">
+          <span class="tool-pill">git</span>
+          <span class="tool-pill">bun</span>
+          <span class="tool-pill">node</span>
+          <span class="tool-pill">python</span>
+          <span class="tool-pill">gh</span>
+          <span class="tool-pill">ripgrep</span>
+          <span class="tool-pill">fzf</span>
+          <span class="tool-pill">uv</span>
+        </div>
+      </div>
+      <div class="profile-card">
+        <span class="profile-agent">github-copilot</span>
+        <h3>GitHub Copilot</h3>
+        <p>GitHub Copilot agent experience. Full developer toolchain with skills integrated into Copilot context.</p>
+        <div class="profile-tools">
+          <span class="tool-pill">git</span>
+          <span class="tool-pill">bun</span>
+          <span class="tool-pill">node</span>
+          <span class="tool-pill">python</span>
+          <span class="tool-pill">gh</span>
+          <span class="tool-pill">ripgrep</span>
+          <span class="tool-pill">fzf</span>
+          <span class="tool-pill">uv</span>
+        </div>
+      </div>
+    </div>
+    <div class="profiles-more">
+      <p class="profiles-more-count">+ 36 more</p>
+      <p>Including Aider, Codeium, Tabnine, Sourcegraph Cody, Replit, Zed, Amazon Q, and more.</p>
     </div>
   </section>
 
@@ -807,8 +916,8 @@ const description = 'The fastest AI workflow setup on any machine. One command b
     <div class="features-grid">
       <div class="feature">
         <p class="feature-num">01</p>
-        <h3>Inspect before you install</h3>
-        <p><code>--dry-run</code> resolves the full plan — every tool, every skill, in order — and prints it without touching your machine. Run it first. Always.</p>
+        <h3>Choose your agent</h3>
+        <p>Pick a profile for Claude, Codex, Cursor, Goose, Gemini, and more. Each one installs the agent plus a complete developer toolchain — git, Bun, Node, Python, ripgrep, and everything else you need.</p>
       </div>
       <div class="feature">
         <p class="feature-num">02</p>
@@ -837,18 +946,16 @@ const description = 'The fastest AI workflow setup on any machine. One command b
       </div>
       <div class="why-right">
         <p>
-          Every new agent, every new skill package, every workflow shift — it's another thing to configure by hand.
-          You're juggling agent CLIs, API keys, curated prompts, and a pile of tools that all need to be <strong>just right</strong>
-          before any of it actually works together.
+          Setting up an AI workflow shouldn't take hours, but it does. You need the agent, the tools, the skills, the prompts —
+          and everything has to work together before you can actually build anything.
         </p>
         <p>
-          Most setups are one person's dotfiles that half-work on other machines, install commands copied from a README
-          that hasn't been touched in months, or tribal knowledge that lives in one Slack thread and nowhere else.
-          The everyday engineer shouldn't have to spend hours getting their AI environment ready to use.
+          Teams patch this together with outdated READMEs, personal scripts, or instructions buried in a Slack thread.
+          It works until it doesn't, and then someone else spends another afternoon debugging it.
         </p>
         <p>
-          powerhouse is a registry that knows what you need. Pick your agent. Add a domain for the work you're doing.
-          Inspect the plan. Run it. <strong>No guessing, no drift, no "works on my machine."</strong>
+          powerhouse is a registry that defines the whole setup — tools, skills, and configuration — in version-controlled manifests.
+          Run one command and get the same environment, on any machine, every time.
         </p>
       </div>
     </div>
@@ -863,7 +970,7 @@ const description = 'The fastest AI workflow setup on any machine. One command b
       </div>
       <div class="cta-actions">
         <a href="/getting-started/" class="btn-primary">→ Read the docs</a>
-        <a href="https://github.com/frankievalentine/powerhouse" class="btn-secondary">GitHub ↗</a>
+        <a href="https://github.com/frankievalentine/powerhouse" class="btn-secondary">GitHub</a>
       </div>
     </div>
   </section>
