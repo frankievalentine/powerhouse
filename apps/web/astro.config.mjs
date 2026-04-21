@@ -1,12 +1,16 @@
 import { defineConfig } from 'astro/config';
 import starlight from '@astrojs/starlight';
 import starlightThemeBlack from 'starlight-theme-black';
+import sitemap from '@astrojs/sitemap';
 
 export default defineConfig({
+  site: 'https://powerhouse-pi.vercel.app',
   integrations: [
+    sitemap(),
     starlight({
       title: 'powerhouse',
       description: 'Get any machine ready for AI workflows in one command.',
+      disable404Route: true,
       customCss: ['./src/styles/docs.css'],
       plugins: [
         starlightThemeBlack({

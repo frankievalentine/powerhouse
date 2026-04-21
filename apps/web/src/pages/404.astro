@@ -1,0 +1,136 @@
+---
+const title = '404 — powerhouse';
+---
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{title}</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #0A0A0A;
+      --text:     #CDD9E5;
+      --muted:    #768390;
+      --dim:      #444C56;
+      --accent:   #F59E0B;
+      --border:   #30363D;
+      --font-sans: -apple-system, 'Inter', 'Segoe UI', sans-serif;
+      --font-mono: 'Geist Mono', 'SF Mono', monospace;
+    }
+
+    html, body {
+      height: 100%;
+    }
+
+    body {
+      font-family: var(--font-sans);
+      background: var(--bg);
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 2rem;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .container {
+      text-align: center;
+      max-width: 28rem;
+    }
+
+    .code {
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      color: var(--accent);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin-bottom: 1.5rem;
+      display: block;
+    }
+
+    h1 {
+      font-size: clamp(1.75rem, 4vw, 2.5rem);
+      font-weight: 700;
+      letter-spacing: -0.04em;
+      margin-bottom: 1rem;
+      line-height: 1.1;
+    }
+
+    p {
+      font-size: 0.9375rem;
+      color: var(--muted);
+      line-height: 1.7;
+      margin-bottom: 2.5rem;
+    }
+
+    .actions {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.7rem 1.5rem;
+      background: var(--accent);
+      color: #0A0A0A;
+      font-weight: 600;
+      font-size: 0.875rem;
+      text-decoration: none;
+      border-radius: 6px;
+      transition: opacity 0.15s;
+    }
+
+    .btn-primary:hover { opacity: 0.88; }
+
+    .btn-secondary {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.7rem 1.5rem;
+      color: var(--muted);
+      font-size: 0.875rem;
+      text-decoration: none;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      transition: border-color 0.15s, color 0.15s;
+    }
+
+    .btn-secondary:hover { border-color: var(--muted); color: var(--text); }
+
+    .nav-brand {
+      position: fixed;
+      top: 1.5rem;
+      left: 2rem;
+      font-family: var(--font-mono);
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--accent);
+      text-decoration: none;
+      letter-spacing: -0.02em;
+    }
+  </style>
+</head>
+<body>
+  <a href="/" class="nav-brand">powerhouse</a>
+  <div class="container">
+    <span class="code">404</span>
+    <h1>Page not found.</h1>
+    <p>The page you're looking for doesn't exist or may have been moved.</p>
+    <div class="actions">
+      <a href="/" class="btn-primary">Go home</a>
+      <a href="/getting-started/" class="btn-secondary">Read the docs</a>
+    </div>
+  </div>
+</body>
+</html>
