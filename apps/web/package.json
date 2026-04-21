@@ -5,12 +5,20 @@
   "type": "module",
   "scripts": {
     "dev": "astro dev",
-    "build": "astro build",
+    "check": "astro check",
+    "lint": "astro check",
+    "build": "astro check && astro build",
     "preview": "astro preview"
   },
   "dependencies": {
-    "@astrojs/starlight": "latest",
-    "astro": "^6.0.0"
+    "@astrojs/starlight": "0.38.3",
+    "@fontsource/geist-mono": "^5.2.7",
+    "@fontsource/geist-sans": "^5.2.5",
+    "astro": "6.1.8",
+    "starlight-theme-black": "^0.6.0"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.8",
+    "typescript": "^5.9.3"
   }
 }
-
