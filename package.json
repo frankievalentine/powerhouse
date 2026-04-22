@@ -9,12 +9,15 @@
     "apps/*"
   ],
   "scripts": {
-    "bootstrap": "bun run cli bootstrap",
+    "setup": "bun run cli setup",
+    "bootstrap": "bun run cli setup",
     "cli": "bun packages/cli/src/index.ts",
     "doctor": "bun run cli doctor",
     "domains": "bun run cli domain list",
     "lint": "bun run typecheck && bun run web:lint",
-    "profiles": "bun run cli profile list",
+    "harnesses": "bun run cli harness list",
+    "docs:generate": "bun scripts/generate-docs.ts",
+    "docs:generate:force": "bun scripts/generate-docs.ts --force",
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",

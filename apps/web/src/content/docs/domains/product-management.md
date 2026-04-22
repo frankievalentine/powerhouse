@@ -1,26 +1,28 @@
 ---
 title: Product Management
-description: PRDs, feature prioritization, and user feedback synthesis.
+description: Curated skills for PRDs, prioritization, and feedback-driven planning.
 ---
 
-PRDs, feature prioritization, and user feedback synthesis.
+Curated skills for PRDs, prioritization, and feedback-driven planning.
 
 ## Skills
 
-| Skills | Source |
+| Skill | Source |
 |---|---|
 | `prd-writer` | `pmprompt/claude-plugin-product-management` |
 | `feature-prioritization-assistant` | `pmprompt/claude-plugin-product-management` |
 | `user-feedback-synthesizer` | `pmprompt/claude-plugin-product-management` |
 
+Recommended domain tools are selected by default during setup. You can refine the optional tool layer later with `powerhouse tool use`, `powerhouse tool add`, or `powerhouse tool remove`.
+
 ## Using this domain
 
 ```bash
-powerhouse bootstrap --profile claude --domain product-management
+powerhouse setup --domain product-management
 ```
 
-Or switch to it from another domain:
+Or add it to an existing domain selection:
 
 ```bash
-powerhouse domain use product-management
+powerhouse domain add product-management
 ```

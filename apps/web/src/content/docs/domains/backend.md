@@ -1,24 +1,34 @@
 ---
 title: Backend
-description: APIs, services, and security-oriented code review.
+description: Curated skills and defaults for API, services, and infrastructure work.
 ---
 
-APIs, services, and security-oriented code review.
+Curated skills and defaults for API, services, and infrastructure work.
+
+## Recommended optional tools
+
+| Tool | Description |
+|---|---|
+| `python` | Python interpreter |
+| `uv` | Fast Python package manager |
+| `gh` | GitHub CLI for repos and PRs |
 
 ## Skills
 
-| Skills | Source |
+| Skill | Source |
 |---|---|
 | `security-review` | `vercel-labs/agent-skills` |
+
+Recommended domain tools are selected by default during setup. You can refine the optional tool layer later with `powerhouse tool use`, `powerhouse tool add`, or `powerhouse tool remove`.
 
 ## Using this domain
 
 ```bash
-powerhouse bootstrap --profile claude --domain backend
+powerhouse setup --domain backend
 ```
 
-Or switch to it from another domain:
+Or add it to an existing domain selection:
 
 ```bash
-powerhouse domain use backend
+powerhouse domain add backend
 ```

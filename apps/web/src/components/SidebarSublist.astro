@@ -1,0 +1,196 @@
+---
+import type { StarlightRouteData } from '@astrojs/starlight/route-data'
+
+interface Props {
+  sublist: StarlightRouteData['sidebar']
+  nested?: boolean
+}
+
+const { sublist, nested } = Astro.props
+
+function hasCurrentEntry(entries: StarlightRouteData['sidebar']): boolean {
+  return entries.some((entry) =>
+    entry.type === 'link' ? entry.isCurrent : hasCurrentEntry(entry.entries)
+  )
+}
+---
+
+{sublist.map((entry) =>
+  entry.type === 'link' ? (
+    <a
+      href={entry.href}
+      aria-current={entry.isCurrent && 'page'}
+      class:list={['entry-link', entry.attrs.class]}
+      {...entry.attrs}
+    >
+      {entry.label}
+      {entry.badge && <span class="entry-badge">{entry.badge.text}</span>}
+    </a>
+  ) : (
+    <details
+      class:list={['sidebar-group', { nested }]}
+      data-group={entry.label}
+      open={hasCurrentEntry(entry.entries) || (!entry.collapsed && !nested)}
+    >
+      <summary class="group-label">
+        <span>{entry.label}</span>
+        <svg class="chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <polyline points="6 9 12 15 18 9" />
+        </svg>
+      </summary>
+      <div class="group-items">
+        <Astro.self sublist={entry.entries} nested />
+      </div>
+    </details>
+  )
+)}
+
+<script>
+  const GROUPS_KEY = 'ph-sidebar-groups'
+  const SCROLL_KEY = 'ph-sidebar-scroll'
+
+  function getSidebar() {
+    return document.querySelector<HTMLElement>('.sidebar')
+  }
+
+  function getSavedGroups(): Record<string, boolean> {
+    try { return JSON.parse(sessionStorage.getItem(GROUPS_KEY) ?? '{}') } catch { return {} }
+  }
+
+  function initGroups() {
+    const saved = getSavedGroups()
+    document.querySelectorAll<HTMLDetailsElement>('details[data-group]').forEach((el) => {
+      const label = el.dataset.group!
+      const hasActivePage = !!el.querySelector('[aria-current="page"]')
+      if (!hasActivePage && label in saved) {
+        el.open = saved[label]
+      }
+      el.addEventListener('toggle', () => {
+        const current = getSavedGroups()
+        current[label] = el.open
+        sessionStorage.setItem(GROUPS_KEY, JSON.stringify(current))
+      })
+    })
+  }
+
+  // Save scroll position right before the DOM is torn down — most reliable capture point
+  document.addEventListener('astro:before-swap', () => {
+    const sidebar = getSidebar()
+    if (sidebar) {
+      sessionStorage.setItem(SCROLL_KEY, String(Math.round(sidebar.scrollTop)))
+    }
+  })
+
+  document.addEventListener('astro:page-load', () => {
+    // 1. Restore groups first — they affect the sidebar's scrollable height
+    initGroups()
+
+    // 2. Restore scroll after layout settles (rAF ensures group height changes are painted)
+    const saved = sessionStorage.getItem(SCROLL_KEY)
+    const sidebar = getSidebar()
+    if (sidebar && saved !== null) {
+      requestAnimationFrame(() => {
+        sidebar.scrollTop = parseInt(saved, 10)
+      })
+    }
+
+    // 3. Re-attach scroll listener on the fresh sidebar element
+    if (sidebar) {
+      sidebar.addEventListener('scroll', () => {
+        sessionStorage.setItem(SCROLL_KEY, String(Math.round(sidebar.scrollTop)))
+      }, { passive: true })
+    }
+  })
+</script>
+
+<style>
+  .sidebar-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.125rem;
+  }
+
+  .group-label {
+    list-style: none;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    font-weight: 600;
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: calc(var(--radius) - 2px);
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .group-label::-webkit-details-marker {
+    display: none;
+  }
+
+  .group-label:hover {
+    background-color: var(--accent);
+    color: var(--accent-foreground);
+  }
+
+  .chevron {
+    flex-shrink: 0;
+    opacity: 0.5;
+    transition: transform 0.15s ease;
+  }
+
+  details[open] > .group-label .chevron {
+    transform: rotate(180deg);
+  }
+
+  .group-items {
+    display: grid;
+    grid-auto-flow: row;
+    grid-auto-rows: max-content;
+    gap: 0.125rem;
+    padding-left: 0.75rem;
+    border-left: 1px solid color-mix(in oklab, var(--border) 50%, transparent);
+    margin-left: 0.5rem;
+  }
+
+  .nested > .group-label {
+    font-weight: 500;
+    font-size: 0.875rem;
+  }
+
+  .entry-link {
+    color: inherit;
+    text-decoration: inherit;
+    text-underline-offset: 2px;
+    font-weight: 500;
+    font-size: 0.875rem;
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+    border-radius: var(--radius);
+    align-items: center;
+    width: 100%;
+    height: 2rem;
+    display: flex;
+  }
+
+  .entry-link[aria-current='page'] {
+    background-color: var(--accent);
+    color: var(--accent-foreground);
+  }
+
+  .entry-link:hover {
+    background-color: var(--accent);
+    color: var(--accent-foreground);
+  }
+
+  .entry-badge {
+    color: rgb(0 0 0);
+    line-height: 1;
+    font-size: 0.75rem;
+    padding: 0.125rem 0.375rem;
+    background-color: rgb(173 250 29);
+    border-radius: calc(var(--radius) - 2px);
+    margin-left: 0.5rem;
+  }
+</style>

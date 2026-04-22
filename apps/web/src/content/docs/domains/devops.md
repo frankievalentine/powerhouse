@@ -1,25 +1,35 @@
 ---
 title: DevOps
-description: Rollout planning, automation, and infrastructure operations.
+description: Curated skills for rollout planning, automation, and infrastructure operations.
 ---
 
-Rollout planning, automation, and infrastructure operations.
+Curated skills for rollout planning, automation, and infrastructure operations.
+
+## Recommended optional tools
+
+| Tool | Description |
+|---|---|
+| `python` | Python interpreter |
+| `uv` | Fast Python package manager |
+| `gh` | GitHub CLI for repos and PRs |
 
 ## Skills
 
-| Skills | Source |
+| Skill | Source |
 |---|---|
 | `devops-rollout-plan` | `github/awesome-copilot` |
 | `devops-engineer` | `jeffallan/claude-skills` |
 
+Recommended domain tools are selected by default during setup. You can refine the optional tool layer later with `powerhouse tool use`, `powerhouse tool add`, or `powerhouse tool remove`.
+
 ## Using this domain
 
 ```bash
-powerhouse bootstrap --profile claude --domain devops
+powerhouse setup --domain devops
 ```
 
-Or switch to it from another domain:
+Or add it to an existing domain selection:
 
 ```bash
-powerhouse domain use devops
+powerhouse domain add devops
 ```

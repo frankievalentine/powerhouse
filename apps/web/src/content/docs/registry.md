@@ -1,60 +1,42 @@
 ---
 title: Registry
-description: The registry is the source of truth for everything powerhouse installs — profiles, domains, tools, integrations, MCP servers, and skills all live in JSON manifests you can read, diff, and evolve.
+description: "The registry is the source of truth for everything Powerhouse resolves: harnesses, domains, tools, integrations, MCP servers, and skill packages."
 ---
 
-The registry is a set of JSON manifest files that live in the `registry/` directory of the repository. When you run `bootstrap` or `plan`, the CLI reads these manifests, resolves a concrete install plan, and shows it to you before anything runs.
+The registry is a set of JSON manifests under `registry/`. When you run `setup` or `plan`, the CLI loads these manifests, resolves a concrete install plan, and shows it before anything changes on your machine.
 
-Nothing installs from a remote source at plan time — the registry is local, version-controlled, and fully auditable.
+Nothing is fetched from a remote catalog at plan time. The registry is local, version-controlled, and auditable.
 
 ## Structure
 
-```
+```text
 registry/
-  ├── profiles/
-  │   ├── base.json
-  │   ├── claude.json
-  │   ├── codex.json
-  │   ├── opencode.json
-  │   ├── cursor.json
-  │   ├── goose.json
-  │   ├── gemini.json
-  │   ├── openclaw.json
-  │   ├── antigravity.json
-  │   └── github-copilot.json
+  ├── harnesses/
   ├── domains/
-  │   ├── general.json
-  │   ├── web.json
-
-  │   ├── backend.json
-  │   ├── devops.json
-  │   ├── engineering.json
-  │   ├── design.json
-  │   ├── data.json
-  │   ├── content.json
-  │   ├── marketing.json
-  │   ├── product-management.json
-  │   └── social-media.json
   ├── integrations/
-  │   ├── claude-github.json
-  │   ├── gemini-workspace.json
-  │   └── ...
   ├── mcp/
-  │   ├── claude-context7.json
-  │   ├── codex-context7.json
-  │   └── ...
   └── tools/
-      ├── git.json
-      ├── bun.json
-      ├── claude-code.json
-      └── ...
 ```
 
----
+New harness manifests live in `registry/harnesses`. The loader still understands legacy `registry/profiles` data for migration and compatibility, but new writes and scaffolds use `harnesses`.
 
-## Profile manifests
+## Resolution model
 
-A profile declares which AI agent you work with. Most profiles extend the `base` profile to inherit universal tooling, then add only agent-specific binaries.
+Powerhouse resolves three layers into a final plan:
+
+1. Harnesses contribute required tools, default agents, integrations, and MCP servers.
+2. Domains contribute recommended optional tools, skill packages, and any domain-level integrations or MCP servers.
+3. The saved tool selection picks from the recommended optional tools only.
+
+The final tool set is:
+
+```text
+required harness tools + selected optional domain tools
+```
+
+## Harness manifests
+
+Harness manifests define the AI environment layer.
 
 ```json
 {
@@ -64,74 +46,61 @@ A profile declares which AI agent you work with. Most profiles extend the `base`
   "kind": "terminal-agent",
   "extends": "base",
   "defaultAgents": ["claude-code"],
-  "toolIds": ["claude-code"],
+  "requiredToolIds": ["claude-code"],
   "supportedPlatforms": ["darwin", "linux", "win32", "wsl"]
 }
 ```
 
-**Fields**
-
 | Field | Description |
 |---|---|
-| `id` | Unique identifier. Used with `--profile` and `profile use`. |
-| `title` | Display name shown in interactive prompts and `profile list`. |
-| `description` | Short description shown as a hint in the profile picker. |
-| `kind` | `terminal-agent`, `editor-integrated`, `ecosystem`, or `local-first`. Optional taxonomy for UI grouping and validation rules. |
-| `extends` | Parent profile ID to inherit `toolIds` from. Most profiles extend `base`. |
-| `integrationIds` | Curated integrations that should be resolved automatically when the profile is applied. |
-| `mcpServerIds` | Curated MCP servers that should be resolved automatically when the profile is applied. |
-| `defaultAgents` | Agents that receive global skill installs and discovery filtering when this profile is active. |
-| `toolIds` | Ordered list of tool IDs to install. Combined with inherited parent tool IDs. Tools are resolved in priority order from their own manifests. |
+| `id` | Unique identifier. Used with `--harness` and `powerhouse harness ...`. |
+| `title` | Display name shown in prompts and lists. |
+| `description` | Short description shown in harness selection UIs. |
+| `kind` | Optional taxonomy such as `terminal-agent`, `editor-integrated`, `ecosystem`, or `local-first`. |
+| `extends` | Parent harness id. Most harnesses extend `base`. |
+| `defaultAgents` | Agents that receive skill installs and catalog filtering when the harness is active. |
+| `requiredToolIds` | Required tool ids contributed by this harness. Combined with inherited parent tools. |
+| `integrationIds` | Curated integrations that should be included when this harness is active. |
+| `mcpServerIds` | Curated MCP servers that should be included when this harness is active. |
 | `supportedPlatforms` | Any mix of `darwin`, `linux`, `win32`, and `wsl`. |
-
----
 
 ## Domain manifests
 
-A domain declares its skill packages — each one points to a GitHub repository and lists which skills to install from it.
+Domain manifests define the workflow layer.
 
 ```json
 {
   "id": "web",
   "title": "Web",
   "description": "UI, frontend implementation, and design-heavy work.",
-  "extraToolIds": ["node", "bun"],
+  "recommendedToolIds": ["node", "bun"],
   "skillPackages": [
     {
       "source": "anthropics/skills",
       "skills": ["frontend-design"],
       "description": "Frontend and UI design guidance"
-    },
-    {
-      "source": "vercel-labs/agent-skills",
-      "skills": ["web-design-guidelines"],
-      "description": "Web presentation and design direction"
     }
   ],
   "notes": ["The web domain starts with design and frontend guidance, not framework lock-in."]
 }
 ```
 
-**Fields**
-
 | Field | Description |
 |---|---|
-| `id` | Unique identifier. Used with `--domain` and `domain use`. |
-| `title` | Display name shown in interactive prompts and `domain list`. |
-| `description` | Short description shown as a hint in the domain picker. |
-| `extraToolIds` | Additional tools to install beyond what the profile provides. |
+| `id` | Unique identifier. Used with `--domain` and `powerhouse domain ...`. |
+| `title` | Display name shown in prompts and lists. |
+| `description` | Short description shown in domain selection UIs. |
+| `recommendedToolIds` | Optional tool ids recommended by this domain. These become candidates for the saved tool selection. |
 | `integrationIds` | Curated integrations to add to the resolved plan for this domain. |
 | `mcpServerIds` | Curated MCP servers to add to the resolved plan for this domain. |
-| `skillPackages` | Array of skill package definitions to install when the domain is applied. |
-| `skillPackages[].source` | GitHub `owner/repo` the skill is sourced from. |
-| `skillPackages[].skills` | Which skills to install from that source. |
-| `notes` | Internal context for contributors about domain scope decisions. |
-
----
+| `skillPackages` | Skill package definitions to install when the domain is active. |
+| `skillPackages[].source` | GitHub `owner/repo` the skills are sourced from. |
+| `skillPackages[].skills` | Specific skills to install from that source. |
+| `notes` | Contributor notes about the domain's scope and intent. |
 
 ## Tool manifests
 
-A tool manifest declares how to check if the tool is already installed and how to install it per platform.
+Tool manifests define how Powerhouse detects and installs tools on each platform.
 
 ```json
 {
@@ -152,35 +121,20 @@ A tool manifest declares how to check if the tool is already installed and how t
 }
 ```
 
-**Fields**
-
 | Field | Description |
 |---|---|
-| `id` | Unique identifier. Referenced in profile `toolIds` arrays. |
+| `id` | Unique identifier. Referenced from `requiredToolIds` and `recommendedToolIds`. |
 | `title` | Display name. |
-| `description` | What this tool does and why it's in the registry. |
+| `description` | What the tool does and why it exists in the registry. |
 | `kind` | `ai-cli`, `developer-tool`, `runtime`, or `utility`. |
 | `priority` | Install order within a plan. Lower numbers install first. |
 | `check` | Structured command used by `doctor` to verify the tool is present. |
-| `doctorHint` | Guidance text shown when the check command fails. |
+| `doctorHint` | Guidance shown when the check command fails. |
 | `installs` | Per-platform install steps. Supports `brew`, `npm`, `script`, `winget`, `powershell-script`, and `scoop`. |
-
-**Install methods**
-
-| Method | Fields |
-|---|---|
-| `brew` | `name` — formula name. Optional `packageType` (`formula` or `cask`). Optional `tap`. |
-| `npm` | `package` — npm package name. Optional `bin`. Optional `global` (default `true`). |
-| `script` | `url` — URL of the install script. Optional `args`. |
-| `winget` | `id` — winget package id. Optional `exact` (default `true`). |
-| `powershell-script` | `url` — URL of the install script. Optional `args`. |
-| `scoop` | `name` — scoop package name. Optional `bucket`. |
-
----
 
 ## Integration manifests
 
-An integration manifest declares a curated plugin or extension for a specific agent.
+Integration manifests describe curated plugins or extensions for a specific agent.
 
 ```json
 {
@@ -201,24 +155,9 @@ An integration manifest declares a curated plugin or extension for a specific ag
 }
 ```
 
-**Fields**
-
-| Field | Description |
-|---|---|
-| `id` | Unique identifier. Used with `integration show` and `integration install`. |
-| `targetAgent` | Agent/tool id this integration targets, such as `claude-code` or `gemini-cli`. |
-| `supportedPlatforms` | Platforms where this integration is supported. |
-| `supportedScopes` | Powerhouse's normalized `global`, `project`, and `local` scopes. |
-| `installKind` | High-level install strategy. Mirrors `install.kind`. |
-| `source` | Native source identifier passed to the platform installer or config. |
-| `bundledMcpIds` | MCP server ids that should be installed alongside the integration. |
-| `install` | Platform-native install details. Supports `native-cli`, `json-config`, `toml-config`, and `manual`. |
-
----
-
 ## MCP manifests
 
-An MCP manifest declares a curated server setup for one or more agents.
+MCP manifests describe curated server configurations for one or more agents.
 
 ```json
 {
@@ -241,58 +180,20 @@ An MCP manifest declares a curated server setup for one or more agents.
 }
 ```
 
-**Fields**
+## Adding new manifests
 
-| Field | Description |
-|---|---|
-| `id` | Unique identifier. Used with `mcp show` and `mcp install`. |
-| `serverName` | Native MCP server name written into agent config. |
-| `targetAgents` | Agents this server can be configured for. |
-| `supportedPlatforms` | Platforms where the configuration path is supported. |
-| `supportedScopes` | Supported Powerhouse scopes for this server. |
-| `serverKind` | `stdio`, `http`, or `sse`. |
-| `source` | Package, URL, or endpoint used to configure the server. |
-| `install` | Platform-native install details. Supports `native-cli`, `json-config`, `toml-config`, and `manual`. |
+Use the scaffold commands to create new manifests with the current schema:
 
----
+```bash
+powerhouse registry scaffold-harness my-harness
+powerhouse registry scaffold-domain my-domain
+powerhouse registry scaffold-tool my-tool
+powerhouse registry scaffold-integration my-integration
+powerhouse registry scaffold-mcp my-mcp
+```
 
-## Validating the registry
-
-Before pushing any changes to manifests, run:
+Then validate the full registry:
 
 ```bash
 powerhouse registry validate
 ```
-
-This checks cross-manifest consistency — that every tool, integration, and MCP server reference resolves, that bundled MCP links are valid, that all platforms are declared correctly, and that required fields are present.
-
----
-
-## Scaffolding new manifests
-
-Use the scaffold commands to generate a valid starting point for new entries rather than writing JSON by hand.
-
-```bash
-# New domain
-powerhouse registry scaffold-domain my-domain --title "My Domain"
-
-# New profile
-powerhouse registry scaffold-profile my-profile --title "My Profile"
-
-# New tool
-powerhouse registry scaffold-tool my-tool --title "My Tool"
-
-# New integration
-powerhouse registry scaffold-integration my-plugin --title "My Plugin"
-
-# New MCP server
-powerhouse registry scaffold-mcp my-server --title "My Server"
-```
-
-Add `--dry-run` to preview the output without writing files:
-
-```bash
-powerhouse registry scaffold-domain my-domain --dry-run
-```
-
-After scaffolding, fill in the fields and run `registry validate` before committing.

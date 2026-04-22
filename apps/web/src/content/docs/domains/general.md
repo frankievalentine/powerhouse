@@ -1,24 +1,34 @@
 ---
 title: General
-description: A conservative default for broad repository work.
+description: A small default skill bundle for broad repository work.
 ---
 
-A conservative default for broad repository work. Installed when no domain is specified.
+A small default skill bundle for broad repository work.
+
+## Recommended optional tools
+
+| Tool | Description |
+|---|---|
+| `bat` | Syntax-highlighted file previews |
+| `eza` | Modern ls replacement with icons |
+| `fzf` | Fuzzy finder for files and history |
 
 ## Skills
 
-| Skills | Source |
+| Skill | Source |
 |---|---|
 | `skill-creator` | `vercel-labs/agent-skills` |
+
+Recommended domain tools are selected by default during setup. You can refine the optional tool layer later with `powerhouse tool use`, `powerhouse tool add`, or `powerhouse tool remove`.
 
 ## Using this domain
 
 ```bash
-powerhouse bootstrap --profile claude --domain general
+powerhouse setup --domain general
 ```
 
-Or switch to it from another domain:
+Or add it to an existing domain selection:
 
 ```bash
-powerhouse domain use general
+powerhouse domain add general
 ```

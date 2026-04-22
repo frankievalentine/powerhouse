@@ -1,6 +1,21 @@
 @import '@fontsource/geist-mono/400.css';
 @import '@fontsource/geist-mono/600.css';
 
+/* View transition: fade the main content area only, not the sidebar */
+.main-pane {
+  view-transition-name: main-content;
+}
+
+@keyframes fade-in  { from { opacity: 0 } }
+@keyframes fade-out { to   { opacity: 0 } }
+
+::view-transition-old(main-content) {
+  animation: 120ms ease-out both fade-out;
+}
+::view-transition-new(main-content) {
+  animation: 150ms ease-in  both fade-in;
+}
+
 /* Match the marketing page amber brand color */
 .site-title {
   color: #F59E0B !important;
@@ -9,35 +24,36 @@
   letter-spacing: -0.02em !important;
 }
 
-/* Sidebar link hover and active states */
-.sidebar-content ul li a {
+/* Sidebar link hover and active states
+   Target with high specificity to override Starlight's scoped component styles */
+#starlight__sidebar .sidebar-content ul li a {
   transition: background-color 0.15s ease, color 0.15s ease;
 }
 
-.sidebar-content ul li a:hover,
-.sidebar-content ul li a:focus {
+#starlight__sidebar .sidebar-content ul li a:hover,
+#starlight__sidebar .sidebar-content ul li a:focus {
   background-color: color-mix(in srgb, var(--sl-color-accent) 12%, transparent);
-  color: var(--sl-color-white);
+  color: var(--sl-color-text-accent);
 }
 
-.sidebar-content ul li a[aria-current='page'] {
+#starlight__sidebar .sidebar-content ul li a[aria-current='page'] {
   background-color: color-mix(in srgb, var(--sl-color-accent) 18%, transparent);
-  color: var(--sl-color-white);
+  color: var(--sl-color-text-accent);
   font-weight: 600;
 }
 
-.sidebar-content ul li a[aria-current='page']:hover,
-.sidebar-content ul li a[aria-current='page']:focus {
+#starlight__sidebar .sidebar-content ul li a[aria-current='page']:hover,
+#starlight__sidebar .sidebar-content ul li a[aria-current='page']:focus {
   background-color: color-mix(in srgb, var(--sl-color-accent) 24%, transparent);
 }
 
 /* Group headers (summary labels): only text color on hover, no background */
-.sidebar-content summary {
+#starlight__sidebar .sidebar-content summary {
   transition: color 0.15s ease;
 }
 
-.sidebar-content summary:hover {
-  color: var(--sl-color-white);
+#starlight__sidebar .sidebar-content summary:hover {
+  color: var(--sl-color-text-accent);
 }
 
 /* Right sidebar (table of contents) hover states */
@@ -47,5 +63,5 @@
 
 .right-sidebar-panel a:hover,
 .right-sidebar-panel a:focus {
-  color: var(--sl-color-white);
+  color: var(--sl-color-text-accent);
 }

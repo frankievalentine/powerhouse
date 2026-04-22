@@ -1,26 +1,28 @@
 ---
 title: Marketing
-description: SEO, copywriting, and marketing strategy.
+description: Curated skills for messaging, SEO, and marketing strategy workflows.
 ---
 
-SEO, copywriting, and marketing strategy.
+Curated skills for messaging, SEO, and marketing strategy workflows.
 
 ## Skills
 
-| Skills | Source |
+| Skill | Source |
 |---|---|
 | `seo-audit` | `coreyhaines31/marketingskills` |
 | `copywriting` | `coreyhaines31/marketingskills` |
 | `marketing-psychology` | `coreyhaines31/marketingskills` |
 
+Recommended domain tools are selected by default during setup. You can refine the optional tool layer later with `powerhouse tool use`, `powerhouse tool add`, or `powerhouse tool remove`.
+
 ## Using this domain
 
 ```bash
-powerhouse bootstrap --profile claude --domain marketing
+powerhouse setup --domain marketing
 ```
 
-Or switch to it from another domain:
+Or add it to an existing domain selection:
 
 ```bash
-powerhouse domain use marketing
+powerhouse domain add marketing
 ```

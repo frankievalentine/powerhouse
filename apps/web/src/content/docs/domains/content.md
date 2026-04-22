@@ -1,25 +1,27 @@
 ---
 title: Content
-description: Content strategy, research, and drafting workflows.
+description: Curated skills for content strategy, research, and drafting workflows.
 ---
 
-Content strategy, research, and drafting workflows.
+Curated skills for content strategy, research, and drafting workflows.
 
 ## Skills
 
-| Skills | Source |
+| Skill | Source |
 |---|---|
 | `content-strategy` | `coreyhaines31/marketingskills` |
 | `content-research-writer` | `composiohq/awesome-claude-skills` |
 
+Recommended domain tools are selected by default during setup. You can refine the optional tool layer later with `powerhouse tool use`, `powerhouse tool add`, or `powerhouse tool remove`.
+
 ## Using this domain
 
 ```bash
-powerhouse bootstrap --profile claude --domain content
+powerhouse setup --domain content
 ```
 
-Or switch to it from another domain:
+Or add it to an existing domain selection:
 
 ```bash
-powerhouse domain use content
+powerhouse domain add content
 ```

@@ -1,6 +1,6 @@
 ---
 const title = 'powerhouse';
-const description = 'The fastest AI workflow setup on any machine. One command bootstraps your tools, installs your agent, and configures curated skills for how you work.';
+const description = 'The fastest AI workflow setup on any machine. One command installs your tools, configures your agent, and wires in curated skills for how you work.';
 ---
 <!DOCTYPE html>
 <html lang="en">
@@ -331,13 +331,13 @@ const description = 'The fastest AI workflow setup on any machine. One command b
     .t-hint   { color: var(--text-dim); padding-left: 0.5rem; }
 
     /* ─── PROFILES ─── */
-    .profiles-grid {
+    .harnesses-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
       gap: 1rem;
     }
 
-    .profile-card {
+    .harness-card {
       background: var(--bg-card);
       border: 1px solid var(--border);
       border-radius: 10px;
@@ -345,9 +345,9 @@ const description = 'The fastest AI workflow setup on any machine. One command b
       transition: border-color 0.15s;
     }
 
-    .profile-card:hover { border-color: var(--accent-border); }
+    .harness-card:hover { border-color: var(--accent-border); }
 
-    .profile-agent {
+    .harness-agent {
       font-family: var(--font-mono);
       font-size: 0.72rem;
       color: var(--accent);
@@ -360,7 +360,7 @@ const description = 'The fastest AI workflow setup on any machine. One command b
       letter-spacing: 0.04em;
     }
 
-    .profile-card h3 {
+    .harness-card h3 {
       font-size: 1rem;
       font-weight: 600;
       letter-spacing: -0.025em;
@@ -370,14 +370,14 @@ const description = 'The fastest AI workflow setup on any machine. One command b
       gap: 0.625rem;
     }
 
-    .profile-card p {
+    .harness-card p {
       font-size: 0.84375rem;
       color: var(--text-muted);
       line-height: 1.7;
       margin-bottom: 1.125rem;
     }
 
-    .profile-tools {
+    .harness-tools {
       display: flex;
       flex-wrap: wrap;
       gap: 0.375rem;
@@ -393,12 +393,12 @@ const description = 'The fastest AI workflow setup on any machine. One command b
       border-radius: 3px;
     }
 
-    .profiles-more {
+    .harnesses-more {
       margin-top: 1.5rem;
       text-align: center;
     }
 
-    .profiles-more p {
+    .harnesses-more p {
       font-size: 0.875rem;
       color: var(--text-muted);
       line-height: 1.6;
@@ -406,7 +406,7 @@ const description = 'The fastest AI workflow setup on any machine. One command b
       margin: 0 auto;
     }
 
-    .profiles-more-count {
+    .harnesses-more-count {
       font-family: var(--font-mono);
       font-size: 1rem;
       font-weight: 600;
@@ -651,8 +651,8 @@ const description = 'The fastest AI workflow setup on any machine. One command b
   <section class="hero">
     <h1>One command to a productive AI environment.</h1>
     <p class="hero-tagline">
-      Pick the agent you want to use and the kind of work you do. We handle the tools, the skills,
-      and the setup — you just start coding.
+      Pick your harness, your domain, and your tools. Powerhouse handles the required setup,
+      integrations, MCP servers, and skills on macOS, Linux, and Windows so you can start working.
     </p>
     <div class="hero-actions">
       <a href="/getting-started/" class="btn-primary">→ Get started</a>
@@ -667,48 +667,59 @@ const description = 'The fastest AI workflow setup on any machine. One command b
         <div class="dot"></div>
         <div class="dot"></div>
         <div class="dot"></div>
-        <span class="terminal-title">bash — powerhouse bootstrap</span>
+        <span class="terminal-title">bash — powerhouse setup</span>
       </div>
       <div class="terminal-body">
-        <span class="t-comment t-block"># clone the repo</span>
-        <span class="t-block"><span class="t-ps">$</span> <span class="t-cmd">git clone https://github.com/frankievalentine/powerhouse</span></span>
-        <span class="t-out">Cloning into 'powerhouse'...</span>
+        <span class="t-comment t-block"># install powerhouse — no git required</span>
+        <span class="t-block"><span class="t-ps">$</span> <span class="t-cmd">curl -fsSL https://raw.githubusercontent.com/frankievalentine/powerhouse/main/install.sh | bash</span></span>
+        <span class="t-out">powerhouse bootstrap</span>
+        <span class="t-out">AI-native workstation setup</span>
         <span class="t-gap"></span>
-        <span class="t-block"><span class="t-ps">$</span> <span class="t-cmd">cd powerhouse &amp;&amp; ./install.sh</span></span>
+        <span class="t-clack t-block">◆  powerhouse setup</span>
         <span class="t-gap"></span>
-        <span class="t-clack t-block">◆  powerhouse bootstrap</span>
-        <span class="t-gap"></span>
-        <span class="t-clack t-block">◆  Choose a profile</span>
+        <span class="t-clack t-block">◆  Pick your harness</span>
         <span class="t-choice-active t-block">│  ●  Claude             <span class="t-hint">AI coding with Claude Code</span></span>
+        <span class="t-choice t-block">│  ○  Cursor             <span class="t-hint">AI-native code editor</span></span>
+        <span class="t-choice t-block">│  ○  Windsurf           <span class="t-hint">Codeium's AI-native editor</span></span>
         <span class="t-choice t-block">│  ○  Codex              <span class="t-hint">AI coding with OpenAI Codex</span></span>
-        <span class="t-choice t-block">│  ○  OpenCode           <span class="t-hint">Provider-agnostic open source agent</span></span>
         <span class="t-gap"></span>
-        <span class="t-clack t-block">◆  Choose a domain</span>
+        <span class="t-clack t-block">◆  Pick your domain</span>
         <span class="t-choice t-block">│  ○  General</span>
         <span class="t-choice-active t-block">│  ●  Web               <span class="t-hint">UI, frontend, design, and modern web dev</span></span>
-        <span class="t-choice t-block">│  ○  Backend</span>
-        <span class="t-choice t-block">│  ○  Devops</span>
+        <span class="t-choice t-block">│  ○  Engineering</span>
+        <span class="t-choice t-block">│  ○  DevOps</span>
         <span class="t-gap"></span>
-        <span class="t-clack t-block">◇  Apply this bootstrap plan now?</span>
+        <span class="t-out t-block">Required harness tools: git, curl, jq, ripgrep, fd, claude-code, claude-app</span>
+        <span class="t-gap"></span>
+        <span class="t-clack t-block">◆  Pick your tools</span>
+        <span class="t-choice-active t-block">│  ●  node              <span class="t-hint">Recommended by web</span></span>
+        <span class="t-choice-active t-block">│  ●  bun               <span class="t-hint">Recommended by web</span></span>
+        <span class="t-choice t-block">│  ○  playwright        <span class="t-hint">Optional testing tool</span></span>
+        <span class="t-gap"></span>
+        <span class="t-clack t-block">◇  Apply this setup plan now?</span>
         <span class="t-choice-active t-block">│  Yes</span>
         <span class="t-gap"></span>
-        <span class="t-ok t-block">◇  Installing 14 tools and 2 skill packages...</span>
-        <span class="t-ok t-block">◆  Bootstrap complete.</span>
+        <span class="t-out t-block">↷ git already available</span>
+        <span class="t-out t-block">• claude-code</span>
+        <span class="t-out t-block">✓ claude-github (global)</span>
+        <span class="t-out t-block">✓ context7 (global)</span>
+        <span class="t-out t-block">✓ sequential-thinking (global)</span>
+        <span class="t-ok t-block">◆  Setup complete.</span>
       </div>
     </div>
   </div>
 
-  <!-- ─── PROFILES ─── -->
+  <!-- ─── HARNESSES ─── -->
   <section class="section">
-    <p class="section-label">// profiles</p>
-    <h2 class="section-heading">Pick the agent you want to use.</h2>
-    <p class="section-sub">Each profile inherits a universal base — git, curl, jq, ripgrep, and fd — then adds only the AI agent you choose. Domains layer in workflow-specific tools on top.</p>
-    <div class="profiles-grid">
-      <div class="profile-card">
-        <span class="profile-agent">claude-code</span>
+    <p class="section-label">// harnesses</p>
+    <h2 class="section-heading">Pick your harness.</h2>
+    <p class="section-sub">Harnesses stay strict: each one inherits the shared base, then adds only the required tools for that AI environment. Domains layer recommended workflow tools on top.</p>
+    <div class="harnesses-grid">
+      <div class="harness-card">
+        <span class="harness-agent">claude-code</span>
         <h3>Claude</h3>
-        <p>Anthropic's Claude Code agent and desktop app. Inherits the base profile plus the Claude Code binary and the Claude App on macOS.</p>
-        <div class="profile-tools">
+        <p>Anthropic's Claude Code agent and desktop app. Adds the Claude Code binary and the Claude App on macOS on top of the shared base harness.</p>
+        <div class="harness-tools">
           <span class="tool-pill">git</span>
           <span class="tool-pill">curl</span>
           <span class="tool-pill">jq</span>
@@ -718,11 +729,11 @@ const description = 'The fastest AI workflow setup on any machine. One command b
           <span class="tool-pill">claude-app</span>
         </div>
       </div>
-      <div class="profile-card">
-        <span class="profile-agent">codex-cli</span>
+      <div class="harness-card">
+        <span class="harness-agent">codex-cli</span>
         <h3>Codex</h3>
-        <p>OpenAI's Codex CLI and desktop app. Inherits the base profile plus Node.js, the Codex CLI, and the Codex App on macOS.</p>
-        <div class="profile-tools">
+        <p>OpenAI's Codex CLI and desktop app. Adds Node.js, the Codex CLI, and the Codex App on macOS on top of the shared base harness.</p>
+        <div class="harness-tools">
           <span class="tool-pill">git</span>
           <span class="tool-pill">curl</span>
           <span class="tool-pill">jq</span>
@@ -733,11 +744,11 @@ const description = 'The fastest AI workflow setup on any machine. One command b
           <span class="tool-pill">codex-app</span>
         </div>
       </div>
-      <div class="profile-card">
-        <span class="profile-agent">opencode</span>
+      <div class="harness-card">
+        <span class="harness-agent">opencode</span>
         <h3>OpenCode</h3>
         <p>Provider-agnostic open source coding agent. Use with cloud providers or add Ollama for fully local, offline inference.</p>
-        <div class="profile-tools">
+        <div class="harness-tools">
           <span class="tool-pill">git</span>
           <span class="tool-pill">curl</span>
           <span class="tool-pill">jq</span>
@@ -747,11 +758,11 @@ const description = 'The fastest AI workflow setup on any machine. One command b
           <span class="tool-pill">opencode</span>
         </div>
       </div>
-      <div class="profile-card">
-        <span class="profile-agent">cursor</span>
+      <div class="harness-card">
+        <span class="harness-agent">cursor</span>
         <h3>Cursor</h3>
-        <p>The AI-native code editor. Inherits the base profile plus the Cursor application.</p>
-        <div class="profile-tools">
+        <p>The AI-native code editor. Adds the Cursor application on top of the shared base harness.</p>
+        <div class="harness-tools">
           <span class="tool-pill">git</span>
           <span class="tool-pill">curl</span>
           <span class="tool-pill">jq</span>
@@ -760,24 +771,23 @@ const description = 'The fastest AI workflow setup on any machine. One command b
           <span class="tool-pill">cursor</span>
         </div>
       </div>
-      <div class="profile-card">
-        <span class="profile-agent">goose</span>
-        <h3>Goose</h3>
-        <p>Block's open-source extensible AI agent. Inherits the base profile plus the Goose CLI.</p>
-        <div class="profile-tools">
+      <div class="harness-card">
+        <span class="harness-agent">antigravity</span>
+        <h3>Antigravity</h3>
+        <p>Google's Antigravity agent ecosystem. Keeps the shared base harness and is managed through the Gemini ecosystem.</p>
+        <div class="harness-tools">
           <span class="tool-pill">git</span>
           <span class="tool-pill">curl</span>
           <span class="tool-pill">jq</span>
           <span class="tool-pill">ripgrep</span>
           <span class="tool-pill">fd</span>
-          <span class="tool-pill">goose</span>
         </div>
       </div>
-      <div class="profile-card">
-        <span class="profile-agent">gemini-cli</span>
+      <div class="harness-card">
+        <span class="harness-agent">gemini-cli</span>
         <h3>Gemini</h3>
-        <p>Google's Gemini CLI. Inherits the base profile plus Node.js and the Gemini CLI.</p>
-        <div class="profile-tools">
+        <p>Google's Gemini CLI. Adds Node.js and the Gemini CLI on top of the shared base harness.</p>
+        <div class="harness-tools">
           <span class="tool-pill">git</span>
           <span class="tool-pill">curl</span>
           <span class="tool-pill">jq</span>
@@ -787,11 +797,11 @@ const description = 'The fastest AI workflow setup on any machine. One command b
           <span class="tool-pill">gemini-cli</span>
         </div>
       </div>
-      <div class="profile-card">
-        <span class="profile-agent">openclaw</span>
+      <div class="harness-card">
+        <span class="harness-agent">openclaw</span>
         <h3>OpenClaw</h3>
-        <p>Your own personal AI assistant. Inherits the base profile plus Node.js and the OpenClaw gateway.</p>
-        <div class="profile-tools">
+        <p>Your own personal AI assistant. Adds Node.js and the OpenClaw gateway on top of the shared base harness.</p>
+        <div class="harness-tools">
           <span class="tool-pill">git</span>
           <span class="tool-pill">curl</span>
           <span class="tool-pill">jq</span>
@@ -801,23 +811,63 @@ const description = 'The fastest AI workflow setup on any machine. One command b
           <span class="tool-pill">openclaw</span>
         </div>
       </div>
-      <div class="profile-card">
-        <span class="profile-agent">antigravity</span>
-        <h3>Antigravity</h3>
-        <p>Google's Antigravity agent ecosystem. Inherits the base profile. Managed through the Gemini ecosystem.</p>
-        <div class="profile-tools">
+      <div class="harness-card">
+        <span class="harness-agent">t3code</span>
+        <h3>T3 Code</h3>
+        <p>Minimal GUI for AI code agents by T3 Tools. Adds the T3 Code desktop app on top of the shared base harness.</p>
+        <div class="harness-tools">
           <span class="tool-pill">git</span>
           <span class="tool-pill">curl</span>
           <span class="tool-pill">jq</span>
           <span class="tool-pill">ripgrep</span>
           <span class="tool-pill">fd</span>
+          <span class="tool-pill">t3code</span>
         </div>
       </div>
-      <div class="profile-card">
-        <span class="profile-agent">github-copilot</span>
+      <div class="harness-card">
+        <span class="harness-agent">conductor</span>
+        <h3>Conductor</h3>
+        <p>Run a team of coding agents on your Mac in isolated workspaces. Supports Claude Code and Codex in parallel.</p>
+        <div class="harness-tools">
+          <span class="tool-pill">git</span>
+          <span class="tool-pill">curl</span>
+          <span class="tool-pill">jq</span>
+          <span class="tool-pill">ripgrep</span>
+          <span class="tool-pill">fd</span>
+          <span class="tool-pill">conductor</span>
+        </div>
+      </div>
+      <div class="harness-card">
+        <span class="harness-agent">superset</span>
+        <h3>Superset</h3>
+        <p>The code editor for AI agents. Orchestrate parallel coding agents with isolated Git worktrees.</p>
+        <div class="harness-tools">
+          <span class="tool-pill">git</span>
+          <span class="tool-pill">curl</span>
+          <span class="tool-pill">jq</span>
+          <span class="tool-pill">ripgrep</span>
+          <span class="tool-pill">fd</span>
+          <span class="tool-pill">superset</span>
+        </div>
+      </div>
+      <div class="harness-card">
+        <span class="harness-agent">goose</span>
+        <h3>Goose</h3>
+        <p>Block's open-source extensible AI agent. Adds the Goose CLI on top of the shared base harness.</p>
+        <div class="harness-tools">
+          <span class="tool-pill">git</span>
+          <span class="tool-pill">curl</span>
+          <span class="tool-pill">jq</span>
+          <span class="tool-pill">ripgrep</span>
+          <span class="tool-pill">fd</span>
+          <span class="tool-pill">goose</span>
+        </div>
+      </div>
+      <div class="harness-card">
+        <span class="harness-agent">github-copilot</span>
         <h3>GitHub Copilot</h3>
-        <p>GitHub Copilot agent experience. Inherits the base profile. Managed through your editor or the gh CLI extension.</p>
-        <div class="profile-tools">
+        <p>GitHub Copilot agent experience. Keeps the shared base harness and is managed through your editor or the gh CLI extension.</p>
+        <div class="harness-tools">
           <span class="tool-pill">git</span>
           <span class="tool-pill">curl</span>
           <span class="tool-pill">jq</span>
@@ -826,9 +876,9 @@ const description = 'The fastest AI workflow setup on any machine. One command b
         </div>
       </div>
     </div>
-    <div class="profiles-more">
-      <p class="profiles-more-count">+ 36 more</p>
-      <p>Including Aider, Codeium, Tabnine, Sourcegraph Cody, Replit, Zed, Amazon Q, and more.</p>
+    <div class="harnesses-more">
+      <p class="harnesses-more-count">12 harnesses, 16 domains</p>
+      <p>Claude, Codex, OpenCode, Cursor, Goose, Gemini, OpenClaw, T3 Code, Conductor, Superset, Antigravity, and GitHub Copilot — with web, backend, devops, engineering, design, data, and more.</p>
     </div>
   </section>
 
@@ -836,7 +886,7 @@ const description = 'The fastest AI workflow setup on any machine. One command b
   <section class="section">
     <p class="section-label">// domains</p>
     <h2 class="section-heading">Layer in skills for your workflow.</h2>
-    <p class="section-sub">Domains install curated skill packages from the community into your active AI agent — without changing anything about your base profile.</p>
+    <p class="section-sub">Domains install curated skill packages and recommend optional tools for your active harness selection. Required harness tools stay locked in.</p>
     <div class="domains-grid">
       <div class="domain-item">
         <div class="domain-name">web</div>
@@ -847,12 +897,24 @@ const description = 'The fastest AI workflow setup on any machine. One command b
         <div class="domain-desc">APIs, services, and security-oriented review</div>
       </div>
       <div class="domain-item">
+        <div class="domain-name">mobile</div>
+        <div class="domain-desc">Native and cross-platform mobile architecture, UI, and performance</div>
+      </div>
+      <div class="domain-item">
         <div class="domain-name">devops</div>
         <div class="domain-desc">Rollout planning, automation, and infrastructure ops</div>
       </div>
       <div class="domain-item">
+        <div class="domain-name">security</div>
+        <div class="domain-desc">Threat modeling, security review, and mitigation planning</div>
+      </div>
+      <div class="domain-item">
         <div class="domain-name">engineering</div>
         <div class="domain-desc">Architecture decisions, ADRs, and testing strategy</div>
+      </div>
+      <div class="domain-item">
+        <div class="domain-name">qa</div>
+        <div class="domain-desc">Test planning, regression analysis, and release validation</div>
       </div>
       <div class="domain-item">
         <div class="domain-name">design</div>
@@ -861,6 +923,14 @@ const description = 'The fastest AI workflow setup on any machine. One command b
       <div class="domain-item">
         <div class="domain-name">data</div>
         <div class="domain-desc">Analysis, reporting, and exploratory data workflows</div>
+      </div>
+      <div class="domain-item">
+        <div class="domain-name">ai</div>
+        <div class="domain-desc">LLM apps, prompt design, retrieval, and evaluation workflows</div>
+      </div>
+      <div class="domain-item">
+        <div class="domain-name">docs</div>
+        <div class="domain-desc">Technical docs, specs, API references, and changelogs</div>
       </div>
       <div class="domain-item">
         <div class="domain-name">content</div>
@@ -891,23 +961,23 @@ const description = 'The fastest AI workflow setup on any machine. One command b
     <div class="features-grid">
       <div class="feature">
         <p class="feature-num">01</p>
-        <h3>Choose your agent</h3>
-        <p>Pick a profile for Claude, Codex, OpenCode, Cursor, Goose, Gemini, and more. Each one installs the agent plus a universal base of git, curl, jq, ripgrep, and fd.</p>
+        <h3>Pick your harness</h3>
+        <p>Choose one or more AI environments for Claude, Codex, Cursor, Windsurf, Zed, Cline, Goose, Gemini, and more. Each harness installs only the required tools for that environment on top of the shared base.</p>
       </div>
       <div class="feature">
         <p class="feature-num">02</p>
-        <h3>Skills from the community</h3>
-        <p>Domains pull curated skill packages from upstream repos like <code>anthropics/skills</code>, <code>vercel-labs/agent-skills</code>, and <code>github/awesome-copilot</code> — not a proprietary bundle.</p>
+        <h3>Pick your domain</h3>
+        <p>Layer in workflow-specific skills and recommended tools for web, backend, docs, design, QA, security, and more. Domains stay focused on the work, not the AI environment.</p>
       </div>
       <div class="feature">
         <p class="feature-num">03</p>
-        <h3>Switch without starting over</h3>
-        <p>Change your profile with <code>profile use</code> or swap domains with <code>domain use</code>. powerhouse re-applies only what changed — no full rebootstrap needed.</p>
+        <h3>Pick your tools</h3>
+        <p>Required harness tools are always included. Recommended domain tools are selected by default, and you can trim or extend that optional set explicitly with <code>powerhouse tool</code>.</p>
       </div>
       <div class="feature">
         <p class="feature-num">04</p>
-        <h3>Always know your state</h3>
-        <p><code>status</code> shows what's active and installed. <code>doctor</code> checks every tool against the registry and surfaces anything that drifted or failed.</p>
+        <h3>Everything else is wired in</h3>
+        <p>Powerhouse configures curated integrations, MCP servers, and community skill packages from the resolved plan, then tracks the resulting state with <code>status</code>, <code>doctor</code>, and <code>prune</code>.</p>
       </div>
     </div>
   </section>
@@ -941,7 +1011,7 @@ const description = 'The fastest AI workflow setup on any machine. One command b
     <div class="cta-inner">
       <div class="cta-text">
         <h2>Set up your machine right, once.</h2>
-        <p>Walk through your first bootstrap in a few minutes.</p>
+        <p>Walk through your first setup in a few minutes.</p>
       </div>
       <div class="cta-actions">
         <a href="/getting-started/" class="btn-primary">→ Read the docs</a>

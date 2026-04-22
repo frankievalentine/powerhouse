@@ -2,70 +2,66 @@
 
 One command to a productive AI environment.
 
+## Quick install
+
+**macOS / Linux / WSL**
+
 ```bash
-./install.sh
+curl -fsSL https://raw.githubusercontent.com/frankievalentine/powerhouse/main/install.sh | bash
 ```
 
-Preview what it will do first:
+Preview the installation:
 
 ```bash
-./install.sh --dry-run
+curl -fsSL https://raw.githubusercontent.com/frankievalentine/powerhouse/main/install.sh | bash -s -- --dry-run
+```
+
+**Windows (PowerShell)**
+
+```powershell
+irm https://raw.githubusercontent.com/frankievalentine/powerhouse/main/install.ps1 | iex
+```
+
+Preview the installation:
+
+```powershell
+$env:POWERHOUSE_DRY_RUN = "1"; irm https://raw.githubusercontent.com/frankievalentine/powerhouse/main/install.ps1 | iex
 ```
 
 ## What it does
 
-Powerhouse picks an AI agent profile and a workflow domain, then installs everything you need to start coding with it.
+Powerhouse resolves three layers into one install plan:
 
-- **Profiles** — the AI agent you want to use (Claude, Codex, OpenCode, Cursor, etc.)
-- **Domains** — the kind of work you do (web, backend, devops, data, etc.)
-- **Tools** — developer dependencies checked and installed per platform
-- **Integrations & MCPs** — plugins and servers configured for your agent
-- **Skills** — curated knowledge packages loaded into your agent
+- **Harnesses**: one or more AI environments such as Claude, Codex, Cursor, or Windsurf
+- **Domains**: one or more workflow packs such as web, backend, devops, or docs
+- **Tools**: explicit optional tool selection on top of harness-required tools
+
+From that plan, Powerhouse installs missing tools, configures curated integrations and MCP servers for the selected harness agents, and installs domain skill packages.
 
 Everything is declared in JSON manifests under [`registry/`](./registry). The CLI resolves a plan, shows it to you, then installs only what is missing.
 
-## Available profiles
+## Selection model
 
-| Profile | Agent |
-|---|---|
-| `claude` | Anthropic Claude Code + desktop app |
-| `codex` | OpenAI Codex CLI + desktop app |
-| `opencode` | Provider-agnostic open source agent |
-| `cursor` | AI-native code editor |
-| `goose` | Block's open-source extensible agent |
-| `gemini` | Google's Gemini CLI |
-| `openclaw` | Personal AI assistant |
-| `antigravity` | Google's Antigravity ecosystem |
-| `github-copilot` | GitHub Copilot agent |
-
-## Available domains
-
-| Domain | Focus |
-|---|---|
-| `general` | Broad repository work |
-| `web` | UI, frontend, design, and modern web development |
-| `backend` | APIs, services, and security review |
-| `devops` | Rollout planning and infrastructure |
-| `engineering` | Architecture and testing strategy |
-| `design` | Interface design and design systems |
-| `data` | Analysis and exploratory workflows |
-| `content` | Content strategy and drafting |
-| `marketing` | SEO, copywriting, and strategy |
-| `product-management` | PRDs and prioritization |
-| `social-media` | Campaign planning and content |
+- Harnesses contribute **required tools**, default agents, integrations, and MCP servers.
+- Domains contribute **recommended optional tools** and skill packages.
+- Your saved tool selection contains only optional domain tools.
+- The final tool plan is: required harness tools + selected optional tools.
 
 ## Common commands
 
 ```bash
-# Bootstrap a full setup
-powerhouse bootstrap --profile claude --domain web
+# Run setup
+powerhouse setup --harness claude --domain web
+powerhouse setup --harness codex --harness cursor --domain backend --tool node --tool bun
 
 # Inspect a plan without installing
-powerhouse plan --profile codex --domain backend
+powerhouse plan --harness claude --domain engineering
 
-# Switch agent or workflow
-powerhouse profile use codex
-powerhouse domain use backend
+# Change selections incrementally
+powerhouse harness add codex
+powerhouse domain add docs
+powerhouse tool current
+powerhouse tool remove bun
 
 # Check environment health
 powerhouse doctor
@@ -85,11 +81,17 @@ powerhouse registry validate
 - macOS
 - Linux
 - WSL
-- Windows (plan/status/doctor only)
+- Windows (PowerShell)
 
 ## Development
 
+If you already have git and want to contribute or run from source:
+
 ```bash
+# Clone the repository
+git clone https://github.com/frankievalentine/powerhouse
+cd powerhouse
+
 # Install dependencies
 bun install
 
@@ -107,17 +109,14 @@ bun run cli registry validate
 
 | Path | Purpose |
 |---|---|
-| [`install.sh`](./install.sh) | End-user bootstrap entrypoint |
+| [`install.sh`](./install.sh) | End-user setup entrypoint |
 | [`packages/cli`](./packages/cli) | CLI commands and interactive UX |
 | [`packages/core`](./packages/core) | Registry, plans, installers, state |
-| [`registry`](./registry) | Manifests for tools, profiles, domains, integrations, MCPs |
+| [`registry`](./registry) | Manifests for tools, harnesses, domains, integrations, MCPs |
 | [`apps/web`](./apps/web) | Astro docs site |
 | [`tests`](./tests) | Vitest suite |
 
 ## Docs
 
-Full documentation lives at [powerhouse-pi.vercel.app](https://powerhouse-pi.vercel.app).
-
----
-
-See [`docs/architecture.md`](./docs/architecture.md) and [`docs/registry.md`](./docs/registry.md) for contributor details.
+- Public docs: [powerhouse-pi.vercel.app](https://powerhouse-pi.vercel.app)
+- Local contributor docs: [`apps/web/src/content/docs/getting-started.md`](./apps/web/src/content/docs/getting-started.md), [`apps/web/src/content/docs/harnesses.md`](./apps/web/src/content/docs/harnesses.md), [`apps/web/src/content/docs/domains.md`](./apps/web/src/content/docs/domains.md), [`apps/web/src/content/docs/registry.md`](./apps/web/src/content/docs/registry.md), [`apps/web/src/content/docs/cli.md`](./apps/web/src/content/docs/cli.md)
