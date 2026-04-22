@@ -9,7 +9,7 @@
     "command": "opencode",
     "args": ["--version"]
   },
-  "doctorHint": "OpenCode is expected by the opencode profile.",
+  "doctorHint": "OpenCode is expected by the opencode harness.",
   "installs": {
     "darwin": [{ "type": "brew", "name": "opencode", "tap": "anomalyco/tap" }],
     "linux": [{ "type": "brew", "name": "opencode", "tap": "anomalyco/tap" }]

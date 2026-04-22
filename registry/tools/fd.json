@@ -12,6 +12,7 @@
   "doctorHint": "fd is part of the default shell ergonomics bundle.",
   "installs": {
     "darwin": [{ "type": "brew", "name": "fd" }],
-    "linux": [{ "type": "brew", "name": "fd" }]
+    "linux": [{ "type": "brew", "name": "fd" }],
+    "win32": [{ "type": "winget", "id": "sharkdp.fd" }]
   }
 }

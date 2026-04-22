@@ -1,0 +1,17 @@
+{
+  "id": "flyctl",
+  "title": "Flyctl",
+  "description": "Command-line tools for Fly.io services. Deploy apps close to users.",
+  "kind": "developer-tool",
+  "priority": 60,
+  "supportedPlatforms": ["darwin", "linux", "win32", "wsl"],
+  "check": {
+    "command": "flyctl",
+    "args": ["--version"]
+  },
+  "doctorHint": "Flyctl is recommended for the devops domain. Install via brew install flyctl.",
+  "installs": {
+    "darwin": [{ "type": "brew", "name": "flyctl" }],
+    "linux": [{ "type": "brew", "name": "flyctl" }]
+  }
+}

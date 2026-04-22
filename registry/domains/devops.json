@@ -2,7 +2,7 @@
   "id": "devops",
   "title": "DevOps",
   "description": "Curated skills for rollout planning, automation, and infrastructure operations.",
-  "extraToolIds": ["python", "uv", "gh"],
+  "recommendedToolIds": ["python", "uv", "gh", "docker", "pulumi", "opentofu", "kubectl", "helm", "flyctl", "cloudflared"],
   "skillPackages": [
     {
       "source": "github/awesome-copilot",

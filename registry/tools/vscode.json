@@ -1,0 +1,19 @@
+{
+  "id": "vscode",
+  "title": "Visual Studio Code",
+  "description": "Microsoft's lightweight but powerful source code editor.",
+  "kind": "developer-tool",
+  "priority": 45,
+  "supportedPlatforms": ["darwin", "linux", "win32", "wsl"],
+  "check": {
+    "command": "code",
+    "args": ["--version"]
+  },
+  "doctorHint": "VS Code is required by editor-integrated harnesses that install extensions. Install via brew install --cask visual-studio-code.",
+  "installs": {
+    "darwin": [{ "type": "brew", "name": "visual-studio-code", "packageType": "cask" }],
+    "linux": [{ "type": "brew", "name": "visual-studio-code", "packageType": "cask" }],
+    "win32": [{ "type": "winget", "id": "Microsoft.VisualStudioCode" }],
+    "wsl": [{ "type": "brew", "name": "visual-studio-code", "packageType": "cask" }]
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "id": "gemini",
+  "title": "Gemini",
+  "description": "Google's Gemini CLI agent.",
+  "kind": "terminal-agent",
+  "extends": "base",
+  "supportedPlatforms": ["darwin", "linux", "win32", "wsl"],
+  "requiredToolIds": ["node", "gemini-cli"],
+  "integrationIds": ["gemini-workspace"],
+  "mcpServerIds": ["gemini-context7", "gemini-sequential-thinking"],
+  "defaultAgents": ["gemini-cli"],
+  "notes": ["Skill installs target Gemini CLI by default."]
+}

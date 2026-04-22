@@ -1,0 +1,17 @@
+{
+  "id": "graphviz",
+  "title": "Graphviz",
+  "description": "Graph visualization software. Render directed and undirected graphs.",
+  "kind": "utility",
+  "priority": 80,
+  "supportedPlatforms": ["darwin", "linux", "win32", "wsl"],
+  "check": {
+    "command": "dot",
+    "args": ["-V"]
+  },
+  "doctorHint": "Graphviz is recommended for docs and design domains. Install via brew install graphviz.",
+  "installs": {
+    "darwin": [{ "type": "brew", "name": "graphviz" }],
+    "linux": [{ "type": "brew", "name": "graphviz" }]
+  }
+}

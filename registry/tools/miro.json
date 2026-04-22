@@ -1,0 +1,16 @@
+{
+  "id": "miro",
+  "title": "Miro",
+  "description": "Online collaborative whiteboard platform for brainstorming and planning.",
+  "kind": "developer-tool",
+  "priority": 60,
+  "supportedPlatforms": ["darwin", "linux", "win32", "wsl"],
+  "check": {
+    "command": "ls",
+    "args": ["/Applications/Miro.app"]
+  },
+  "doctorHint": "Miro is recommended for product-management and design domains. Install via brew install --cask miro.",
+  "installs": {
+    "darwin": [{ "type": "brew", "name": "miro", "packageType": "cask" }]
+  }
+}

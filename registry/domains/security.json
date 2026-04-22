@@ -1,0 +1,19 @@
+{
+  "id": "security",
+  "title": "Security",
+  "description": "Curated skills for threat modeling, application security review, and mitigation planning.",
+  "recommendedToolIds": ["python", "uv", "gh", "gitleaks", "trivy", "1password-cli"],
+  "skillPackages": [
+    {
+      "source": "vercel-labs/agent-skills",
+      "skills": ["security-review"],
+      "description": "Application security review guidance for code and architecture."
+    },
+    {
+      "source": "wshobson/agents",
+      "skills": ["stride-analysis-patterns", "attack-tree-construction", "security-requirement-extraction", "threat-mitigation-mapping"],
+      "description": "Threat-modeling workflows and remediation planning patterns."
+    }
+  ],
+  "notes": ["Security is broader than backend's single review skill and is centered on threat modeling and mitigation planning."]
+}

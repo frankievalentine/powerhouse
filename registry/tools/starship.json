@@ -1,0 +1,17 @@
+{
+  "id": "starship",
+  "title": "Starship",
+  "description": "Minimal, fast, and customizable cross-shell prompt.",
+  "kind": "utility",
+  "priority": 35,
+  "supportedPlatforms": ["darwin", "linux", "win32", "wsl"],
+  "check": {
+    "command": "starship",
+    "args": ["--version"]
+  },
+  "doctorHint": "Starship is recommended for the general domain. Install via brew install starship.",
+  "installs": {
+    "darwin": [{ "type": "brew", "name": "starship" }],
+    "linux": [{ "type": "brew", "name": "starship" }]
+  }
+}

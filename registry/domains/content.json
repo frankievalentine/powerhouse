@@ -2,7 +2,7 @@
   "id": "content",
   "title": "Content",
   "description": "Curated skills for content strategy, research, and drafting workflows.",
-  "extraToolIds": [],
+  "recommendedToolIds": ["pandoc", "d2", "notion"],
   "skillPackages": [
     {
       "source": "coreyhaines31/marketingskills",

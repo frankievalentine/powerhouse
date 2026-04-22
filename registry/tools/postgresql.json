@@ -1,0 +1,17 @@
+{
+  "id": "postgresql",
+  "title": "PostgreSQL",
+  "description": "Object-relational database system for local development and testing.",
+  "kind": "developer-tool",
+  "priority": 45,
+  "supportedPlatforms": ["darwin", "linux", "win32", "wsl"],
+  "check": {
+    "command": "psql",
+    "args": ["--version"]
+  },
+  "doctorHint": "PostgreSQL is recommended for backend and data domains. Install via brew install postgresql@18.",
+  "installs": {
+    "darwin": [{ "type": "brew", "name": "postgresql@18" }],
+    "linux": [{ "type": "brew", "name": "postgresql@18" }]
+  }
+}

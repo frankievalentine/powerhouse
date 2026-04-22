@@ -12,6 +12,7 @@
   "doctorHint": "Install Bun before running the powerhouse CLI locally.",
   "installs": {
     "darwin": [{ "type": "brew", "name": "bun" }],
-    "linux": [{ "type": "brew", "name": "bun" }]
+    "linux": [{ "type": "brew", "name": "bun" }],
+    "win32": [{ "type": "powershell-script", "url": "https://bun.sh/install.ps1" }]
   }
 }

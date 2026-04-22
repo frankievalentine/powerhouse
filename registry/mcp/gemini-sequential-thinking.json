@@ -1,0 +1,24 @@
+{
+  "id": "gemini-sequential-thinking",
+  "title": "Gemini Sequential Thinking MCP",
+  "description": "Structured multi-step reasoning server for Gemini CLI.",
+  "serverName": "sequential-thinking",
+  "targetAgents": ["gemini-cli"],
+  "supportedPlatforms": ["darwin", "linux", "win32", "wsl"],
+  "supportedScopes": ["global", "project"],
+  "serverKind": "stdio",
+  "source": "@modelcontextprotocol/server-sequential-thinking",
+  "tags": ["reasoning", "thinking", "mcp"],
+  "install": {
+    "kind": "native-cli",
+    "command": "gemini",
+    "args": ["mcp", "add", "--scope", "{{nativeScope}}", "{{serverName}}", "npx", "-y", "{{source}}"],
+    "cwd": "project",
+    "env": {},
+    "scopeMap": {
+      "global": "user",
+      "project": "project"
+    },
+    "restartRequired": false
+  }
+}

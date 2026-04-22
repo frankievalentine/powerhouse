@@ -1,0 +1,31 @@
+{
+  "id": "cursor-sequential-thinking",
+  "title": "Cursor Sequential Thinking MCP",
+  "description": "Structured multi-step reasoning server for Cursor.",
+  "serverName": "sequential-thinking",
+  "targetAgents": ["cursor"],
+  "supportedPlatforms": ["darwin", "linux", "wsl"],
+  "supportedScopes": ["global", "project"],
+  "serverKind": "stdio",
+  "source": "@modelcontextprotocol/server-sequential-thinking",
+  "tags": ["reasoning", "thinking", "mcp"],
+  "install": {
+    "kind": "json-config",
+    "scopePaths": {
+      "global": "~/.cursor/mcp.json",
+      "project": ".cursor/mcp.json"
+    },
+    "operations": [
+      {
+        "op": "set-object-entry",
+        "path": ["mcpServers"],
+        "key": "{{serverName}}",
+        "value": {
+          "command": "npx",
+          "args": ["-y", "@modelcontextprotocol/server-sequential-thinking"]
+        }
+      }
+    ],
+    "restartRequired": true
+  }
+}

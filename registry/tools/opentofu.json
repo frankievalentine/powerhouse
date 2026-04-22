@@ -1,0 +1,17 @@
+{
+  "id": "opentofu",
+  "title": "OpenTofu",
+  "description": "Open-source fork of Terraform. Infrastructure as Code tool.",
+  "kind": "developer-tool",
+  "priority": 55,
+  "supportedPlatforms": ["darwin", "linux", "win32", "wsl"],
+  "check": {
+    "command": "tofu",
+    "args": ["--version"]
+  },
+  "doctorHint": "OpenTofu is recommended for the devops and engineering domains. Install via brew install opentofu.",
+  "installs": {
+    "darwin": [{ "type": "brew", "name": "opentofu" }],
+    "linux": [{ "type": "brew", "name": "opentofu" }]
+  }
+}

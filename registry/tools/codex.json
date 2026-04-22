@@ -9,7 +9,7 @@
     "command": "codex",
     "args": ["--version"]
   },
-  "doctorHint": "Codex is expected by the codex profile.",
+  "doctorHint": "Codex is expected by the codex harness.",
   "installs": {
     "darwin": [{ "type": "brew", "name": "codex", "packageType": "cask" }],
     "linux": [{ "type": "npm", "package": "@openai/codex" }]

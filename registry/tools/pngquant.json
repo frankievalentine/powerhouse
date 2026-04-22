@@ -1,0 +1,17 @@
+{
+  "id": "pngquant",
+  "title": "pngquant",
+  "description": "PNG image optimizing utility. Compress PNGs with minimal quality loss.",
+  "kind": "utility",
+  "priority": 75,
+  "supportedPlatforms": ["darwin", "linux", "win32", "wsl"],
+  "check": {
+    "command": "pngquant",
+    "args": ["--version"]
+  },
+  "doctorHint": "pngquant is recommended for the web and design domains. Install via brew install pngquant.",
+  "installs": {
+    "darwin": [{ "type": "brew", "name": "pngquant" }],
+    "linux": [{ "type": "brew", "name": "pngquant" }]
+  }
+}

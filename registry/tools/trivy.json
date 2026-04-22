@@ -1,0 +1,17 @@
+{
+  "id": "trivy",
+  "title": "Trivy",
+  "description": "Vulnerability scanner for container images, file systems, and Git repositories.",
+  "kind": "developer-tool",
+  "priority": 45,
+  "supportedPlatforms": ["darwin", "linux", "win32", "wsl"],
+  "check": {
+    "command": "trivy",
+    "args": ["--version"]
+  },
+  "doctorHint": "Trivy is recommended for the security and devops domains. Install via brew install trivy.",
+  "installs": {
+    "darwin": [{ "type": "brew", "name": "trivy" }],
+    "linux": [{ "type": "brew", "name": "trivy" }]
+  }
+}

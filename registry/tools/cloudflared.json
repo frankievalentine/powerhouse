@@ -1,0 +1,17 @@
+{
+  "id": "cloudflared",
+  "title": "cloudflared",
+  "description": "Cloudflare Tunnel client. Create secure tunnels to localhost.",
+  "kind": "developer-tool",
+  "priority": 65,
+  "supportedPlatforms": ["darwin", "linux", "win32", "wsl"],
+  "check": {
+    "command": "cloudflared",
+    "args": ["--version"]
+  },
+  "doctorHint": "cloudflared is recommended for the devops and web domains. Install via brew install cloudflared.",
+  "installs": {
+    "darwin": [{ "type": "brew", "name": "cloudflared" }],
+    "linux": [{ "type": "brew", "name": "cloudflared" }]
+  }
+}

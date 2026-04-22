@@ -1,0 +1,17 @@
+{
+  "id": "d2",
+  "title": "D2",
+  "description": "Modern diagram scripting language that turns text to diagrams.",
+  "kind": "utility",
+  "priority": 75,
+  "supportedPlatforms": ["darwin", "linux", "win32", "wsl"],
+  "check": {
+    "command": "d2",
+    "args": ["--version"]
+  },
+  "doctorHint": "D2 is recommended for design, docs, and content domains. Install via brew install d2.",
+  "installs": {
+    "darwin": [{ "type": "brew", "name": "d2" }],
+    "linux": [{ "type": "brew", "name": "d2" }]
+  }
+}

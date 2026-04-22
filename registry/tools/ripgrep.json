@@ -12,6 +12,7 @@
   "doctorHint": "ripgrep is part of the default shell ergonomics bundle.",
   "installs": {
     "darwin": [{ "type": "brew", "name": "ripgrep" }],
-    "linux": [{ "type": "brew", "name": "ripgrep" }]
+    "linux": [{ "type": "brew", "name": "ripgrep" }],
+    "win32": [{ "type": "winget", "id": "BurntSushi.ripgrep.MSVC" }]
   }
 }

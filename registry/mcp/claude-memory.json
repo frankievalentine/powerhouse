@@ -1,0 +1,25 @@
+{
+  "id": "claude-memory",
+  "title": "Claude Memory MCP",
+  "description": "Persistent knowledge graph memory for Claude Code sessions.",
+  "serverName": "memory",
+  "targetAgents": ["claude-code"],
+  "supportedPlatforms": ["darwin", "linux", "wsl"],
+  "supportedScopes": ["global", "project", "local"],
+  "serverKind": "stdio",
+  "source": "@modelcontextprotocol/server-memory",
+  "tags": ["memory", "knowledge", "mcp"],
+  "install": {
+    "kind": "native-cli",
+    "command": "claude",
+    "args": ["mcp", "add", "{{serverName}}", "--scope", "{{nativeScope}}", "--", "npx", "-y", "{{source}}"],
+    "cwd": "project",
+    "env": {},
+    "scopeMap": {
+      "global": "user",
+      "project": "project",
+      "local": "local"
+    },
+    "restartRequired": false
+  }
+}

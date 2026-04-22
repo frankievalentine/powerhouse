@@ -1,0 +1,10 @@
+{
+  "id": "base",
+  "title": "Base",
+  "description": "Universal tooling required by every Powerhouse harness and domain.",
+  "kind": "terminal-agent",
+  "supportedPlatforms": ["darwin", "linux", "win32", "wsl"],
+  "requiredToolIds": ["git", "curl", "jq", "ripgrep", "fd"],
+  "defaultAgents": [],
+  "notes": ["This harness is not selectable directly; it provides the shared foundation for all other harnesses."]
+}

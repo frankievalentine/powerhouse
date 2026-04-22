@@ -12,6 +12,7 @@
   "doctorHint": "Node is required for npm and some upstream AI CLIs.",
   "installs": {
     "darwin": [{ "type": "brew", "name": "node" }],
-    "linux": [{ "type": "brew", "name": "node" }]
+    "linux": [{ "type": "brew", "name": "node" }],
+    "win32": [{ "type": "winget", "id": "OpenJS.NodeJS" }]
   }
 }

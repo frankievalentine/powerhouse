@@ -12,6 +12,7 @@
   "doctorHint": "jq is expected by several shell-heavy workflows.",
   "installs": {
     "darwin": [{ "type": "brew", "name": "jq" }],
-    "linux": [{ "type": "brew", "name": "jq" }]
+    "linux": [{ "type": "brew", "name": "jq" }],
+    "win32": [{ "type": "winget", "id": "jqlang.jq" }]
   }
 }

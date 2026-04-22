@@ -1,0 +1,18 @@
+{
+  "id": "docker",
+  "title": "Docker",
+  "description": "Pack, ship, and run applications in lightweight containers.",
+  "kind": "developer-tool",
+  "priority": 30,
+  "supportedPlatforms": ["darwin", "linux", "win32", "wsl"],
+  "check": {
+    "command": "docker",
+    "args": ["--version"]
+  },
+  "doctorHint": "Docker is recommended for backend, devops, data, and AI domains. Install via brew install docker.",
+  "installs": {
+    "darwin": [{ "type": "brew", "name": "docker" }],
+    "linux": [{ "type": "brew", "name": "docker" }],
+    "win32": [{ "type": "winget", "id": "Docker.DockerDesktop" }]
+  }
+}

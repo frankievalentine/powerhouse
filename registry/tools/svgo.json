@@ -1,0 +1,17 @@
+{
+  "id": "svgo",
+  "title": "SVGO",
+  "description": "Node.js-based tool for optimizing SVG vector graphics files.",
+  "kind": "utility",
+  "priority": 70,
+  "supportedPlatforms": ["darwin", "linux", "win32", "wsl"],
+  "check": {
+    "command": "svgo",
+    "args": ["--version"]
+  },
+  "doctorHint": "SVGO is recommended for the web and design domains. Install via brew install svgo.",
+  "installs": {
+    "darwin": [{ "type": "brew", "name": "svgo" }],
+    "linux": [{ "type": "brew", "name": "svgo" }]
+  }
+}

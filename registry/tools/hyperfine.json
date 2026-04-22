@@ -1,0 +1,17 @@
+{
+  "id": "hyperfine",
+  "title": "Hyperfine",
+  "description": "Command-line benchmarking tool. Compare performance of commands and scripts.",
+  "kind": "utility",
+  "priority": 70,
+  "supportedPlatforms": ["darwin", "linux", "win32", "wsl"],
+  "check": {
+    "command": "hyperfine",
+    "args": ["--version"]
+  },
+  "doctorHint": "Hyperfine is recommended for engineering, QA, and general domains. Install via brew install hyperfine.",
+  "installs": {
+    "darwin": [{ "type": "brew", "name": "hyperfine" }],
+    "linux": [{ "type": "brew", "name": "hyperfine" }]
+  }
+}

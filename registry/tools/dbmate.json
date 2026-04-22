@@ -1,0 +1,17 @@
+{
+  "id": "dbmate",
+  "title": "dbmate",
+  "description": "Lightweight, framework-agnostic database migration tool.",
+  "kind": "developer-tool",
+  "priority": 65,
+  "supportedPlatforms": ["darwin", "linux", "win32", "wsl"],
+  "check": {
+    "command": "dbmate",
+    "args": ["--version"]
+  },
+  "doctorHint": "dbmate is recommended for the backend domain. Install via brew install dbmate.",
+  "installs": {
+    "darwin": [{ "type": "brew", "name": "dbmate" }],
+    "linux": [{ "type": "brew", "name": "dbmate" }]
+  }
+}

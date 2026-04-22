@@ -1,0 +1,19 @@
+{
+  "id": "mobile",
+  "title": "Mobile",
+  "description": "Curated skills for native and cross-platform mobile architecture, UI, and performance work.",
+  "recommendedToolIds": ["node", "bun", "gh", "fastlane", "cocoapods"],
+  "skillPackages": [
+    {
+      "source": "vercel-labs/agent-skills",
+      "skills": ["react-native-guidelines"],
+      "description": "React Native and Expo performance and implementation guidance."
+    },
+    {
+      "source": "wshobson/agents",
+      "skills": ["react-native-architecture", "mobile-ios-design", "mobile-android-design", "react-native-design"],
+      "description": "Mobile architecture plus iOS, Android, and cross-platform design patterns."
+    }
+  ],
+  "notes": ["Mobile leans toward React Native and platform UX patterns in v1 while remaining useful for broader app planning."]
+}

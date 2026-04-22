@@ -1,7 +1,7 @@
 {
   "id": "ollama",
   "title": "Ollama",
-  "description": "Local model runtime for workstation profiles that prefer on-device inference.",
+  "description": "Local model runtime for workstation harnesses that prefer on-device inference.",
   "kind": "ai-cli",
   "priority": 50,
   "supportedPlatforms": ["darwin", "linux", "win32", "wsl"],
@@ -9,7 +9,7 @@
     "command": "ollama",
     "args": ["--version"]
   },
-  "doctorHint": "Ollama is an optional add-on for the opencode profile when using local LLMs.",
+  "doctorHint": "Ollama is an optional add-on for the opencode harness when using local LLMs.",
   "installs": {
     "darwin": [{ "type": "brew", "name": "ollama" }],
     "linux": [{ "type": "brew", "name": "ollama" }]

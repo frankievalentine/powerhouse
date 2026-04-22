@@ -1,0 +1,11 @@
+{
+  "id": "openclaw",
+  "title": "OpenClaw",
+  "description": "OpenClaw personal AI assistant.",
+  "kind": "terminal-agent",
+  "extends": "base",
+  "supportedPlatforms": ["darwin", "linux", "win32", "wsl"],
+  "requiredToolIds": ["node", "openclaw"],
+  "defaultAgents": ["openclaw"],
+  "notes": ["Skill installs target OpenClaw by default."]
+}

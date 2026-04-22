@@ -1,0 +1,17 @@
+{
+  "id": "zed",
+  "title": "Zed",
+  "description": "High-performance multiplayer code editor with built-in AI assistant.",
+  "kind": "developer-tool",
+  "priority": 60,
+  "supportedPlatforms": ["darwin", "linux", "wsl"],
+  "check": {
+    "command": "zed",
+    "args": ["--version"]
+  },
+  "doctorHint": "Zed is expected by the zed harness. Install via brew install --cask zed.",
+  "installs": {
+    "darwin": [{ "type": "brew", "name": "zed", "packageType": "cask" }],
+    "linux": [{ "type": "script", "url": "https://zed.dev/install.sh", "args": [] }]
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "id": "helm",
+  "title": "Helm",
+  "description": "Kubernetes package manager. Find, share, and use software built for Kubernetes.",
+  "kind": "developer-tool",
+  "priority": 55,
+  "supportedPlatforms": ["darwin", "linux", "win32", "wsl"],
+  "check": {
+    "command": "helm",
+    "args": ["version"]
+  },
+  "doctorHint": "Helm is recommended for the devops domain. Install via brew install helm.",
+  "installs": {
+    "darwin": [{ "type": "brew", "name": "helm" }],
+    "linux": [{ "type": "brew", "name": "helm" }]
+  }
+}

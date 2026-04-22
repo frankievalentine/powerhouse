@@ -2,7 +2,7 @@
   "id": "design",
   "title": "Design",
   "description": "Curated skills for interface design, visual exploration, and design-system work.",
-  "extraToolIds": [],
+  "recommendedToolIds": ["figma", "imagemagick", "ffmpeg", "svgo", "pngquant", "d2", "mermaid-cli", "graphviz"],
   "skillPackages": [
     {
       "source": "anthropics/skills",

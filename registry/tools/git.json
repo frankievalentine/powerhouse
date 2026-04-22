@@ -12,6 +12,7 @@
   "doctorHint": "Git is required for most developer tooling and skill package installs.",
   "installs": {
     "darwin": [{ "type": "brew", "name": "git" }],
-    "linux": [{ "type": "brew", "name": "git" }]
+    "linux": [{ "type": "brew", "name": "git" }],
+    "win32": [{ "type": "winget", "id": "Git.Git" }]
   }
 }

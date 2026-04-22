@@ -179,21 +179,21 @@ export const domainManifestSchema = z.object({
   id: z.string().min(1),
   title: z.string().min(1),
   description: z.string().min(1),
-  extraToolIds: z.array(z.string()).default([]),
+  recommendedToolIds: z.array(z.string()).default([]),
   integrationIds: z.array(z.string()).default([]),
   mcpServerIds: z.array(z.string()).default([]),
   skillPackages: z.array(skillPackageSchema).default([]),
   notes: z.array(z.string()).default([])
 });
 
-export const profileManifestSchema = z.object({
+export const harnessManifestSchema = z.object({
   id: z.string().min(1),
   title: z.string().min(1),
   description: z.string().min(1),
   kind: z.enum(['terminal-agent', 'editor-integrated', 'ecosystem', 'local-first']).optional(),
   extends: z.string().min(1).optional(),
   supportedPlatforms: z.array(platformSchema).nonempty(),
-  toolIds: z.array(z.string()).default([]),
+  requiredToolIds: z.array(z.string()).default([]),
   integrationIds: z.array(z.string()).default([]),
   mcpServerIds: z.array(z.string()).default([]),
   defaultAgents: z.array(z.string()).default([]),
@@ -231,7 +231,7 @@ export const mcpManifestSchema = z.object({
 export type InstallStep = z.infer<typeof installStepSchema>;
 export type ToolManifest = z.infer<typeof toolManifestSchema>;
 export type DomainManifest = z.infer<typeof domainManifestSchema>;
-export type ProfileManifest = z.infer<typeof profileManifestSchema>;
+export type HarnessManifest = z.infer<typeof harnessManifestSchema>;
 export type SkillPackage = z.infer<typeof skillPackageSchema>;
 export type CommandCheck = z.infer<typeof checkSchema>;
 export type NormalizedScope = z.infer<typeof normalizedScopeSchema>;

@@ -1,0 +1,13 @@
+{
+  "id": "t3code",
+  "title": "T3 Code",
+  "description": "Minimal GUI for AI code agents by T3 Tools.",
+  "kind": "editor-integrated",
+  "extends": "base",
+  "supportedPlatforms": ["darwin", "linux", "wsl"],
+  "requiredToolIds": ["t3code"],
+  "integrationIds": [],
+  "mcpServerIds": [],
+  "defaultAgents": ["t3code"],
+  "notes": ["Skill installs target T3 Code by default. On macOS it installs via Homebrew Cask. On Linux/WSL, download the AppImage from https://t3.codes/download before running setup.", "T3 Code does not expose a plugin or extension API."]
+}

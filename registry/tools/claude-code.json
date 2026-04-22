@@ -9,7 +9,7 @@
     "command": "claude",
     "args": ["--version"]
   },
-  "doctorHint": "Claude Code is expected by the claude profile.",
+  "doctorHint": "Claude Code is expected by the claude harness.",
   "installs": {
     "darwin": [{ "type": "brew", "name": "claude-code", "packageType": "cask" }],
     "linux": [{ "type": "script", "url": "https://claude.ai/install.sh", "args": ["stable"] }]

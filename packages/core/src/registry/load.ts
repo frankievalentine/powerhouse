@@ -3,14 +3,14 @@ import path from 'node:path';
 
 import {
   domainManifestSchema,
+  harnessManifestSchema,
   integrationManifestSchema,
   mcpManifestSchema,
-  profileManifestSchema,
   toolManifestSchema,
   type DomainManifest,
+  type HarnessManifest,
   type IntegrationManifest,
   type McpManifest,
-  type ProfileManifest,
   type ToolManifest
 } from './schema.ts';
 import { findWorkspaceRoot } from '../workspace.ts';
@@ -18,7 +18,7 @@ import { findWorkspaceRoot } from '../workspace.ts';
 export interface RegistryData {
   rootDir: string;
   tools: ToolManifest[];
-  profiles: ProfileManifest[];
+  harnesses: HarnessManifest[];
   domains: DomainManifest[];
   integrations: IntegrationManifest[];
   mcpServers: McpManifest[];
@@ -26,16 +26,22 @@ export interface RegistryData {
 
 export async function loadRegistry(startDir = process.cwd()): Promise<RegistryData> {
   const rootDir = await findWorkspaceRoot(startDir);
+  const harnessDirectory =
+    (await existingDirectory(path.join(rootDir, 'registry', 'harnesses'))) ??
+    (await existingDirectory(path.join(rootDir, 'registry', 'profiles')));
+  if (!harnessDirectory) {
+    throw new Error('Unable to find registry/harnesses or registry/profiles.');
+  }
 
-  const [tools, profiles, domains, integrations, mcpServers] = await Promise.all([
+  const [tools, harnesses, domains, integrations, mcpServers] = await Promise.all([
     loadDirectory(path.join(rootDir, 'registry', 'tools'), toolManifestSchema.parse),
-    loadDirectory(path.join(rootDir, 'registry', 'profiles'), profileManifestSchema.parse),
-    loadDirectory(path.join(rootDir, 'registry', 'domains'), domainManifestSchema.parse),
+    loadDirectory(harnessDirectory, parseHarnessManifest),
+    loadDirectory(path.join(rootDir, 'registry', 'domains'), parseDomainManifest),
     loadOptionalDirectory(path.join(rootDir, 'registry', 'integrations'), integrationManifestSchema.parse),
     loadOptionalDirectory(path.join(rootDir, 'registry', 'mcp'), mcpManifestSchema.parse)
   ]);
 
-  return { rootDir, tools, profiles, domains, integrations, mcpServers };
+  return { rootDir, tools, harnesses, domains, integrations, mcpServers };
 }
 
 async function loadDirectory<T>(dirPath: string, parse: (input: unknown) => T): Promise<T[]> {
@@ -59,4 +65,39 @@ async function loadOptionalDirectory<T>(dirPath: string, parse: (input: unknown)
     }
     throw error;
   }
+}
+
+async function existingDirectory(dirPath: string): Promise<string | null> {
+  try {
+    const stat = await fs.stat(dirPath);
+    return stat.isDirectory() ? dirPath : null;
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
+      return null;
+    }
+    throw error;
+  }
+}
+
+function parseHarnessManifest(input: unknown): HarnessManifest {
+  const normalized = normalizeManifestObject(input);
+  return harnessManifestSchema.parse({
+    ...normalized,
+    requiredToolIds: normalized.requiredToolIds ?? normalized.toolIds ?? []
+  });
+}
+
+function parseDomainManifest(input: unknown): DomainManifest {
+  const normalized = normalizeManifestObject(input);
+  return domainManifestSchema.parse({
+    ...normalized,
+    recommendedToolIds: normalized.recommendedToolIds ?? normalized.extraToolIds ?? []
+  });
+}
+
+function normalizeManifestObject(input: unknown): Record<string, unknown> {
+  if (!input || typeof input !== 'object' || Array.isArray(input)) {
+    return {};
+  }
+  return input as Record<string, unknown>;
 }

@@ -1,0 +1,23 @@
+{
+  "id": "cline-context7",
+  "title": "Cline Context7 MCP",
+  "description": "Install the Context7 MCP server for the Cline VS Code extension.",
+  "serverName": "context7",
+  "targetAgents": ["cline"],
+  "supportedPlatforms": ["darwin", "linux", "wsl"],
+  "supportedScopes": ["global"],
+  "serverKind": "stdio",
+  "source": "@upstash/context7-mcp",
+  "tags": ["context7", "docs", "mcp"],
+  "install": {
+    "kind": "manual",
+    "instructions": [
+      "Open VS Code and go to the Cline extension settings (sidebar icon → gear icon).",
+      "Navigate to 'MCP Servers' and add a new server named 'context7'.",
+      "Set command: npx, args: [-y, @upstash/context7-mcp].",
+      "macOS config path: ~/Library/Application Support/Code/User/globalStorage/saoudrizwan.claude-dev/settings/cline_mcp_settings.json",
+      "Linux/WSL config path: ~/.config/Code/User/globalStorage/saoudrizwan.claude-dev/settings/cline_mcp_settings.json"
+    ],
+    "restartRequired": true
+  }
+}

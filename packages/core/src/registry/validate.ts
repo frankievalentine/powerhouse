@@ -1,7 +1,7 @@
 import type { DetectedPlatform, PlatformTarget } from '../platform/detect.ts';
 import type { RegistryData } from './load.ts';
 
-import { resolveBootstrapPlan, resolveProfileToolIds } from '../install/resolve.ts';
+import { resolveSetupPlan, resolveHarnessRequiredToolIds } from '../install/resolve.ts';
 
 export interface RegistryValidationResult {
   errors: string[];
@@ -13,7 +13,7 @@ export function validateRegistry(registry: RegistryData): RegistryValidationResu
   const warnings: string[] = [];
 
   assertUniqueIds('tool', registry.tools.map((tool) => tool.id), errors);
-  assertUniqueIds('profile', registry.profiles.map((profile) => profile.id), errors);
+  assertUniqueIds('harness', registry.harnesses.map((harness) => harness.id), errors);
   assertUniqueIds('domain', registry.domains.map((domain) => domain.id), errors);
   assertUniqueIds('integration', registry.integrations.map((integration) => integration.id), errors);
   assertUniqueIds('mcp', registry.mcpServers.map((server) => server.id), errors);
@@ -34,67 +34,71 @@ export function validateRegistry(registry: RegistryData): RegistryValidationResu
       }
 
       if (tool.installs[platform].length === 0) {
-        errors.push(`Tool "${tool.id}" supports ${platform} but has no install steps for that platform.`);
+        if (tool.doctorHint) {
+          warnings.push(`Tool "${tool.id}" supports ${platform} but has no automated install steps — manual install only. See doctorHint.`);
+        } else {
+          errors.push(`Tool "${tool.id}" supports ${platform} but has no install steps for that platform.`);
+        }
       }
     }
   }
 
-  for (const profile of registry.profiles) {
-    const resolvedToolIds = resolveProfileToolIds(registry, profile.id);
+  for (const harness of registry.harnesses) {
+    const resolvedToolIds = resolveHarnessRequiredToolIds(registry, harness.id);
 
-    for (const toolId of profile.toolIds) {
+    for (const toolId of harness.requiredToolIds) {
       if (!toolIds.has(toolId)) {
-        errors.push(`Profile "${profile.id}" references missing tool "${toolId}".`);
+        errors.push(`Harness "${harness.id}" references missing required tool "${toolId}".`);
       }
     }
 
-    for (const agent of profile.defaultAgents) {
+    for (const agent of harness.defaultAgents) {
       if (toolIds.has(agent) && !resolvedToolIds.includes(agent)) {
-        errors.push(`Profile "${profile.id}" default agent "${agent}" is not included in the profile tool set.`);
+        errors.push(`Harness "${harness.id}" default agent "${agent}" is not included in the harness required tool set.`);
       }
     }
 
-    for (const integrationId of profile.integrationIds) {
+    for (const integrationId of harness.integrationIds) {
       if (!integrationIds.has(integrationId)) {
-        errors.push(`Profile "${profile.id}" references missing integration "${integrationId}".`);
+        errors.push(`Harness "${harness.id}" references missing integration "${integrationId}".`);
       }
     }
 
-    for (const mcpServerId of profile.mcpServerIds) {
+    for (const mcpServerId of harness.mcpServerIds) {
       if (!mcpServerIds.has(mcpServerId)) {
-        errors.push(`Profile "${profile.id}" references missing MCP server "${mcpServerId}".`);
+        errors.push(`Harness "${harness.id}" references missing MCP server "${mcpServerId}".`);
       }
     }
   }
 
-  const profileIds = new Set(registry.profiles.map((profile) => profile.id));
+  const harnessIds = new Set(registry.harnesses.map((harness) => harness.id));
 
-  for (const profile of registry.profiles) {
-    if (profile.extends) {
-      if (!profileIds.has(profile.extends)) {
-        errors.push(`Profile "${profile.id}" extends unknown profile "${profile.extends}".`);
+  for (const harness of registry.harnesses) {
+    if (harness.extends) {
+      if (!harnessIds.has(harness.extends)) {
+        errors.push(`Harness "${harness.id}" extends unknown harness "${harness.extends}".`);
       }
     }
   }
 
-  for (const profile of registry.profiles) {
+  for (const harness of registry.harnesses) {
     const chain = new Set<string>();
-    let currentId: string | undefined = profile.id;
+    let currentId: string | undefined = harness.id;
     while (currentId) {
       if (chain.has(currentId)) {
-        errors.push(`Circular profile inheritance detected involving "${currentId}".`);
+        errors.push(`Circular harness inheritance detected involving "${currentId}".`);
         break;
       }
       chain.add(currentId);
-      const currentProfile = registry.profiles.find((p) => p.id === currentId);
-      currentId = currentProfile?.extends;
+      const currentHarness = registry.harnesses.find((candidate) => candidate.id === currentId);
+      currentId = currentHarness?.extends;
     }
   }
 
   for (const domain of registry.domains) {
-    for (const toolId of domain.extraToolIds) {
+    for (const toolId of domain.recommendedToolIds) {
       if (!toolIds.has(toolId)) {
-        errors.push(`Domain "${domain.id}" references missing extra tool "${toolId}".`);
+        errors.push(`Domain "${domain.id}" references missing recommended tool "${toolId}".`);
       }
     }
 
@@ -129,14 +133,14 @@ export function validateRegistry(registry: RegistryData): RegistryValidationResu
     }
   }
 
-  for (const profile of registry.profiles) {
+  for (const harness of registry.harnesses) {
     for (const domain of registry.domains) {
-      for (const platform of profile.supportedPlatforms) {
+      for (const platform of harness.supportedPlatforms) {
         try {
-          resolveBootstrapPlan(registry, syntheticPlatform(platform), profile.id, domain.id);
+          resolveSetupPlan(registry, syntheticPlatform(platform), [harness.id], [domain.id]);
         } catch (error) {
           const message = error instanceof Error ? error.message : String(error);
-          errors.push(`Plan "${profile.id}" + "${domain.id}" on ${platform} is invalid: ${message}`);
+          errors.push(`Plan "${harness.id}" + "${domain.id}" on ${platform} is invalid: ${message}`);
         }
       }
     }

@@ -9,7 +9,7 @@
     "command": "goose",
     "args": ["--version"]
   },
-  "doctorHint": "Goose is expected by the goose profile. Install via the official download script.",
+  "doctorHint": "Goose is expected by the goose harness. Install via the official download script.",
   "installs": {
     "darwin": [{ "type": "script", "url": "https://github.com/aaif-goose/goose/releases/download/stable/download_cli.sh", "args": [] }],
     "linux": [{ "type": "script", "url": "https://github.com/aaif-goose/goose/releases/download/stable/download_cli.sh", "args": [] }]

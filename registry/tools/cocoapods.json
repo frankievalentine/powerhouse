@@ -1,0 +1,17 @@
+{
+  "id": "cocoapods",
+  "title": "CocoaPods",
+  "description": "Dependency manager for Cocoa projects. Manage iOS and macOS libraries.",
+  "kind": "developer-tool",
+  "priority": 55,
+  "supportedPlatforms": ["darwin", "linux", "wsl"],
+  "check": {
+    "command": "pod",
+    "args": ["--version"]
+  },
+  "doctorHint": "CocoaPods is recommended for the mobile domain. Install via brew install cocoapods.",
+  "installs": {
+    "darwin": [{ "type": "brew", "name": "cocoapods" }],
+    "linux": [{ "type": "brew", "name": "cocoapods" }]
+  }
+}

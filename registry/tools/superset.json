@@ -1,0 +1,19 @@
+{
+  "id": "superset",
+  "title": "Superset",
+  "description": "The code editor for AI agents. Orchestrate parallel coding agents with isolated Git worktrees.",
+  "kind": "developer-tool",
+  "priority": 60,
+  "supportedPlatforms": ["darwin", "linux", "wsl"],
+  "check": {
+    "command": "superset",
+    "args": ["--version"]
+  },
+  "doctorHint": "Superset is expected by the superset harness. Install via brew tap superset-sh/homebrew-tap && brew install superset, or download from https://superset.sh/.",
+  "installs": {
+    "darwin": [{ "type": "brew", "name": "superset", "packageType": "formula", "tap": "superset-sh/homebrew-tap" }],
+    "linux": [{ "type": "brew", "name": "superset", "packageType": "formula", "tap": "superset-sh/homebrew-tap" }],
+    "win32": [],
+    "wsl": [{ "type": "brew", "name": "superset", "packageType": "formula", "tap": "superset-sh/homebrew-tap" }]
+  }
+}

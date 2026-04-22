@@ -1,0 +1,17 @@
+{
+  "id": "stripe-cli",
+  "title": "Stripe CLI",
+  "description": "Command-line tool for Stripe. Test webhooks, trigger events, and manage resources.",
+  "kind": "developer-tool",
+  "priority": 60,
+  "supportedPlatforms": ["darwin", "linux", "win32", "wsl"],
+  "check": {
+    "command": "stripe",
+    "args": ["--version"]
+  },
+  "doctorHint": "Stripe CLI is recommended for the web domain. Install via brew install stripe-cli.",
+  "installs": {
+    "darwin": [{ "type": "brew", "name": "stripe-cli" }],
+    "linux": [{ "type": "brew", "name": "stripe-cli" }]
+  }
+}

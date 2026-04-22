@@ -1,0 +1,17 @@
+{
+  "id": "windsurf",
+  "title": "Windsurf",
+  "description": "Codeium's AI-native code editor with built-in Cascade agent.",
+  "kind": "ai-cli",
+  "priority": 60,
+  "supportedPlatforms": ["darwin", "linux", "wsl"],
+  "check": {
+    "command": "windsurf",
+    "args": ["--version"]
+  },
+  "doctorHint": "Windsurf is expected by the windsurf harness. Install via brew install --cask windsurf.",
+  "installs": {
+    "darwin": [{ "type": "brew", "name": "windsurf", "packageType": "cask" }],
+    "linux": [{ "type": "brew", "name": "windsurf", "packageType": "cask" }]
+  }
+}

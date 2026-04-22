@@ -3,7 +3,7 @@ import path from 'node:path';
 
 import { findWorkspaceRoot } from '../workspace.ts';
 
-export type RegistryScaffoldKind = 'domain' | 'profile' | 'tool' | 'integration' | 'mcp';
+export type RegistryScaffoldKind = 'domain' | 'harness' | 'tool' | 'integration' | 'mcp';
 
 export interface ScaffoldOptions {
   dryRun?: boolean;
@@ -25,7 +25,7 @@ export async function scaffoldRegistryManifest(
   assertManifestId(id);
 
   const rootDir = await findWorkspaceRoot(startDir);
-  const directory = kind === 'mcp' ? 'mcp' : `${kind}s`;
+  const directory = getRegistryDirectory(kind);
   const filePath = path.join(rootDir, 'registry', directory, `${id}.json`);
 
   try {
@@ -51,6 +51,18 @@ export async function scaffoldRegistryManifest(
   };
 }
 
+function getRegistryDirectory(kind: RegistryScaffoldKind): string {
+  if (kind === 'harness') {
+    return 'harnesses';
+  }
+
+  if (kind === 'mcp') {
+    return 'mcp';
+  }
+
+  return `${kind}s`;
+}
+
 function renderManifest(kind: RegistryScaffoldKind, id: string, title?: string): string {
   const manifestTitle = title ?? humanizeId(id);
 
@@ -61,7 +73,7 @@ function renderManifest(kind: RegistryScaffoldKind, id: string, title?: string):
           id,
           title: manifestTitle,
           description: `Curated skills and optional tooling for ${manifestTitle.toLowerCase()} workflows.`,
-          extraToolIds: [],
+          recommendedToolIds: [],
           skillPackages: [],
           notes: []
         },
@@ -71,15 +83,15 @@ function renderManifest(kind: RegistryScaffoldKind, id: string, title?: string):
     );
   }
 
-  if (kind === 'profile') {
+  if (kind === 'harness') {
     return (
       JSON.stringify(
         {
           id,
           title: manifestTitle,
-          description: `${manifestTitle} workstation profile.`,
+          description: `${manifestTitle} AI harness.`,
           supportedPlatforms: ['darwin', 'linux', 'win32', 'wsl'],
-          toolIds: [],
+          requiredToolIds: [],
           defaultAgents: [],
           notes: []
         },

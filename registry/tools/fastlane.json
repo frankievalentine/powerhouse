@@ -1,0 +1,17 @@
+{
+  "id": "fastlane",
+  "title": "Fastlane",
+  "description": "Easiest way to build and release mobile apps. Automate iOS and Android deployments.",
+  "kind": "developer-tool",
+  "priority": 50,
+  "supportedPlatforms": ["darwin", "linux", "win32", "wsl"],
+  "check": {
+    "command": "fastlane",
+    "args": ["--version"]
+  },
+  "doctorHint": "Fastlane is recommended for the mobile domain. Install via brew install fastlane.",
+  "installs": {
+    "darwin": [{ "type": "brew", "name": "fastlane" }],
+    "linux": [{ "type": "brew", "name": "fastlane" }]
+  }
+}

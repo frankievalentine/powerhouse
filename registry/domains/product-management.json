@@ -2,7 +2,7 @@
   "id": "product-management",
   "title": "Product Management",
   "description": "Curated skills for PRDs, prioritization, and feedback-driven planning.",
-  "extraToolIds": [],
+  "recommendedToolIds": ["linear", "notion", "figma", "miro", "loom"],
   "skillPackages": [
     {
       "source": "pmprompt/claude-plugin-product-management",

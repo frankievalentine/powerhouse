@@ -1,0 +1,24 @@
+{
+  "id": "claude-git",
+  "title": "Claude Git MCP",
+  "description": "Git repository operations for Claude Code via the official MCP git server.",
+  "serverName": "git",
+  "targetAgents": ["claude-code"],
+  "supportedPlatforms": ["darwin", "linux", "wsl"],
+  "supportedScopes": ["project", "local"],
+  "serverKind": "stdio",
+  "source": "mcp-server-git",
+  "tags": ["git", "version-control", "mcp"],
+  "install": {
+    "kind": "native-cli",
+    "command": "claude",
+    "args": ["mcp", "add", "{{serverName}}", "--scope", "{{nativeScope}}", "--", "uvx", "{{source}}", "--repository", "{{projectDir}}"],
+    "cwd": "project",
+    "env": {},
+    "scopeMap": {
+      "project": "project",
+      "local": "local"
+    },
+    "restartRequired": false
+  }
+}

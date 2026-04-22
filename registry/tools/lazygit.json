@@ -1,0 +1,17 @@
+{
+  "id": "lazygit",
+  "title": "Lazygit",
+  "description": "Simple terminal UI for git commands. Stage, commit, branch, and resolve conflicts visually.",
+  "kind": "utility",
+  "priority": 40,
+  "supportedPlatforms": ["darwin", "linux", "win32", "wsl"],
+  "check": {
+    "command": "lazygit",
+    "args": ["--version"]
+  },
+  "doctorHint": "Lazygit is recommended for the general domain. Install via brew install lazygit.",
+  "installs": {
+    "darwin": [{ "type": "brew", "name": "lazygit" }],
+    "linux": [{ "type": "brew", "name": "lazygit" }]
+  }
+}

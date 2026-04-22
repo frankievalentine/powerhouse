@@ -9,7 +9,7 @@
     "command": "gemini",
     "args": ["--version"]
   },
-  "doctorHint": "Gemini CLI is expected by the gemini profile. Install via brew install gemini-cli or npm install -g @google/gemini-cli.",
+  "doctorHint": "Gemini CLI is expected by the gemini harness. Install via brew install gemini-cli or npm install -g @google/gemini-cli.",
   "installs": {
     "darwin": [{ "type": "brew", "name": "gemini-cli" }],
     "linux": [{ "type": "npm", "package": "@google/gemini-cli" }]

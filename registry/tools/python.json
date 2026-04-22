@@ -12,6 +12,7 @@
   "doctorHint": "Python is part of the default runtime foundation.",
   "installs": {
     "darwin": [{ "type": "brew", "name": "python" }],
-    "linux": [{ "type": "brew", "name": "python" }]
+    "linux": [{ "type": "brew", "name": "python" }],
+    "win32": [{ "type": "winget", "id": "Python.Python.3.12" }]
   }
 }

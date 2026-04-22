@@ -2,7 +2,7 @@
   "id": "social-media",
   "title": "Social Media",
   "description": "Curated skills for social campaign planning, post generation, and channel-ready content.",
-  "extraToolIds": [],
+  "recommendedToolIds": [],
   "skillPackages": [
     {
       "source": "dengineproblem/agents-monorepo",

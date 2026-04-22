@@ -1,0 +1,13 @@
+{
+  "id": "claude",
+  "title": "Claude",
+  "description": "Anthropic's Claude Code CLI, plus the Claude desktop app on macOS.",
+  "kind": "terminal-agent",
+  "extends": "base",
+  "supportedPlatforms": ["darwin", "linux", "win32", "wsl"],
+  "requiredToolIds": ["claude-code", "claude-app"],
+  "integrationIds": ["claude-github"],
+  "mcpServerIds": ["claude-context7", "claude-sequential-thinking"],
+  "defaultAgents": ["claude-code"],
+  "notes": ["Skill installs target Claude Code by default."]
+}

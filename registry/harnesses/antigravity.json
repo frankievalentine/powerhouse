@@ -1,0 +1,11 @@
+{
+  "id": "antigravity",
+  "title": "Antigravity",
+  "description": "Google's Antigravity agent ecosystem.",
+  "kind": "ecosystem",
+  "extends": "base",
+  "supportedPlatforms": ["darwin", "linux"],
+  "requiredToolIds": [],
+  "defaultAgents": ["antigravity"],
+  "notes": ["Skill installs target Antigravity by default. Antigravity itself is managed through the Gemini ecosystem.", "Antigravity is a VS Code fork and does not expose a non-interactive extension install path."]
+}

@@ -2,7 +2,8 @@
   "id": "engineering",
   "title": "Engineering",
   "description": "Curated skills for architecture, technical decision-making, and testing strategy.",
-  "extraToolIds": ["python", "uv", "gh"],
+  "recommendedToolIds": ["python", "uv", "gh", "docker", "opentofu", "hyperfine"],
+  "mcpServerIds": ["claude-sequential-thinking", "opencode-sequential-thinking"],
   "skillPackages": [
     {
       "source": "wshobson/agents",

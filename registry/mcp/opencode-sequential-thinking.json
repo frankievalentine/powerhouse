@@ -1,0 +1,33 @@
+{
+  "id": "opencode-sequential-thinking",
+  "title": "OpenCode Sequential Thinking MCP",
+  "description": "Structured multi-step reasoning server for OpenCode.",
+  "serverName": "sequential-thinking",
+  "targetAgents": ["opencode"],
+  "supportedPlatforms": ["darwin", "linux", "win32", "wsl"],
+  "supportedScopes": ["global", "project"],
+  "serverKind": "stdio",
+  "source": "@modelcontextprotocol/server-sequential-thinking",
+  "tags": ["reasoning", "thinking", "mcp"],
+  "install": {
+    "kind": "json-config",
+    "scopePaths": {
+      "global": "~/.config/opencode/opencode.json",
+      "project": "opencode.json"
+    },
+    "operations": [
+      {
+        "op": "set-object-entry",
+        "path": ["mcp"],
+        "key": "{{serverName}}",
+        "value": {
+          "type": "local",
+          "command": "npx",
+          "args": ["-y", "@modelcontextprotocol/server-sequential-thinking"],
+          "enabled": true
+        }
+      }
+    ],
+    "restartRequired": true
+  }
+}

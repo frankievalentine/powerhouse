@@ -1,0 +1,19 @@
+{
+  "id": "cline",
+  "title": "Cline",
+  "description": "AI coding assistant VS Code extension (saoudrizwan.claude-dev).",
+  "kind": "developer-tool",
+  "priority": 70,
+  "supportedPlatforms": ["darwin", "linux", "wsl"],
+  "check": {
+    "command": "code",
+    "args": ["--version"]
+  },
+  "doctorHint": "VS Code must be installed. Then install the Cline extension from the marketplace: code --install-extension saoudrizwan.claude-dev",
+  "installs": {
+    "darwin": [],
+    "linux": [],
+    "win32": [],
+    "wsl": []
+  }
+}

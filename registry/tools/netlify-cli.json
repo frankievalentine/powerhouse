@@ -1,0 +1,17 @@
+{
+  "id": "netlify-cli",
+  "title": "Netlify CLI",
+  "description": "Command-line tool for Netlify. Deploy sites, manage functions, and run local dev.",
+  "kind": "developer-tool",
+  "priority": 55,
+  "supportedPlatforms": ["darwin", "linux", "win32", "wsl"],
+  "check": {
+    "command": "netlify",
+    "args": ["--version"]
+  },
+  "doctorHint": "Netlify CLI is recommended for the web domain. Install via brew install netlify-cli.",
+  "installs": {
+    "darwin": [{ "type": "brew", "name": "netlify-cli" }],
+    "linux": [{ "type": "brew", "name": "netlify-cli" }]
+  }
+}

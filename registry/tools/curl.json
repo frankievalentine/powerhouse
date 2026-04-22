@@ -1,7 +1,7 @@
 {
   "id": "curl",
   "title": "curl",
-  "description": "HTTP transfer tool used for bootstrap and script-based installers.",
+  "description": "HTTP transfer tool used for setup and script-based installers.",
   "kind": "utility",
   "priority": 5,
   "supportedPlatforms": ["darwin", "linux", "win32", "wsl"],
@@ -9,9 +9,10 @@
     "command": "curl",
     "args": ["--version"]
   },
-  "doctorHint": "curl is required for bootstrap and script-driven installs.",
+  "doctorHint": "curl is required for setup and script-driven installs.",
   "installs": {
     "darwin": [{ "type": "brew", "name": "curl" }],
-    "linux": [{ "type": "brew", "name": "curl" }]
+    "linux": [{ "type": "brew", "name": "curl" }],
+    "win32": [{ "type": "winget", "id": "curl.curl" }]
   }
 }

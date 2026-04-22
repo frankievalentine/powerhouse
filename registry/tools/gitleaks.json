@@ -1,0 +1,17 @@
+{
+  "id": "gitleaks",
+  "title": "Gitleaks",
+  "description": "Audit git repositories for secrets and credentials.",
+  "kind": "developer-tool",
+  "priority": 40,
+  "supportedPlatforms": ["darwin", "linux", "win32", "wsl"],
+  "check": {
+    "command": "gitleaks",
+    "args": ["--version"]
+  },
+  "doctorHint": "Gitleaks is recommended for the security domain. Install via brew install gitleaks.",
+  "installs": {
+    "darwin": [{ "type": "brew", "name": "gitleaks" }],
+    "linux": [{ "type": "brew", "name": "gitleaks" }]
+  }
+}

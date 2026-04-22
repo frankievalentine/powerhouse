@@ -2,7 +2,7 @@
   "id": "general",
   "title": "General",
   "description": "A small default skill bundle for broad repository work.",
-  "extraToolIds": [],
+  "recommendedToolIds": ["bat", "eza", "fzf", "zoxide", "starship", "atuin", "tmux", "lazygit", "git-delta", "hyperfine"],
   "skillPackages": [
     {
       "source": "vercel-labs/agent-skills",

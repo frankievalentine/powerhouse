@@ -1,0 +1,17 @@
+{
+  "id": "ngrok",
+  "title": "ngrok",
+  "description": "Reverse proxy for secure introspectable tunnels to localhost. Share local servers publicly.",
+  "kind": "developer-tool",
+  "priority": 55,
+  "supportedPlatforms": ["darwin", "linux", "win32", "wsl"],
+  "check": {
+    "command": "ngrok",
+    "args": ["--version"]
+  },
+  "doctorHint": "ngrok is recommended for QA and web domains. Install via brew install --cask ngrok.",
+  "installs": {
+    "darwin": [{ "type": "brew", "name": "ngrok", "packageType": "cask" }],
+    "linux": [{ "type": "brew", "name": "ngrok", "packageType": "cask" }]
+  }
+}

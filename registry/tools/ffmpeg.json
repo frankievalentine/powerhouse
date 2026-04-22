@@ -1,0 +1,17 @@
+{
+  "id": "ffmpeg",
+  "title": "FFmpeg",
+  "description": "Play, record, convert, and stream audio and video codecs.",
+  "kind": "utility",
+  "priority": 70,
+  "supportedPlatforms": ["darwin", "linux", "win32", "wsl"],
+  "check": {
+    "command": "ffmpeg",
+    "args": ["-version"]
+  },
+  "doctorHint": "FFmpeg is recommended for the design and content domains. Install via brew install ffmpeg.",
+  "installs": {
+    "darwin": [{ "type": "brew", "name": "ffmpeg" }],
+    "linux": [{ "type": "brew", "name": "ffmpeg" }]
+  }
+}

@@ -12,6 +12,7 @@
   "doctorHint": "Install bat for better file previews inside terminal-first workflows.",
   "installs": {
     "darwin": [{ "type": "brew", "name": "bat" }],
-    "linux": [{ "type": "brew", "name": "bat" }]
+    "linux": [{ "type": "brew", "name": "bat" }],
+    "win32": [{ "type": "winget", "id": "sharkdp.bat" }]
   }
 }

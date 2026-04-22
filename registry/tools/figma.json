@@ -1,0 +1,16 @@
+{
+  "id": "figma",
+  "title": "Figma",
+  "description": "Collaborative design tool for interfaces and digital products.",
+  "kind": "developer-tool",
+  "priority": 40,
+  "supportedPlatforms": ["darwin", "linux", "win32", "wsl"],
+  "check": {
+    "command": "ls",
+    "args": ["/Applications/Figma.app"]
+  },
+  "doctorHint": "Figma is recommended for design and product-management domains. Install via brew install --cask figma.",
+  "installs": {
+    "darwin": [{ "type": "brew", "name": "figma", "packageType": "cask" }]
+  }
+}

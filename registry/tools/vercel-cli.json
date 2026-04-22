@@ -1,0 +1,17 @@
+{
+  "id": "vercel-cli",
+  "title": "Vercel CLI",
+  "description": "Command-line interface for Vercel. Deploy, preview, and manage projects.",
+  "kind": "developer-tool",
+  "priority": 50,
+  "supportedPlatforms": ["darwin", "linux", "win32", "wsl"],
+  "check": {
+    "command": "vercel",
+    "args": ["--version"]
+  },
+  "doctorHint": "Vercel CLI is recommended for the web domain. Install via brew install vercel-cli.",
+  "installs": {
+    "darwin": [{ "type": "brew", "name": "vercel-cli" }],
+    "linux": [{ "type": "brew", "name": "vercel-cli" }]
+  }
+}

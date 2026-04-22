@@ -1,0 +1,16 @@
+{
+  "id": "loom",
+  "title": "Loom",
+  "description": "Screen and video recording software for async communication.",
+  "kind": "developer-tool",
+  "priority": 65,
+  "supportedPlatforms": ["darwin", "linux", "win32", "wsl"],
+  "check": {
+    "command": "ls",
+    "args": ["/Applications/Loom.app"]
+  },
+  "doctorHint": "Loom is recommended for marketing and product-management domains. Install via brew install --cask loom.",
+  "installs": {
+    "darwin": [{ "type": "brew", "name": "loom", "packageType": "cask" }]
+  }
+}

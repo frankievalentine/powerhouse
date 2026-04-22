@@ -1,0 +1,19 @@
+{
+  "id": "ai",
+  "title": "AI",
+  "description": "Curated skills for LLM app development, prompt design, retrieval, and evaluation workflows.",
+  "recommendedToolIds": ["python", "uv", "node", "bun", "ollama", "docker"],
+  "skillPackages": [
+    {
+      "source": "wshobson/agents",
+      "skills": ["prompt-engineering-patterns", "rag-implementation", "llm-evaluation"],
+      "description": "Core patterns for prompts, retrieval, and evaluation in LLM applications."
+    },
+    {
+      "source": "anthropics/skills",
+      "skills": ["mcp-builder"],
+      "description": "Guidance for building MCP servers and agent-facing tool integrations."
+    }
+  ],
+  "notes": ["AI focuses on agentic and LLM-powered systems rather than general analytics or backend APIs."]
+}

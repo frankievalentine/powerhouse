@@ -1,0 +1,17 @@
+{
+  "id": "mermaid-cli",
+  "title": "Mermaid CLI",
+  "description": "CLI for generating Mermaid diagrams from text definitions.",
+  "kind": "utility",
+  "priority": 75,
+  "supportedPlatforms": ["darwin", "linux", "win32", "wsl"],
+  "check": {
+    "command": "mmdc",
+    "args": ["--version"]
+  },
+  "doctorHint": "Mermaid CLI is recommended for docs and design domains. Install via brew install mermaid-cli.",
+  "installs": {
+    "darwin": [{ "type": "brew", "name": "mermaid-cli" }],
+    "linux": [{ "type": "brew", "name": "mermaid-cli" }]
+  }
+}

@@ -2,7 +2,8 @@
   "id": "web",
   "title": "Web",
   "description": "Curated skills for UI, frontend implementation, design, and modern web development.",
-  "extraToolIds": ["node", "bun", "gh"],
+  "recommendedToolIds": ["node", "bun", "gh", "vercel-cli", "netlify-cli", "stripe-cli", "svgo", "pngquant"],
+  "mcpServerIds": ["claude-fetch"],
   "skillPackages": [
     {
       "source": "anthropics/skills",

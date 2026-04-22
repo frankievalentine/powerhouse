@@ -1,0 +1,30 @@
+{
+  "id": "codex-sequential-thinking",
+  "title": "Codex Sequential Thinking MCP",
+  "description": "Structured multi-step reasoning server for Codex.",
+  "serverName": "sequential-thinking",
+  "targetAgents": ["codex"],
+  "supportedPlatforms": ["darwin", "linux", "win32", "wsl"],
+  "supportedScopes": ["global", "project"],
+  "serverKind": "stdio",
+  "source": "@modelcontextprotocol/server-sequential-thinking",
+  "tags": ["reasoning", "thinking", "mcp"],
+  "install": {
+    "kind": "toml-config",
+    "scopePaths": {
+      "global": "~/.codex/config.toml",
+      "project": ".codex/config.toml"
+    },
+    "operations": [
+      {
+        "op": "ensure-table",
+        "header": "mcp_servers.{{serverName}}",
+        "lines": [
+          "command = \"npx\"",
+          "args = [\"-y\", \"{{source}}\"]"
+        ]
+      }
+    ],
+    "restartRequired": true
+  }
+}

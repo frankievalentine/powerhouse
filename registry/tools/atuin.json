@@ -1,0 +1,17 @@
+{
+  "id": "atuin",
+  "title": "Atuin",
+  "description": "Improved shell history for zsh, bash, fish, and nushell. Searchable, syncable, and secure.",
+  "kind": "utility",
+  "priority": 40,
+  "supportedPlatforms": ["darwin", "linux", "win32", "wsl"],
+  "check": {
+    "command": "atuin",
+    "args": ["--version"]
+  },
+  "doctorHint": "Atuin is recommended for the general domain. Install via brew install atuin.",
+  "installs": {
+    "darwin": [{ "type": "brew", "name": "atuin" }],
+    "linux": [{ "type": "brew", "name": "atuin" }]
+  }
+}

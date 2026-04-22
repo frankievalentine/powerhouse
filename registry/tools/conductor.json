@@ -1,0 +1,19 @@
+{
+  "id": "conductor",
+  "title": "Conductor",
+  "description": "Run a team of coding agents on your Mac in isolated workspaces.",
+  "kind": "developer-tool",
+  "priority": 60,
+  "supportedPlatforms": ["darwin"],
+  "check": {
+    "command": "ls",
+    "args": ["/Applications/Conductor.app"]
+  },
+  "doctorHint": "Conductor is expected by the conductor harness. Install via the DMG from https://conductor.build/ (Homebrew install is not supported by the vendor).",
+  "installs": {
+    "darwin": [],
+    "linux": [],
+    "win32": [],
+    "wsl": []
+  }
+}

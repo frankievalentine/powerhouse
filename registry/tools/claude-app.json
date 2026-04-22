@@ -9,7 +9,7 @@
     "command": "ls",
     "args": ["/Applications/Claude.app"]
   },
-  "doctorHint": "Claude App is expected by the claude profile on macOS. Install via brew install --cask claude.",
+  "doctorHint": "Claude App is expected by the claude harness on macOS. Install via brew install --cask claude.",
   "installs": {
     "darwin": [{ "type": "brew", "name": "claude", "packageType": "cask" }]
   }

@@ -1,0 +1,25 @@
+{
+  "id": "claude-fetch",
+  "title": "Claude Fetch MCP",
+  "description": "Web content fetching and HTML-to-markdown conversion for Claude Code.",
+  "serverName": "fetch",
+  "targetAgents": ["claude-code"],
+  "supportedPlatforms": ["darwin", "linux", "wsl"],
+  "supportedScopes": ["global", "project", "local"],
+  "serverKind": "stdio",
+  "source": "@modelcontextprotocol/server-fetch",
+  "tags": ["fetch", "web", "mcp"],
+  "install": {
+    "kind": "native-cli",
+    "command": "claude",
+    "args": ["mcp", "add", "{{serverName}}", "--scope", "{{nativeScope}}", "--", "npx", "-y", "{{source}}"],
+    "cwd": "project",
+    "env": {},
+    "scopeMap": {
+      "global": "user",
+      "project": "project",
+      "local": "local"
+    },
+    "restartRequired": false
+  }
+}

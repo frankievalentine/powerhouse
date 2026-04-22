@@ -1,0 +1,17 @@
+{
+  "id": "tmux",
+  "title": "tmux",
+  "description": "Terminal multiplexer. Manage multiple terminal sessions in a single window.",
+  "kind": "utility",
+  "priority": 45,
+  "supportedPlatforms": ["darwin", "linux", "win32", "wsl"],
+  "check": {
+    "command": "tmux",
+    "args": ["-V"]
+  },
+  "doctorHint": "tmux is recommended for the general domain. Install via brew install tmux.",
+  "installs": {
+    "darwin": [{ "type": "brew", "name": "tmux" }],
+    "linux": [{ "type": "brew", "name": "tmux" }]
+  }
+}

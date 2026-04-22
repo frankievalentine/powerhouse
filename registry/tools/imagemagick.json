@@ -1,0 +1,17 @@
+{
+  "id": "imagemagick",
+  "title": "ImageMagick",
+  "description": "Tools and libraries to manipulate images. Convert, resize, and process image assets.",
+  "kind": "utility",
+  "priority": 65,
+  "supportedPlatforms": ["darwin", "linux", "win32", "wsl"],
+  "check": {
+    "command": "convert",
+    "args": ["--version"]
+  },
+  "doctorHint": "ImageMagick is recommended for the design domain. Install via brew install imagemagick.",
+  "installs": {
+    "darwin": [{ "type": "brew", "name": "imagemagick" }],
+    "linux": [{ "type": "brew", "name": "imagemagick" }]
+  }
+}

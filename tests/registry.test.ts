@@ -33,13 +33,13 @@ describe('registry validation', () => {
           }
         }
       ],
-      profiles: [
+      harnesses: [
         {
           id: 'claude',
           title: 'Claude',
-          description: 'Claude profile',
+          description: 'Claude harness',
           supportedPlatforms: ['darwin'],
-          toolIds: ['claude-code'],
+          requiredToolIds: ['claude-code'],
           integrationIds: ['claude-github'],
           mcpServerIds: [],
           defaultAgents: ['claude-code'],
@@ -51,7 +51,7 @@ describe('registry validation', () => {
           id: 'general',
           title: 'General',
           description: 'General domain',
-          extraToolIds: [],
+          recommendedToolIds: [],
           integrationIds: [],
           mcpServerIds: [],
           skillPackages: [],

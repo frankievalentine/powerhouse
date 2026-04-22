@@ -1,0 +1,17 @@
+{
+  "id": "git-delta",
+  "title": "delta",
+  "description": "Syntax-highlighting pager for git and diff output.",
+  "kind": "utility",
+  "priority": 45,
+  "supportedPlatforms": ["darwin", "linux", "win32", "wsl"],
+  "check": {
+    "command": "delta",
+    "args": ["--version"]
+  },
+  "doctorHint": "delta is recommended for the general domain. Install via brew install git-delta.",
+  "installs": {
+    "darwin": [{ "type": "brew", "name": "git-delta" }],
+    "linux": [{ "type": "brew", "name": "git-delta" }]
+  }
+}

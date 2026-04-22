@@ -1,0 +1,16 @@
+{
+  "id": "canva",
+  "title": "Canva",
+  "description": "User-friendly design tool for creating marketing materials, presentations, and visual content.",
+  "kind": "developer-tool",
+  "priority": 70,
+  "supportedPlatforms": ["darwin", "linux", "win32", "wsl"],
+  "check": {
+    "command": "ls",
+    "args": ["/Applications/Canva.app"]
+  },
+  "doctorHint": "Canva is recommended for the marketing domain. Install via brew install --cask canva.",
+  "installs": {
+    "darwin": [{ "type": "brew", "name": "canva", "packageType": "cask" }]
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "id": "kubectl",
+  "title": "kubectl",
+  "description": "Kubernetes command-line interface. Control Kubernetes clusters.",
+  "kind": "developer-tool",
+  "priority": 50,
+  "supportedPlatforms": ["darwin", "linux", "win32", "wsl"],
+  "check": {
+    "command": "kubectl",
+    "args": ["version", "--client"]
+  },
+  "doctorHint": "kubectl is recommended for the devops domain. Install via brew install kubernetes-cli.",
+  "installs": {
+    "darwin": [{ "type": "brew", "name": "kubernetes-cli" }],
+    "linux": [{ "type": "brew", "name": "kubernetes-cli" }]
+  }
+}

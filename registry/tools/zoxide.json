@@ -1,0 +1,17 @@
+{
+  "id": "zoxide",
+  "title": "zoxide",
+  "description": "Smarter cd command. Navigate your filesystem with frecency.",
+  "kind": "utility",
+  "priority": 35,
+  "supportedPlatforms": ["darwin", "linux", "win32", "wsl"],
+  "check": {
+    "command": "zoxide",
+    "args": ["--version"]
+  },
+  "doctorHint": "zoxide is recommended for the general domain. Install via brew install zoxide.",
+  "installs": {
+    "darwin": [{ "type": "brew", "name": "zoxide" }],
+    "linux": [{ "type": "brew", "name": "zoxide" }]
+  }
+}

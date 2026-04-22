@@ -1,0 +1,33 @@
+{
+  "id": "zed-context7",
+  "title": "Zed Context7 MCP",
+  "description": "Install the Context7 MCP context server for Zed.",
+  "serverName": "context7",
+  "targetAgents": ["zed"],
+  "supportedPlatforms": ["darwin", "linux", "wsl"],
+  "supportedScopes": ["global"],
+  "serverKind": "stdio",
+  "source": "@upstash/context7-mcp",
+  "tags": ["context7", "docs", "mcp"],
+  "install": {
+    "kind": "json-config",
+    "scopePaths": {
+      "global": "~/.config/zed/settings.json"
+    },
+    "operations": [
+      {
+        "op": "set-object-entry",
+        "path": ["context_servers"],
+        "key": "{{serverName}}",
+        "value": {
+          "command": {
+            "path": "npx",
+            "args": ["-y", "@upstash/context7-mcp"]
+          },
+          "settings": {}
+        }
+      }
+    ],
+    "restartRequired": true
+  }
+}

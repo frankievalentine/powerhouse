@@ -1,0 +1,24 @@
+{
+  "id": "qa",
+  "title": "QA",
+  "description": "Curated skills for test planning, regression analysis, exploratory QA, and release validation.",
+  "recommendedToolIds": ["node", "bun", "hyperfine", "ngrok"],
+  "skillPackages": [
+    {
+      "source": "supercent-io/skills-template",
+      "skills": ["testing-strategies"],
+      "description": "General testing strategy and coverage guidance."
+    },
+    {
+      "source": "anthropics/skills",
+      "skills": ["webapp-testing"],
+      "description": "Validation guidance for testing shipped web applications."
+    },
+    {
+      "source": "wshobson/agents",
+      "skills": ["e2e-testing-patterns"],
+      "description": "End-to-end testing patterns for regression coverage on critical flows."
+    }
+  ],
+  "notes": ["QA focuses on validation and release confidence rather than broader engineering architecture decisions."]
+}

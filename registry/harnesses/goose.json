@@ -1,0 +1,13 @@
+{
+  "id": "goose",
+  "title": "Goose",
+  "description": "Block's open-source extensible AI agent.",
+  "kind": "terminal-agent",
+  "extends": "base",
+  "supportedPlatforms": ["darwin", "linux", "win32", "wsl"],
+  "requiredToolIds": ["goose"],
+  "integrationIds": [],
+  "mcpServerIds": [],
+  "defaultAgents": ["goose"],
+  "notes": ["Skill installs target Goose by default. MCP servers for Goose are configured in ~/.config/goose/config.yaml.", "Goose does not have a standalone plugin marketplace; it uses MCP servers for extensibility."]
+}

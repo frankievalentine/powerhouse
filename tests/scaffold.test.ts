@@ -21,18 +21,18 @@ describe('registry scaffolding', () => {
       id: 'content',
       title: 'Content',
       skillPackages: [],
-      extraToolIds: [],
+      recommendedToolIds: [],
       notes: []
     });
   });
 
-  it('writes a profile scaffold into the workspace registry', async () => {
+  it('writes a harness scaffold into the workspace registry', async () => {
     const workspace = await makeWorkspace();
 
-    const result = await scaffoldRegistryManifest('profile', 'product-management', {}, workspace.startDir);
+    const result = await scaffoldRegistryManifest('harness', 'product-management', {}, workspace.startDir);
 
     expect(result.written).toBe(true);
-    expect(result.path).toBe(path.join(workspace.rootDir, 'registry', 'profiles', 'product-management.json'));
+    expect(result.path).toBe(path.join(workspace.rootDir, 'registry', 'harnesses', 'product-management.json'));
 
     const written = await fs.readFile(result.path, 'utf8');
     const manifest = JSON.parse(written);
@@ -41,7 +41,7 @@ describe('registry scaffolding', () => {
       id: 'product-management',
       title: 'Product Management',
       supportedPlatforms: ['darwin', 'linux', 'win32', 'wsl'],
-      toolIds: [],
+      requiredToolIds: [],
       defaultAgents: [],
       notes: []
     });
@@ -126,7 +126,7 @@ async function makeWorkspace(): Promise<{ rootDir: string; startDir: string }> {
   const startDir = path.join(rootDir, 'packages', 'cli');
 
   await fs.mkdir(path.join(rootDir, 'registry', 'tools'), { recursive: true });
-  await fs.mkdir(path.join(rootDir, 'registry', 'profiles'), { recursive: true });
+  await fs.mkdir(path.join(rootDir, 'registry', 'harnesses'), { recursive: true });
   await fs.mkdir(path.join(rootDir, 'registry', 'domains'), { recursive: true });
   await fs.mkdir(path.join(rootDir, 'registry', 'integrations'), { recursive: true });
   await fs.mkdir(path.join(rootDir, 'registry', 'mcp'), { recursive: true });

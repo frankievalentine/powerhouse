@@ -1,0 +1,19 @@
+{
+  "id": "docs",
+  "title": "Docs",
+  "description": "Curated skills for technical documentation, specs, API references, and changelog work.",
+  "recommendedToolIds": ["pandoc", "d2", "mermaid-cli", "graphviz"],
+  "skillPackages": [
+    {
+      "source": "anthropics/skills",
+      "skills": ["doc-coauthoring"],
+      "description": "Structured workflow for co-authoring technical docs, specs, and proposals."
+    },
+    {
+      "source": "wshobson/agents",
+      "skills": ["openapi-spec-generation", "changelog-automation"],
+      "description": "Developer-facing documentation support for API references and release notes."
+    }
+  ],
+  "notes": ["Docs is for technical and developer-facing artifacts; broader editorial work stays in content."]
+}

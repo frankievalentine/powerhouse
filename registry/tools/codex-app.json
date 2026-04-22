@@ -9,7 +9,7 @@
     "command": "ls",
     "args": ["/Applications/Codex.app"]
   },
-  "doctorHint": "Codex App is expected by the codex profile on macOS. Install via brew install --cask codex-app.",
+  "doctorHint": "Codex App is expected by the codex harness on macOS. Install via brew install --cask codex-app.",
   "installs": {
     "darwin": [{ "type": "brew", "name": "codex-app", "packageType": "cask" }]
   }

@@ -1,0 +1,17 @@
+{
+  "id": "cline",
+  "title": "Cline",
+  "description": "AI coding assistant for VS Code, JetBrains, and terminal. Install the extension or CLI, then let Cline write, edit, and run code for you.",
+  "kind": "editor-integrated",
+  "extends": "base",
+  "supportedPlatforms": ["darwin", "linux", "win32", "wsl"],
+  "requiredToolIds": ["vscode", "node", "cline"],
+  "integrationIds": [],
+  "mcpServerIds": ["cline-context7"],
+  "defaultAgents": ["cline"],
+  "notes": [
+    "Skill installs target Cline by default. Cline can be installed as a VS Code extension or via npm CLI.",
+    "The VS Code extension is installed manually from the marketplace; the CLI installs via npm install -g cline.",
+    "Cline does not have a standalone plugin marketplace of its own."
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "id": "codex",
+  "title": "Codex",
+  "description": "OpenAI's Codex CLI, plus the Codex desktop app on macOS.",
+  "kind": "terminal-agent",
+  "extends": "base",
+  "supportedPlatforms": ["darwin", "linux", "wsl"],
+  "requiredToolIds": ["node", "codex", "codex-app"],
+  "integrationIds": ["codex-gmail"],
+  "mcpServerIds": ["codex-context7", "codex-sequential-thinking"],
+  "defaultAgents": ["codex"],
+  "notes": ["Skill installs target Codex by default."]
+}

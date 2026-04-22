@@ -1,0 +1,13 @@
+{
+  "id": "superset",
+  "title": "Superset",
+  "description": "The code editor for AI agents. Orchestrate parallel coding agents with isolated Git worktrees.",
+  "kind": "editor-integrated",
+  "extends": "base",
+  "supportedPlatforms": ["darwin", "linux", "wsl"],
+  "requiredToolIds": ["superset"],
+  "integrationIds": [],
+  "mcpServerIds": [],
+  "defaultAgents": ["superset"],
+  "notes": ["Skill installs target Superset by default. The Superset CLI installs via Homebrew on macOS and Linux.", "Superset does not have its own plugin marketplace; it orchestrates other agents directly."]
+}

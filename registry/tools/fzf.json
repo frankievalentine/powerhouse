@@ -12,6 +12,7 @@
   "doctorHint": "fzf is part of the default shell ergonomics bundle.",
   "installs": {
     "darwin": [{ "type": "brew", "name": "fzf" }],
-    "linux": [{ "type": "brew", "name": "fzf" }]
+    "linux": [{ "type": "brew", "name": "fzf" }],
+    "win32": [{ "type": "winget", "id": "junegunn.fzf" }]
   }
 }

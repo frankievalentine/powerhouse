@@ -2,7 +2,7 @@
   "id": "marketing",
   "title": "Marketing",
   "description": "Curated skills for messaging, SEO, and marketing strategy workflows.",
-  "extraToolIds": [],
+  "recommendedToolIds": ["loom", "canva"],
   "skillPackages": [
     {
       "source": "coreyhaines31/marketingskills",

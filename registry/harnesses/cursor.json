@@ -1,0 +1,13 @@
+{
+  "id": "cursor",
+  "title": "Cursor",
+  "description": "The AI-native code editor with built-in agent capabilities.",
+  "kind": "editor-integrated",
+  "extends": "base",
+  "supportedPlatforms": ["darwin", "linux", "wsl"],
+  "requiredToolIds": ["cursor"],
+  "integrationIds": [],
+  "mcpServerIds": ["cursor-context7", "cursor-sequential-thinking"],
+  "defaultAgents": ["cursor"],
+  "notes": ["Skill installs target Cursor by default."]
+}

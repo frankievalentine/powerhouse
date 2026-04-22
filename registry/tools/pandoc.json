@@ -1,0 +1,17 @@
+{
+  "id": "pandoc",
+  "title": "Pandoc",
+  "description": "Swiss-army knife for converting between markup formats.",
+  "kind": "utility",
+  "priority": 60,
+  "supportedPlatforms": ["darwin", "linux", "win32", "wsl"],
+  "check": {
+    "command": "pandoc",
+    "args": ["--version"]
+  },
+  "doctorHint": "Pandoc is recommended for docs and content domains. Install via brew install pandoc.",
+  "installs": {
+    "darwin": [{ "type": "brew", "name": "pandoc" }],
+    "linux": [{ "type": "brew", "name": "pandoc" }]
+  }
+}

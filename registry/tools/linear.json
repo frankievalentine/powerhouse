@@ -1,0 +1,16 @@
+{
+  "id": "linear",
+  "title": "Linear",
+  "description": "Issue tracking and project management built for software teams.",
+  "kind": "developer-tool",
+  "priority": 35,
+  "supportedPlatforms": ["darwin", "linux", "wsl"],
+  "check": {
+    "command": "ls",
+    "args": ["/Applications/Linear.app"]
+  },
+  "doctorHint": "Linear is recommended for the product-management domain. Install via brew install --cask linear-linear.",
+  "installs": {
+    "darwin": [{ "type": "brew", "name": "linear-linear", "packageType": "cask" }]
+  }
+}

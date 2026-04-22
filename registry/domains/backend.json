@@ -2,7 +2,7 @@
   "id": "backend",
   "title": "Backend",
   "description": "Curated skills and defaults for API, services, and infrastructure work.",
-  "extraToolIds": ["python", "uv", "gh"],
+  "recommendedToolIds": ["python", "uv", "gh", "docker", "postgresql", "redis", "dbmate"],
   "skillPackages": [
     {
       "source": "vercel-labs/agent-skills",

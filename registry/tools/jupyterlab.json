@@ -1,0 +1,17 @@
+{
+  "id": "jupyterlab",
+  "title": "JupyterLab",
+  "description": "Interactive environment for writing and running code. Essential for data exploration.",
+  "kind": "developer-tool",
+  "priority": 55,
+  "supportedPlatforms": ["darwin", "linux", "win32", "wsl"],
+  "check": {
+    "command": "jupyter",
+    "args": ["--version"]
+  },
+  "doctorHint": "JupyterLab is recommended for the data domain. Install via brew install jupyterlab.",
+  "installs": {
+    "darwin": [{ "type": "brew", "name": "jupyterlab" }],
+    "linux": [{ "type": "brew", "name": "jupyterlab" }]
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "id": "conductor",
+  "title": "Conductor",
+  "description": "Run a team of coding agents on your Mac in isolated workspaces.",
+  "kind": "editor-integrated",
+  "extends": "base",
+  "supportedPlatforms": ["darwin"],
+  "requiredToolIds": ["conductor"],
+  "integrationIds": [],
+  "mcpServerIds": [],
+  "defaultAgents": ["conductor"],
+  "notes": ["Skill installs target Conductor by default. Conductor is macOS only and must be installed manually via the DMG from https://conductor.build/ before running setup.", "Conductor does not have a plugin ecosystem of its own."]
+}

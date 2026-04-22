@@ -1,0 +1,17 @@
+{
+  "id": "redis",
+  "title": "Redis",
+  "description": "Persistent key-value database with built-in net interface. Useful for caching and queues.",
+  "kind": "developer-tool",
+  "priority": 50,
+  "supportedPlatforms": ["darwin", "linux", "win32", "wsl"],
+  "check": {
+    "command": "redis-cli",
+    "args": ["--version"]
+  },
+  "doctorHint": "Redis is recommended for backend and data domains. Install via brew install redis.",
+  "installs": {
+    "darwin": [{ "type": "brew", "name": "redis" }],
+    "linux": [{ "type": "brew", "name": "redis" }]
+  }
+}

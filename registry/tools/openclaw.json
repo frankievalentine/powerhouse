@@ -9,7 +9,7 @@
     "command": "openclaw",
     "args": ["--version"]
   },
-  "doctorHint": "OpenClaw is expected by the openclaw profile. Install via npm install -g openclaw@latest.",
+  "doctorHint": "OpenClaw is expected by the openclaw harness. Install via npm install -g openclaw@latest.",
   "installs": {
     "darwin": [{ "type": "npm", "package": "openclaw" }],
     "linux": [{ "type": "npm", "package": "openclaw" }]

@@ -1,0 +1,24 @@
+{
+  "id": "claude-filesystem",
+  "title": "Claude Filesystem MCP",
+  "description": "File system read/write access for Claude Code via the official MCP filesystem server.",
+  "serverName": "filesystem",
+  "targetAgents": ["claude-code"],
+  "supportedPlatforms": ["darwin", "linux", "wsl"],
+  "supportedScopes": ["project", "local"],
+  "serverKind": "stdio",
+  "source": "@modelcontextprotocol/server-filesystem",
+  "tags": ["filesystem", "files", "mcp"],
+  "install": {
+    "kind": "native-cli",
+    "command": "claude",
+    "args": ["mcp", "add", "{{serverName}}", "--scope", "{{nativeScope}}", "--", "npx", "-y", "{{source}}", "{{projectDir}}"],
+    "cwd": "project",
+    "env": {},
+    "scopeMap": {
+      "project": "project",
+      "local": "local"
+    },
+    "restartRequired": false
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "id": "notion",
+  "title": "Notion",
+  "description": "All-in-one workspace for notes, tasks, wikis, and databases.",
+  "kind": "developer-tool",
+  "priority": 40,
+  "supportedPlatforms": ["darwin", "linux", "win32", "wsl"],
+  "check": {
+    "command": "ls",
+    "args": ["/Applications/Notion.app"]
+  },
+  "doctorHint": "Notion is recommended for product-management and content domains. Install via brew install --cask notion.",
+  "installs": {
+    "darwin": [{ "type": "brew", "name": "notion", "packageType": "cask" }]
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "id": "pulumi",
+  "title": "Pulumi",
+  "description": "Cloud native development platform. Infrastructure as Code in your favorite language.",
+  "kind": "developer-tool",
+  "priority": 55,
+  "supportedPlatforms": ["darwin", "linux", "win32", "wsl"],
+  "check": {
+    "command": "pulumi",
+    "args": ["--version"]
+  },
+  "doctorHint": "Pulumi is recommended for the devops domain. Install via brew install pulumi.",
+  "installs": {
+    "darwin": [{ "type": "brew", "name": "pulumi" }],
+    "linux": [{ "type": "brew", "name": "pulumi" }]
+  }
+}

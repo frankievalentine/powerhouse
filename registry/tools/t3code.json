@@ -1,0 +1,19 @@
+{
+  "id": "t3code",
+  "title": "T3 Code",
+  "description": "Minimal GUI for AI code agents by T3 Tools.",
+  "kind": "developer-tool",
+  "priority": 60,
+  "supportedPlatforms": ["darwin", "linux", "wsl"],
+  "check": {
+    "command": "ls",
+    "args": ["/Applications/T3 Code (Alpha).app"]
+  },
+  "doctorHint": "T3 Code is expected by the t3code harness. On macOS: brew install --cask t3-code. On Linux/WSL: download the AppImage from https://t3.codes/download.",
+  "installs": {
+    "darwin": [{ "type": "brew", "name": "t3-code", "packageType": "cask" }],
+    "linux": [],
+    "win32": [],
+    "wsl": []
+  }
+}

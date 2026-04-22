@@ -1,0 +1,31 @@
+{
+  "id": "cursor-context7",
+  "title": "Cursor Context7 MCP",
+  "description": "Install the Context7 MCP server for Cursor.",
+  "serverName": "context7",
+  "targetAgents": ["cursor"],
+  "supportedPlatforms": ["darwin", "linux", "wsl"],
+  "supportedScopes": ["global", "project"],
+  "serverKind": "stdio",
+  "source": "@upstash/context7-mcp",
+  "tags": ["context7", "docs", "mcp"],
+  "install": {
+    "kind": "json-config",
+    "scopePaths": {
+      "global": "~/.cursor/mcp.json",
+      "project": ".cursor/mcp.json"
+    },
+    "operations": [
+      {
+        "op": "set-object-entry",
+        "path": ["mcpServers"],
+        "key": "{{serverName}}",
+        "value": {
+          "command": "npx",
+          "args": ["-y", "@upstash/context7-mcp"]
+        }
+      }
+    ],
+    "restartRequired": true
+  }
+}
