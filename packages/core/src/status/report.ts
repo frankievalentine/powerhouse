@@ -1,15 +1,15 @@
-import type { BootstrapPlan } from '../install/resolve.ts';
+import type { SetupPlan } from '../install/resolve.ts';
 import type { DriftFinding, PruneAnalysis } from '../install/reconcile.ts';
 import type { DetectedPlatform } from '../platform/detect.ts';
 import type { RegistryData } from '../registry/load.ts';
 import type { PowerhouseLedger } from '../state/ledger.ts';
 import type { ToolLedgerEntry } from '../state/ledger.ts';
-import type { DomainManifest, ProfileManifest } from '../registry/schema.ts';
+import type { DomainManifest, HarnessManifest } from '../registry/schema.ts';
 import type { PowerhousePaths, PowerhouseRunReport, PowerhouseState } from '../state/paths.ts';
 
 import { runDoctor, type DoctorCheck } from '../doctor/run.ts';
 import { computePruneAnalysis, detectLedgerDrift, summarizeToolOwnership } from '../install/reconcile.ts';
-import { resolveBootstrapPlan } from '../install/resolve.ts';
+import { resolveSetupPlan } from '../install/resolve.ts';
 import { detectPlatform, isPlanPlatform } from '../platform/detect.ts';
 import { loadRegistry } from '../registry/load.ts';
 import { loadLedger } from '../state/ledger.ts';
@@ -22,9 +22,9 @@ export interface StatusReport {
   ledger: PowerhouseLedger;
   state: PowerhouseState | null;
   lastRun: PowerhouseRunReport | null;
-  activeProfile: ProfileManifest | null;
-  activeDomain: DomainManifest | null;
-  plan: BootstrapPlan | null;
+  activeHarnesses: HarnessManifest[];
+  activeDomains: DomainManifest[];
+  plan: SetupPlan | null;
   toolOwnership: {
     managed: ToolLedgerEntry[];
     preexisting: ToolLedgerEntry[];
@@ -42,13 +42,13 @@ export async function buildStatusReport(startDir = process.cwd()): Promise<Statu
   const lastRun = await loadLastRun(paths);
   const ledger = await loadLedger(paths);
 
-  const activeProfile = state ? registry.profiles.find((entry) => entry.id === state.activeProfileId) ?? null : null;
-  const activeDomain = state ? registry.domains.find((entry) => entry.id === state.activeDomainId) ?? null : null;
+  const activeHarnesses = state ? registry.harnesses.filter((entry) => state.activeHarnessIds.includes(entry.id)) : [];
+  const activeDomains = state ? registry.domains.filter((entry) => state.activeDomainIds.includes(entry.id)) : [];
 
-  let plan: BootstrapPlan | null = null;
-  if (state && activeProfile && activeDomain && isPlanPlatform(platform)) {
+  let plan: SetupPlan | null = null;
+  if (state && activeHarnesses.length === state.activeHarnessIds.length && activeDomains.length === state.activeDomainIds.length && isPlanPlatform(platform)) {
     try {
-      plan = resolveBootstrapPlan(registry, platform, activeProfile.id, activeDomain.id);
+      plan = resolveSetupPlan(registry, platform, state.activeHarnessIds, state.activeDomainIds, state.selectedToolIds);
     } catch {
       plan = null;
     }
@@ -57,7 +57,7 @@ export async function buildStatusReport(startDir = process.cwd()): Promise<Statu
   const pruneAnalysis = computePruneAnalysis(ledger, plan);
   const toolOwnership = summarizeToolOwnership(ledger);
   const driftFindings = await detectLedgerDrift(ledger);
-  const doctorChecks = await runDoctor(platform, registry, state, lastRun, ledger, pruneAnalysis, driftFindings);
+  const doctorChecks = await runDoctor(platform, registry, state, lastRun, ledger, pruneAnalysis, driftFindings, paths);
 
   return {
     platform,
@@ -66,8 +66,8 @@ export async function buildStatusReport(startDir = process.cwd()): Promise<Statu
     ledger,
     state,
     lastRun,
-    activeProfile,
-    activeDomain,
+    activeHarnesses,
+    activeDomains,
     plan,
     toolOwnership,
     pruneAnalysis,

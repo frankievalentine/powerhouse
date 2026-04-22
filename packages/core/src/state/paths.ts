@@ -17,9 +17,10 @@ export interface PowerhousePaths {
 }
 
 export interface PowerhouseState {
-  schemaVersion: 2;
-  activeProfileId: string;
-  activeDomainId: string;
+  schemaVersion: 4;
+  activeHarnessIds: string[];
+  activeDomainIds: string[];
+  selectedToolIds: string[];
   updatedAt: string;
   installedToolIds: string[];
   installedAgents: string[];
@@ -30,13 +31,13 @@ export interface PowerhouseState {
 }
 
 export interface PowerhouseRunReport {
-  schemaVersion: 2;
-  command: 'bootstrap' | 'update';
+  schemaVersion: 4;
+  command: 'setup' | 'update';
   status: 'success' | 'failed';
   startedAt: string;
   finishedAt: string;
-  profileId: string;
-  domainId: string;
+  harnessIds: string[];
+  domainIds: string[];
   platformOs?: string;
   platformArch?: string;
   installedToolIds: string[];
@@ -45,7 +46,7 @@ export interface PowerhouseRunReport {
   integrationResults: InstalledCatalogState[];
   mcpServerResults: InstalledCatalogState[];
   failedToolId?: string;
-  failureStage?: 'workspace-sync' | 'tool-install' | 'integration-install' | 'mcp-install' | 'skills-install' | 'state-save' | 'bootstrap';
+  failureStage?: 'workspace-sync' | 'tool-install' | 'integration-install' | 'mcp-install' | 'skills-install' | 'state-save' | 'setup';
   errorMessage?: string;
 }
 
@@ -61,10 +62,16 @@ const installedCatalogStateSchema = z.object({
   status: z.enum(['configured', 'planned', 'restart_required', 'manual_step_required', 'unsupported_scope'])
 });
 
+const legacyRunCommandSchema = z.enum(['setup', 'update', 'bootstrap']).transform((value) => normalizeRunCommand(value));
+const legacyFailureStageSchema = z
+  .enum(['workspace-sync', 'tool-install', 'integration-install', 'mcp-install', 'skills-install', 'state-save', 'setup', 'bootstrap'])
+  .transform((value) => normalizeFailureStage(value));
+
 const stateSchema = z.object({
-  schemaVersion: z.literal(2).default(2),
-  activeProfileId: z.string().min(1),
-  activeDomainId: z.string().min(1),
+  schemaVersion: z.literal(4).default(4),
+  activeHarnessIds: z.array(z.string().min(1)).nonempty(),
+  activeDomainIds: z.array(z.string().min(1)).nonempty(),
+  selectedToolIds: z.array(z.string()).default([]),
   updatedAt: z.string().min(1),
   installedToolIds: z.array(z.string()).default([]),
   installedAgents: z.array(z.string()).default([]),
@@ -74,8 +81,21 @@ const stateSchema = z.object({
   platformArch: z.string().optional()
 });
 
-const legacyStateSchema = z.object({
-  schemaVersion: z.literal(1).default(1),
+const legacyStateArraySchema = z.object({
+  schemaVersion: z.union([z.literal(1), z.literal(2), z.literal(3)]).default(3),
+  activeProfileIds: z.array(z.string().min(1)).nonempty(),
+  activeDomainIds: z.array(z.string().min(1)).nonempty(),
+  updatedAt: z.string().min(1),
+  installedToolIds: z.array(z.string()).default([]),
+  installedAgents: z.array(z.string()).default([]),
+  installedIntegrations: z.array(installedCatalogStateSchema).default([]),
+  installedMcpServers: z.array(installedCatalogStateSchema).default([]),
+  platformOs: z.string().optional(),
+  platformArch: z.string().optional()
+});
+
+const legacyStateSingleSchema = z.object({
+  schemaVersion: z.union([z.literal(1), z.literal(2)]).default(2),
   activeProfileId: z.string().min(1),
   activeDomainId: z.string().min(1),
   updatedAt: z.string().min(1),
@@ -88,13 +108,13 @@ const legacyStateSchema = z.object({
 });
 
 const runReportSchema = z.object({
-  schemaVersion: z.literal(2).default(2),
-  command: z.enum(['bootstrap', 'update']),
+  schemaVersion: z.literal(4).default(4),
+  command: legacyRunCommandSchema,
   status: z.enum(['success', 'failed']),
   startedAt: z.string().min(1),
   finishedAt: z.string().min(1),
-  profileId: z.string().min(1),
-  domainId: z.string().min(1),
+  harnessIds: z.array(z.string().min(1)).nonempty(),
+  domainIds: z.array(z.string().min(1)).nonempty(),
   platformOs: z.string().optional(),
   platformArch: z.string().optional(),
   installedToolIds: z.array(z.string()).default([]),
@@ -103,13 +123,33 @@ const runReportSchema = z.object({
   integrationResults: z.array(installedCatalogStateSchema).default([]),
   mcpServerResults: z.array(installedCatalogStateSchema).default([]),
   failedToolId: z.string().optional(),
-  failureStage: z.enum(['workspace-sync', 'tool-install', 'integration-install', 'mcp-install', 'skills-install', 'state-save', 'bootstrap']).optional(),
+  failureStage: legacyFailureStageSchema.optional(),
   errorMessage: z.string().optional()
 });
 
-const legacyRunReportSchema = z.object({
-  schemaVersion: z.literal(1).default(1),
-  command: z.enum(['bootstrap', 'update']),
+const legacyRunReportArraySchema = z.object({
+  schemaVersion: z.union([z.literal(1), z.literal(2), z.literal(3)]).default(3),
+  command: legacyRunCommandSchema,
+  status: z.enum(['success', 'failed']),
+  startedAt: z.string().min(1),
+  finishedAt: z.string().min(1),
+  profileIds: z.array(z.string().min(1)).nonempty(),
+  domainIds: z.array(z.string().min(1)).nonempty(),
+  platformOs: z.string().optional(),
+  platformArch: z.string().optional(),
+  installedToolIds: z.array(z.string()).default([]),
+  skippedToolIds: z.array(z.string()).default([]),
+  installedAgents: z.array(z.string()).default([]),
+  integrationResults: z.array(installedCatalogStateSchema).default([]),
+  mcpServerResults: z.array(installedCatalogStateSchema).default([]),
+  failedToolId: z.string().optional(),
+  failureStage: legacyFailureStageSchema.optional(),
+  errorMessage: z.string().optional()
+});
+
+const legacyRunReportSingleSchema = z.object({
+  schemaVersion: z.union([z.literal(1), z.literal(2)]).default(2),
+  command: legacyRunCommandSchema,
   status: z.enum(['success', 'failed']),
   startedAt: z.string().min(1),
   finishedAt: z.string().min(1),
@@ -123,7 +163,7 @@ const legacyRunReportSchema = z.object({
   integrationResults: z.array(installedCatalogStateSchema).default([]),
   mcpServerResults: z.array(installedCatalogStateSchema).default([]),
   failedToolId: z.string().optional(),
-  failureStage: z.enum(['workspace-sync', 'tool-install', 'integration-install', 'mcp-install', 'skills-install', 'state-save', 'bootstrap']).optional(),
+  failureStage: legacyFailureStageSchema.optional(),
   errorMessage: z.string().optional()
 });
 
@@ -174,7 +214,10 @@ export async function saveState(paths: PowerhousePaths, state: PowerhouseState):
   await fs.mkdir(paths.stateDir, { recursive: true });
   const normalized = stateSchema.parse({
     ...state,
-    schemaVersion: 2,
+    schemaVersion: 4,
+    activeHarnessIds: dedupeStringValues(state.activeHarnessIds),
+    activeDomainIds: dedupeStringValues(state.activeDomainIds),
+    selectedToolIds: dedupeStringValues(state.selectedToolIds),
     installedToolIds: [...new Set(state.installedToolIds)].sort(),
     installedAgents: [...new Set(state.installedAgents)].sort(),
     installedIntegrations: dedupeInstalledCatalogState(state.installedIntegrations),
@@ -199,7 +242,11 @@ export async function saveLastRun(paths: PowerhousePaths, report: PowerhouseRunR
   await fs.mkdir(paths.stateDir, { recursive: true });
   const normalized = runReportSchema.parse({
     ...report,
-    schemaVersion: 2,
+    schemaVersion: 4,
+    command: normalizeRunCommand(report.command),
+    failureStage: report.failureStage ? normalizeFailureStage(report.failureStage) : undefined,
+    harnessIds: dedupeStringValues(report.harnessIds),
+    domainIds: dedupeStringValues(report.domainIds),
     installedToolIds: [...new Set(report.installedToolIds)].sort(),
     skippedToolIds: [...new Set(report.skippedToolIds)].sort(),
     installedAgents: [...new Set(report.installedAgents)].sort(),
@@ -218,25 +265,85 @@ function dedupeInstalledCatalogState(values: InstalledCatalogState[]): Installed
 }
 
 function normalizeState(input: unknown): PowerhouseState {
-  const legacy = legacyStateSchema.safeParse(input);
-  if (legacy.success) {
+  const legacySingle = legacyStateSingleSchema.safeParse(input);
+  if (legacySingle.success) {
     return stateSchema.parse({
-      ...legacy.data,
-      schemaVersion: 2
+      ...legacySingle.data,
+      schemaVersion: 4,
+      activeHarnessIds: [legacySingle.data.activeProfileId],
+      activeDomainIds: [legacySingle.data.activeDomainId],
+      selectedToolIds: legacySingle.data.installedToolIds
     });
   }
 
-  return stateSchema.parse(input);
+  const legacyArray = legacyStateArraySchema.safeParse(input);
+  if (legacyArray.success) {
+    return stateSchema.parse({
+      ...legacyArray.data,
+      schemaVersion: 4,
+      activeHarnessIds: legacyArray.data.activeProfileIds,
+      activeDomainIds: legacyArray.data.activeDomainIds,
+      selectedToolIds: legacyArray.data.installedToolIds
+    });
+  }
+
+  const parsed = stateSchema.parse(input);
+  return {
+    ...parsed,
+    activeHarnessIds: dedupeStringValues(parsed.activeHarnessIds),
+    activeDomainIds: dedupeStringValues(parsed.activeDomainIds),
+    selectedToolIds: dedupeStringValues(parsed.selectedToolIds),
+    installedToolIds: [...new Set(parsed.installedToolIds)].sort(),
+    installedAgents: [...new Set(parsed.installedAgents)].sort(),
+    installedIntegrations: dedupeInstalledCatalogState(parsed.installedIntegrations),
+    installedMcpServers: dedupeInstalledCatalogState(parsed.installedMcpServers)
+  };
 }
 
 function normalizeRunReport(input: unknown): PowerhouseRunReport {
-  const legacy = legacyRunReportSchema.safeParse(input);
-  if (legacy.success) {
+  const legacySingle = legacyRunReportSingleSchema.safeParse(input);
+  if (legacySingle.success) {
     return runReportSchema.parse({
-      ...legacy.data,
-      schemaVersion: 2
+      ...legacySingle.data,
+      schemaVersion: 4,
+      harnessIds: [legacySingle.data.profileId],
+      domainIds: [legacySingle.data.domainId]
     });
   }
 
-  return runReportSchema.parse(input);
+  const legacyArray = legacyRunReportArraySchema.safeParse(input);
+  if (legacyArray.success) {
+    return runReportSchema.parse({
+      ...legacyArray.data,
+      schemaVersion: 4,
+      harnessIds: legacyArray.data.profileIds,
+      domainIds: legacyArray.data.domainIds
+    });
+  }
+
+  const parsed = runReportSchema.parse(input);
+  return {
+    ...parsed,
+    harnessIds: dedupeStringValues(parsed.harnessIds),
+    domainIds: dedupeStringValues(parsed.domainIds),
+    installedToolIds: [...new Set(parsed.installedToolIds)].sort(),
+    skippedToolIds: [...new Set(parsed.skippedToolIds)].sort(),
+    installedAgents: [...new Set(parsed.installedAgents)].sort(),
+    integrationResults: dedupeInstalledCatalogState(parsed.integrationResults),
+    mcpServerResults: dedupeInstalledCatalogState(parsed.mcpServerResults)
+  };
+}
+
+function normalizeRunCommand(value: 'setup' | 'update' | 'bootstrap'): 'setup' | 'update' {
+  return value === 'bootstrap' ? 'setup' : value;
+}
+
+function normalizeFailureStage(
+  value: 'workspace-sync' | 'tool-install' | 'integration-install' | 'mcp-install' | 'skills-install' | 'state-save' | 'setup' | 'bootstrap'
+): 'workspace-sync' | 'tool-install' | 'integration-install' | 'mcp-install' | 'skills-install' | 'state-save' | 'setup' {
+  return value === 'bootstrap' ? 'setup' : value;
+}
+
+function dedupeStringValues(values: string[]): string[] {
+  return [...new Set(values)];
 }

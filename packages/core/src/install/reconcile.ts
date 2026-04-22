@@ -1,4 +1,4 @@
-import type { BootstrapPlan } from './resolve.ts';
+import type { SetupPlan } from './resolve.ts';
 import { detectCatalogDrift } from './integrations.ts';
 import { planManagedSkills } from './skills.ts';
 import type {
@@ -24,7 +24,7 @@ export interface DriftFinding {
   files: string[];
 }
 
-export function computePruneAnalysis(ledger: PowerhouseLedger, plan: BootstrapPlan | null): PruneAnalysis {
+export function computePruneAnalysis(ledger: PowerhouseLedger, plan: SetupPlan | null): PruneAnalysis {
   if (!plan) {
     return {
       tools: [],
@@ -37,7 +37,7 @@ export function computePruneAnalysis(ledger: PowerhouseLedger, plan: BootstrapPl
 
   const plannedToolIds = new Set(plan.tools.map((tool) => tool.id));
   const plannedSkillKeys = new Set(
-    planManagedSkills(plan.domain, plan.agents).map((record) => `${record.source}:${record.skillName ?? '*'}:${record.agent}:${record.scope}`)
+    planManagedSkills(plan.domains, plan.agents).map((record) => `${record.source}:${record.skillName ?? '*'}:${record.agent}:${record.scope}`)
   );
   const plannedIntegrationIds = new Set(plan.integrations.map((integration) => integration.id));
   const plannedMcpIds = new Set(plan.mcpServers.map((server) => server.id));

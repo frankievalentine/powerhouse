@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { executeToolPlan, type BootstrapPlan, type ToolManifest } from '../packages/core/src/index.ts';
+import { executeToolPlan, type SetupPlan, type ToolManifest } from '../packages/core/src/index.ts';
 
 describe('tool ownership tracking', () => {
   const tool: ToolManifest = {
@@ -22,28 +22,35 @@ describe('tool ownership tracking', () => {
     }
   };
 
-  const plan: BootstrapPlan = {
-    profile: {
-      id: 'codex',
-      title: 'Codex',
-      description: 'Codex',
-      supportedPlatforms: ['darwin'],
-      toolIds: ['demo'],
-      defaultAgents: ['codex'],
-      integrationIds: [],
-      mcpServerIds: [],
-      notes: []
-    },
-    domain: {
-      id: 'general',
-      title: 'General',
-      description: 'General',
-      extraToolIds: [],
-      integrationIds: [],
-      mcpServerIds: [],
-      skillPackages: [],
-      notes: []
-    },
+  const plan: SetupPlan = {
+    harnesses: [
+      {
+        id: 'codex',
+        title: 'Codex',
+        description: 'Codex',
+        supportedPlatforms: ['darwin'],
+        requiredToolIds: ['demo'],
+        defaultAgents: ['codex'],
+        integrationIds: [],
+        mcpServerIds: [],
+        notes: []
+      }
+    ],
+    domains: [
+      {
+        id: 'general',
+        title: 'General',
+        description: 'General',
+        recommendedToolIds: [],
+        integrationIds: [],
+        mcpServerIds: [],
+        skillPackages: [],
+        notes: []
+      }
+    ],
+    requiredTools: [tool],
+    recommendedTools: [],
+    selectedOptionalTools: [],
     tools: [tool],
     integrations: [],
     mcpServers: [],

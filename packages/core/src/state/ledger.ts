@@ -4,11 +4,6 @@ import { z } from 'zod';
 import { normalizedScopeSchema } from '../registry/schema.ts';
 import type { PowerhousePaths } from './paths.ts';
 
-const ownerSelectionSchema = z.object({
-  profileId: z.string().min(1),
-  domainId: z.string().min(1)
-});
-
 export const configFileSnapshotSchema = z.object({
   filePath: z.string().min(1),
   existedBefore: z.boolean(),
@@ -45,8 +40,7 @@ const toolLedgerEntrySchema = ledgerEntryBaseSchema.extend({
   toolId: z.string().min(1),
   ownership: z.enum(['installed', 'preexisting']),
   removable: z.boolean(),
-  installMethods: z.array(z.string()).default([]),
-  ownerSelection: ownerSelectionSchema.optional()
+  installMethods: z.array(z.string()).default([])
 });
 
 const skillLedgerEntrySchema = ledgerEntryBaseSchema.extend({
@@ -55,8 +49,7 @@ const skillLedgerEntrySchema = ledgerEntryBaseSchema.extend({
   skillName: z.string().min(1).nullable(),
   agent: z.string().min(1),
   scope: normalizedScopeSchema,
-  removable: z.boolean(),
-  ownerSelection: ownerSelectionSchema.optional()
+  removable: z.boolean()
 });
 
 const catalogLedgerEntrySchema = ledgerEntryBaseSchema.extend({
@@ -66,8 +59,7 @@ const catalogLedgerEntrySchema = ledgerEntryBaseSchema.extend({
   installKind: z.enum(['native-cli', 'json-config', 'toml-config', 'manual']),
   removable: z.boolean(),
   restartRequired: z.boolean().default(false),
-  fileChanges: z.array(configFileSnapshotSchema).default([]),
-  ownerSelection: ownerSelectionSchema.optional()
+  fileChanges: z.array(configFileSnapshotSchema).default([])
 });
 
 const integrationLedgerEntrySchema = catalogLedgerEntrySchema.extend({

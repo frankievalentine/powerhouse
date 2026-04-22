@@ -15,15 +15,14 @@ import type { PowerhousePaths } from '../state/paths.ts';
 import type { DetectedPlatform } from '../platform/detect.ts';
 
 export interface OwnerSelection {
-  profileId: string;
-  domainId: string;
+  harnessIds: string[];
+  domainIds: string[];
 }
 
-export function mergeBootstrapLedger(
+export function mergeSetupLedger(
   ledger: PowerhouseLedger,
   paths: PowerhousePaths,
   platform: DetectedPlatform,
-  ownerSelection: OwnerSelection,
   toolResults: ToolExecutionResult[],
   skillRecords: ManagedSkillRecord[],
   integrationResults: CatalogInstallResult[],
@@ -31,14 +30,16 @@ export function mergeBootstrapLedger(
   updatedAt = new Date().toISOString()
 ): PowerhouseLedger {
   const systemEntries = buildSystemLedgerEntries(paths, platform, updatedAt);
-  const toolEntries = buildToolLedgerEntries(toolResults, ownerSelection, updatedAt);
-  const skillEntries = buildSkillLedgerEntries(skillRecords, ownerSelection, updatedAt);
-  const integrationEntries = buildCatalogLedgerEntries('integration', integrationResults, ownerSelection, updatedAt);
-  const mcpEntries = buildCatalogLedgerEntries('mcp', mcpServerResults, ownerSelection, updatedAt);
+  const toolEntries = buildToolLedgerEntries(toolResults, updatedAt);
+  const skillEntries = buildSkillLedgerEntries(skillRecords, updatedAt);
+  const integrationEntries = buildCatalogLedgerEntries('integration', integrationResults, updatedAt);
+  const mcpEntries = buildCatalogLedgerEntries('mcp', mcpServerResults, updatedAt);
   const nextEntries = [...systemEntries, ...toolEntries, ...skillEntries, ...integrationEntries, ...mcpEntries];
   const replaceKeys = new Set(nextEntries.map((entry) => ledgerEntryKey(entry)));
   return replaceLedgerEntries(ledger, (entry) => replaceKeys.has(ledgerEntryKey(entry)), nextEntries, updatedAt);
 }
+
+export const mergeBootstrapLedger = mergeSetupLedger;
 
 export function buildSystemLedgerEntries(paths: PowerhousePaths, platform: DetectedPlatform, updatedAt: string): LedgerEntry[] {
   return [
@@ -66,20 +67,19 @@ export function buildSystemLedgerEntries(paths: PowerhousePaths, platform: Detec
   ];
 }
 
-export function buildToolLedgerEntries(results: ToolExecutionResult[], ownerSelection: OwnerSelection, updatedAt: string): ToolLedgerEntry[] {
+export function buildToolLedgerEntries(results: ToolExecutionResult[], updatedAt: string): ToolLedgerEntry[] {
   return results.map((result) => ({
     kind: 'tool',
     toolId: result.toolId,
     ownership: result.ownership,
     removable: result.ownership === 'installed' && result.removable,
     installMethods: result.installMethods,
-    ownerSelection,
     addedAt: updatedAt,
     updatedAt
   }));
 }
 
-export function buildSkillLedgerEntries(records: ManagedSkillRecord[], ownerSelection: OwnerSelection, updatedAt: string): SkillLedgerEntry[] {
+export function buildSkillLedgerEntries(records: ManagedSkillRecord[], updatedAt: string): SkillLedgerEntry[] {
   return records.map((record) => ({
     kind: 'skill',
     source: record.source,
@@ -87,7 +87,6 @@ export function buildSkillLedgerEntries(records: ManagedSkillRecord[], ownerSele
     agent: record.agent,
     scope: record.scope,
     removable: record.removable,
-    ownerSelection,
     addedAt: updatedAt,
     updatedAt
   }));
@@ -96,7 +95,6 @@ export function buildSkillLedgerEntries(records: ManagedSkillRecord[], ownerSele
 export function buildCatalogLedgerEntries(
   kind: 'integration' | 'mcp',
   results: CatalogInstallResult[],
-  ownerSelection: OwnerSelection,
   updatedAt: string
 ): Array<IntegrationLedgerEntry | McpLedgerEntry> {
   return results.map((result) => ({
@@ -108,7 +106,6 @@ export function buildCatalogLedgerEntries(
     removable: result.removable,
     restartRequired: result.restartRequired,
     fileChanges: result.fileChanges,
-    ownerSelection,
     addedAt: updatedAt,
     updatedAt
   }));

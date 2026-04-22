@@ -1,12 +1,13 @@
 import { execa } from 'execa';
 
 import type { InstallStep, ToolManifest } from '../registry/schema.ts';
-import type { BootstrapPlan } from './resolve.ts';
+import type { SetupPlan } from './resolve.ts';
 import type { PlatformTarget } from '../platform/detect.ts';
 import { commandCheckSucceeds, commandExists } from '../system/commands.ts';
 
 export interface ExecutionOptions {
   dryRun?: boolean;
+  continueOnError?: boolean;
   onLog?: (message: string) => void;
   knownManagedToolIds?: string[];
   checkSatisfiedImpl?: (tool: ToolManifest, platform: PlatformTarget) => Promise<boolean>;
@@ -15,11 +16,12 @@ export interface ExecutionOptions {
 
 export interface ToolExecutionResult {
   toolId: string;
-  status: 'installed' | 'skipped' | 'planned';
+  status: 'installed' | 'skipped' | 'planned' | 'failed';
   stepsRun: number;
   ownership: 'installed' | 'preexisting';
   removable: boolean;
   installMethods: InstallStep['type'][];
+  errorMessage?: string;
 }
 
 export interface ToolRemovalResult {
@@ -41,7 +43,7 @@ export class ToolInstallError extends Error {
 }
 
 export async function executeToolPlan(
-  plan: BootstrapPlan,
+  plan: SetupPlan,
   platform: PlatformTarget,
   options: ExecutionOptions = {}
 ): Promise<ToolExecutionResult[]> {
@@ -77,7 +79,21 @@ export async function executeToolPlan(
       }
     } catch (error) {
       const reason = error instanceof Error ? error.message : String(error);
-      throw new ToolInstallError(tool.id, results, `Failed to install "${tool.id}": ${reason}`);
+      const message = `Failed to install "${tool.id}": ${reason}`;
+      if (options.continueOnError) {
+        options.onLog?.(`install-failed ${tool.id} ${reason}`);
+        results.push({
+          toolId: tool.id,
+          status: 'failed',
+          stepsRun: 0,
+          ownership: 'installed',
+          removable,
+          installMethods,
+          errorMessage: message
+        });
+        continue;
+      }
+      throw new ToolInstallError(tool.id, results, message);
     }
 
     results.push({
@@ -95,6 +111,11 @@ export async function executeToolPlan(
 
 export async function isToolSatisfied(tool: ToolManifest): Promise<boolean> {
   return commandCheckSucceeds(tool.check);
+}
+
+export async function isToolPlanUpToDate(plan: SetupPlan): Promise<boolean> {
+  const results = await Promise.all(plan.tools.map((tool) => isToolSatisfied(tool)));
+  return results.every(Boolean);
 }
 
 export function resolveInstallSteps(tool: ToolManifest, platform: PlatformTarget): InstallStep[] {
@@ -206,12 +227,17 @@ async function executeStep(step: InstallStep, options: ExecutionOptions, platfor
     return;
   }
 
-  const command = [
-    "$ProgressPreference = 'SilentlyContinue'",
-    `$script = (Invoke-WebRequest -UseBasicParsing '${powershellEscape(step.url)}').Content`,
-    `& ([ScriptBlock]::Create($script))${step.args.length > 0 ? ` ${step.args.map(powershellQuote).join(' ')}` : ''}`
-  ].join('; ');
-  await runCommand('powershell', ['-NoLogo', '-NoProfile', '-ExecutionPolicy', 'Bypass', '-Command', command], options, platform);
+  if (step.type === 'powershell-script') {
+    const command = [
+      "$ProgressPreference = 'SilentlyContinue'",
+      `$script = (Invoke-WebRequest -UseBasicParsing '${powershellEscape(step.url)}').Content`,
+      `& ([ScriptBlock]::Create($script))${step.args.length > 0 ? ` ${step.args.map(powershellQuote).join(' ')}` : ''}`
+    ].join('; ');
+    await runCommand('powershell', ['-NoLogo', '-NoProfile', '-ExecutionPolicy', 'Bypass', '-Command', command], options, platform);
+    return;
+  }
+
+  throw new Error(`Unsupported install step type: ${(step as InstallStep).type}`);
 }
 
 async function uninstallStep(step: InstallStep, options: ExecutionOptions, platform: PlatformTarget): Promise<void> {

@@ -57,7 +57,7 @@ describe('catalog lifecycle', () => {
     const [result] = await installIntegrations([integration], platform, {
       projectDir
     });
-    const [entry] = buildCatalogLedgerEntries('integration', [result], { profileId: 'codex', domainId: 'general' }, '2026-04-20T00:00:00.000Z');
+    const [entry] = buildCatalogLedgerEntries('integration', [result], '2026-04-20T00:00:00.000Z');
     const filePath = path.join(projectDir, 'config.json');
 
     expect(result.removable).toBe(true);
@@ -111,7 +111,7 @@ describe('catalog lifecycle', () => {
     const [result] = await installMcpServers([server], platform, {
       projectDir
     });
-    const [entry] = buildCatalogLedgerEntries('mcp', [result], { profileId: 'codex', domainId: 'general' }, '2026-04-20T00:00:00.000Z');
+    const [entry] = buildCatalogLedgerEntries('mcp', [result], '2026-04-20T00:00:00.000Z');
 
     expect(result.removable).toBe(false);
     const removal = await removeTrackedCatalogEntry(entry);

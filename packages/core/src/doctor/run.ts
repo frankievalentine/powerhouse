@@ -1,10 +1,13 @@
+import fs from 'node:fs/promises';
+import path from 'node:path';
+
 import type { DriftFinding, PruneAnalysis } from '../install/reconcile.ts';
 import type { DetectedPlatform } from '../platform/detect.ts';
 import type { RegistryData } from '../registry/load.ts';
 import type { PowerhouseLedger } from '../state/ledger.ts';
-import type { PowerhouseRunReport, PowerhouseState } from '../state/paths.ts';
-import { isBootstrapPlatform, isNativeWindowsPlatform, isPlanPlatform } from '../platform/detect.ts';
-import { resolveBootstrapPlan } from '../install/resolve.ts';
+import type { PowerhousePaths, PowerhouseRunReport, PowerhouseState } from '../state/paths.ts';
+import { isSetupPlatform, isNativeWindowsPlatform, isPlanPlatform } from '../platform/detect.ts';
+import { resolveSetupPlan } from '../install/resolve.ts';
 import { isToolSatisfied } from '../install/execute.ts';
 import { resolveCommandPath, resolveSkillsRunner } from '../system/commands.ts';
 
@@ -21,16 +24,40 @@ export async function runDoctor(
   lastRun: PowerhouseRunReport | null = null,
   ledger: PowerhouseLedger | null = null,
   pruneAnalysis: PruneAnalysis | null = null,
-  driftFindings: DriftFinding[] = []
+  driftFindings: DriftFinding[] = [],
+  paths: PowerhousePaths | null = null
 ): Promise<DoctorCheck[]> {
   const planSupported = isPlanPlatform(platform);
-  const bootstrapSupported = isBootstrapPlatform(platform);
+  const setupSupported = isSetupPlatform(platform);
   const nativeWindows = isNativeWindowsPlatform(platform);
-  const brewPath = bootstrapSupported ? await resolveCommandPath('brew', platform.os) : null;
+  const brewPath = setupSupported ? await resolveCommandPath('brew', platform.os) : null;
   const wingetPath = nativeWindows ? await resolveCommandPath('winget', platform.os) : null;
   const bunPath = planSupported ? await resolveCommandPath('bun', platform.os) : null;
   const nodePath = planSupported ? await resolveCommandPath('node', platform.os) : null;
   const skillsRunner = planSupported ? await resolveSkillsRunner(platform.os) : null;
+  const powerhousePath = planSupported ? await resolveCommandPath('powerhouse', platform.os) : null;
+
+  // Managed runtime integrity
+  let runtimeDirExists = false;
+  let runtimeDirValid = false;
+  let runtimeDirDetail = 'unchecked';
+  if (paths && setupSupported) {
+    try {
+      await fs.access(paths.runtimeDir);
+      runtimeDirExists = true;
+      // Verify this looks like a powerhouse install by checking for the CLI entrypoint
+      const cliEntry = path.join(paths.runtimeDir, 'packages', 'cli', 'src', 'index.ts');
+      try {
+        await fs.access(cliEntry);
+        runtimeDirValid = true;
+        runtimeDirDetail = paths.runtimeDir;
+      } catch {
+        runtimeDirDetail = `${paths.runtimeDir} (exists but missing expected files — run powerhouse update)`;
+      }
+    } catch {
+      runtimeDirDetail = `${paths.runtimeDir} (missing — run the installer again)`;
+    }
+  }
 
   const checks: DoctorCheck[] = [
     {
@@ -45,22 +72,15 @@ export async function runDoctor(
     },
     nativeWindows
       ? {
-          label: 'bootstrap',
-          ok: false,
-          detail: 'Native Windows planning is available, but bootstrap/update are not enabled yet. Use WSL for installs.'
+          label: 'winget',
+          ok: wingetPath !== null,
+          detail: wingetPath ?? 'missing'
         }
       : {
           label: 'brew',
           ok: brewPath !== null,
           detail: brewPath ?? 'missing'
         },
-    nativeWindows
-      ? {
-          label: 'winget',
-          ok: wingetPath !== null,
-          detail: wingetPath ?? 'missing'
-        }
-      : null,
     {
       label: 'bun',
       ok: bunPath !== null,
@@ -75,14 +95,28 @@ export async function runDoctor(
       label: 'skills-runner',
       ok: skillsRunner !== null,
       detail: skillsRunner ?? 'missing'
-    }
+    },
+    setupSupported
+      ? {
+          label: 'wrapper',
+          ok: powerhousePath !== null,
+          detail: powerhousePath ?? 'Not on PATH — open a new shell or run the installer again'
+        }
+      : null,
+    paths && setupSupported
+      ? {
+          label: 'runtime-dir',
+          ok: runtimeDirExists && runtimeDirValid,
+          detail: runtimeDirDetail
+        }
+      : null
   ].filter((check): check is DoctorCheck => check !== null);
 
   if (!state) {
     checks.push({
       label: 'state',
       ok: false,
-      detail: 'No active powerhouse bootstrap state found yet.'
+      detail: 'No setup state found yet. Run `powerhouse setup`.'
     });
     if (ledger && ledger.entries.length > 0) {
       checks.push({
@@ -107,7 +141,7 @@ export async function runDoctor(
   checks.push({
     label: 'state',
     ok: true,
-    detail: `profile=${state.activeProfileId} domain=${state.activeDomainId} updated=${state.updatedAt}`
+    detail: `harnesses=${state.activeHarnessIds.join(',')} domains=${state.activeDomainIds.join(',')} tools=${state.selectedToolIds.join(',') || 'none'} updated=${state.updatedAt}`
   });
   if (ledger) {
     checks.push({
@@ -131,18 +165,24 @@ export async function runDoctor(
     return checks;
   }
 
-  const profile = registry.profiles.find((entry) => entry.id === state.activeProfileId);
+  const harnesses = registry.harnesses.filter((entry) => state.activeHarnessIds.includes(entry.id));
   checks.push({
-    label: 'profile',
-    ok: Boolean(profile),
-    detail: profile ? profile.title : `missing manifest "${state.activeProfileId}"`
+    label: 'harnesses',
+    ok: harnesses.length === state.activeHarnessIds.length,
+    detail:
+      harnesses.length === state.activeHarnessIds.length
+        ? harnesses.map((harness) => harness.title).join(', ')
+        : `missing manifest(s): ${state.activeHarnessIds.filter((harnessId) => !harnesses.some((harness) => harness.id === harnessId)).join(', ')}`
   });
 
-  const domain = registry.domains.find((entry) => entry.id === state.activeDomainId);
+  const domains = registry.domains.filter((entry) => state.activeDomainIds.includes(entry.id));
   checks.push({
-    label: 'domain',
-    ok: Boolean(domain),
-    detail: domain ? domain.title : `missing manifest "${state.activeDomainId}"`
+    label: 'domains',
+    ok: domains.length === state.activeDomainIds.length,
+    detail:
+      domains.length === state.activeDomainIds.length
+        ? domains.map((domain) => domain.title).join(', ')
+        : `missing manifest(s): ${state.activeDomainIds.filter((domainId) => !domains.some((domain) => domain.id === domainId)).join(', ')}`
   });
 
   if (state.platformOs || state.platformArch) {
@@ -156,13 +196,13 @@ export async function runDoctor(
     });
   }
 
-  if (!profile || !domain) {
+  if (harnesses.length !== state.activeHarnessIds.length || domains.length !== state.activeDomainIds.length) {
     return checks;
   }
 
   let plan;
   try {
-    plan = resolveBootstrapPlan(registry, platform, state.activeProfileId, state.activeDomainId);
+    plan = resolveSetupPlan(registry, platform, state.activeHarnessIds, state.activeDomainIds, state.selectedToolIds);
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     checks.push({
@@ -191,10 +231,10 @@ export async function runDoctor(
 
   const allInstalledToolIdsPresent = state.installedToolIds.every((toolId) => plan.tools.some((tool) => tool.id === toolId));
   checks.push({
-    label: 'tool-state',
-    ok: allInstalledToolIdsPresent,
-    detail: allInstalledToolIdsPresent ? `${state.installedToolIds.length} tracked` : 'saved installedToolIds do not match the resolved plan'
-  });
+      label: 'tool-state',
+      ok: allInstalledToolIdsPresent,
+      detail: allInstalledToolIdsPresent ? `${state.installedToolIds.length} tracked` : 'Saved tool state does not match the resolved plan.'
+    });
 
   const savedIntegrationIds = new Set(state.installedIntegrations.map((integration) => integration.id));
   const plannedIntegrationIds = new Set(plan.integrations.map((integration) => integration.id));
@@ -202,20 +242,20 @@ export async function runDoctor(
     savedIntegrationIds.size === plannedIntegrationIds.size &&
     [...savedIntegrationIds].every((integrationId) => plannedIntegrationIds.has(integrationId));
   checks.push({
-    label: 'integrations',
-    ok: integrationsMatch,
-    detail: integrationsMatch ? `${plan.integrations.length} tracked` : 'saved integrations do not match the resolved plan'
-  });
+      label: 'integrations',
+      ok: integrationsMatch,
+      detail: integrationsMatch ? `${plan.integrations.length} tracked` : 'Saved integrations do not match the resolved plan.'
+    });
 
   const savedMcpIds = new Set(state.installedMcpServers.map((server) => server.id));
   const plannedMcpIds = new Set(plan.mcpServers.map((server) => server.id));
   const mcpMatches =
     savedMcpIds.size === plannedMcpIds.size && [...savedMcpIds].every((serverId) => plannedMcpIds.has(serverId));
   checks.push({
-    label: 'mcp',
-    ok: mcpMatches,
-    detail: mcpMatches ? `${plan.mcpServers.length} tracked` : 'saved MCP servers do not match the resolved plan'
-  });
+      label: 'mcp',
+      ok: mcpMatches,
+      detail: mcpMatches ? `${plan.mcpServers.length} tracked` : 'Saved MCP servers do not match the resolved plan.'
+    });
 
   if (pruneAnalysis) {
     const pruneCount =
@@ -243,9 +283,5 @@ export async function runDoctor(
 }
 
 function describePlatform(platform: DetectedPlatform): string {
-  if (platform.os === 'win32') {
-    return `${platform.os}/${platform.arch} (planning supported; native bootstrap pending)`;
-  }
-
   return `${platform.os}/${platform.arch}`;
 }
