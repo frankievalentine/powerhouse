@@ -2,6 +2,30 @@
 
 set -euo pipefail
 
+# ── curl|bash detection ───────────────────────────────────────────────────────
+# When piped via curl, BASH_SOURCE[0] is empty, "bash", or "/dev/stdin".
+# In that case relative paths and sourcing don't work — clone the repo first,
+# then re-exec the real install.sh from the cloned copy.
+_POWERHOUSE_REPO="https://github.com/frankievalentine/powerhouse"
+_MANAGED_RUNTIME="${XDG_DATA_HOME:-$HOME/.local/share}/powerhouse/runtime"
+
+_bash_source="${BASH_SOURCE[0]:-}"
+if [[ "$_bash_source" == "" || "$_bash_source" == "bash" || "$_bash_source" == "/dev/stdin" ]]; then
+  if command -v powerhouse >/dev/null 2>&1 || [[ -d "$_MANAGED_RUNTIME" ]]; then
+    echo "powerhouse is already installed. Running: powerhouse update"
+    exec powerhouse update "$@"
+  fi
+  if ! command -v git >/dev/null 2>&1; then
+    echo "Error: git is required to install powerhouse. Please install git and re-run." >&2
+    exit 1
+  fi
+  echo "Cloning powerhouse to $_MANAGED_RUNTIME …"
+  mkdir -p "$(dirname "$_MANAGED_RUNTIME")"
+  git clone --depth 1 "$_POWERHOUSE_REPO" "$_MANAGED_RUNTIME"
+  exec bash "$_MANAGED_RUNTIME/install.sh" "$@"
+fi
+# ─────────────────────────────────────────────────────────────────────────────
+
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=/dev/null
 source "$ROOT_DIR/scripts/bootstrap/ui.sh"
@@ -73,6 +97,9 @@ detect_platform() {
         echo "linux"
       fi
       ;;
+    MINGW*|MSYS*|CYGWIN*)
+      echo "windows"
+      ;;
     *)
       echo "unsupported"
       ;;
@@ -89,13 +116,17 @@ require_command() {
 platform="$(detect_platform)"
 MANAGED_ROOT="$ROOT_DIR"
 
+if [[ "$platform" == "windows" ]]; then
+  fail "Native Windows requires PowerShell. Run: irm https://raw.githubusercontent.com/frankievalentine/powerhouse/main/install.ps1 | iex"
+fi
+
 if [[ "$platform" == "unsupported" ]]; then
   fail "Unsupported platform. powerhouse currently targets macOS, Linux, and WSL."
 fi
 
 require_command curl
 if ! has git; then
-  ph_warn "git is not installed yet; the selected profile can install it."
+  ph_warn "git is not installed yet; the selected harness can install it."
 fi
 
 install_homebrew() {
@@ -152,6 +183,33 @@ ph_info "Platform: $platform"
 ph_info "Shell: ${SHELL:-unknown}"
 activate_brew_shellenv || true
 
+# ── Already installed? Offer to update instead of re-installing ───────────────
+MANAGED_RUNTIME_DIR="$(resolve_managed_runtime_dir)"
+if has powerhouse || [[ -d "$MANAGED_RUNTIME_DIR" ]]; then
+  ph_info "powerhouse is already installed on this machine."
+  if [[ -t 0 && -t 1 ]]; then
+    printf "  Run 'powerhouse update' to sync the current harness, or continue to re-install? [update/reinstall/cancel] "
+    read -r _ph_choice
+    case "${_ph_choice,,}" in
+      update|u)
+        ph_info "Running: powerhouse update"
+        exec powerhouse update "$@"
+        ;;
+      reinstall|r)
+        ph_info "Continuing with full re-install…"
+        ;;
+      *)
+        ph_info "Cancelled."
+        exit 0
+        ;;
+    esac
+  else
+    ph_info "Non-interactive shell detected — running 'powerhouse update' to sync."
+    exec powerhouse update "$@"
+  fi
+fi
+# ─────────────────────────────────────────────────────────────────────────────
+
 if [[ "$platform" == "macos" ]]; then
   # shellcheck source=/dev/null
   source "$ROOT_DIR/scripts/platform/macos.sh"
@@ -195,5 +253,5 @@ fi
 
 ph_run "Configuring shell startup" configure_shell_startup
 
-ph_info "Handing off to the interactive bootstrap CLI"
-exec bun "$MANAGED_ROOT/packages/cli/src/index.ts" bootstrap "$@"
+ph_info "Handing off to the interactive setup CLI"
+exec bun "$MANAGED_ROOT/packages/cli/src/index.ts" setup "$@"

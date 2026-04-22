@@ -82,7 +82,7 @@ install_linux_build_tools() {
     *)
       ph_error "Unsupported Linux package manager for automated preflight."
       ph_warn "Supported automated preflight backends are apt, dnf, and pacman."
-      ph_warn "Homebrew's Linux docs recommend installing equivalent build tools before bootstrap."
+      ph_warn "Homebrew's Linux docs recommend installing equivalent build tools before setup."
       exit 1
       ;;
   esac
