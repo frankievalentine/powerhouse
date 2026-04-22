@@ -16,11 +16,19 @@ import {
   type PlatformTarget
 } from '@powerhouse/core';
 
-import { formatCatalogExecutionSummary, printCatalogInstallResult, printCatalogList } from '../ui/output.ts';
+import {
+  formatCatalogExecutionSummary,
+  formatPlatformList,
+  printBulletSection,
+  printCatalogInstallResult,
+  printCatalogList,
+  printKeyValueRows,
+  summarizeDescription
+} from '../ui/output.ts';
 
 export interface IntegrationCatalogOptions {
   agent?: string[];
-  profile?: string;
+  harness?: string;
 }
 
 export interface IntegrationInstallCommandOptions {
@@ -41,7 +49,8 @@ export async function runIntegrationListCommand(options: IntegrationCatalogOptio
       description: item.description,
       target: item.targetAgent,
       scopes: item.supportedScopes,
-      source: item.source
+      source: item.source,
+      kind: 'integration'
     }))
   );
 }
@@ -60,7 +69,8 @@ export async function runIntegrationFindCommand(query: string | undefined, optio
       description: item.description,
       target: item.targetAgent,
       scopes: item.supportedScopes,
-      source: item.source
+      source: item.source,
+      kind: 'integration'
     }))
   );
 }
@@ -72,16 +82,27 @@ export async function runIntegrationShowCommand(integrationId: string): Promise<
     throw new Error(`Unknown integration "${integrationId}".`);
   }
 
-  console.log(`id: ${integration.id}`);
-  console.log(`title: ${integration.title}`);
-  console.log(`description: ${integration.description}`);
-  console.log(`target agent: ${integration.targetAgent}`);
-  console.log(`platforms: ${integration.supportedPlatforms.join(', ')}`);
-  console.log(`scopes: ${integration.supportedScopes.join(', ')}`);
-  console.log(`install kind: ${integration.installKind}`);
-  console.log(`source: ${integration.source}`);
-  console.log(`bundled mcp: ${integration.bundledMcpIds.join(', ') || 'none'}`);
-  console.log(`tags: ${integration.tags.join(', ') || 'none'}`);
+  console.log(integration.title);
+  console.log(summarizeDescription(integration.description, 'integration'));
+  console.log('');
+  printKeyValueRows([
+    { label: 'ID', value: integration.id },
+    { label: 'Target agent', value: integration.targetAgent },
+    { label: 'Platforms', value: formatPlatformList(integration.supportedPlatforms) },
+    { label: 'Scopes', value: integration.supportedScopes.join(', ') },
+    { label: 'Install method', value: formatInstallKind(integration.installKind) },
+    { label: 'Source', value: integration.source }
+  ]);
+
+  if (integration.bundledMcpIds.length > 0) {
+    console.log('');
+    printBulletSection('Bundled MCP servers', integration.bundledMcpIds);
+  }
+
+  if (integration.tags.length > 0) {
+    console.log('');
+    printBulletSection('Tags', [integration.tags.join(', ')]);
+  }
 }
 
 export async function runIntegrationInstallCommand(
@@ -127,7 +148,7 @@ export async function runIntegrationInstallCommand(
     const updatedAt = new Date().toISOString();
     await saveState(paths, {
       ...state,
-      schemaVersion: 2,
+      schemaVersion: 4,
       updatedAt,
       installedIntegrations: [...state.installedIntegrations, ...toInstalledCatalogState(results)],
       installedMcpServers: [...state.installedMcpServers, ...toInstalledCatalogState(bundledMcpResults)]
@@ -135,24 +156,8 @@ export async function runIntegrationInstallCommand(
     const nextLedger = upsertLedgerEntries(
       ledger,
       [
-        ...buildCatalogLedgerEntries(
-          'integration',
-          results,
-          {
-            profileId: state.activeProfileId,
-            domainId: state.activeDomainId
-          },
-          updatedAt
-        ),
-        ...buildCatalogLedgerEntries(
-          'mcp',
-          bundledMcpResults,
-          {
-            profileId: state.activeProfileId,
-            domainId: state.activeDomainId
-          },
-          updatedAt
-        )
+        ...buildCatalogLedgerEntries('integration', results, updatedAt),
+        ...buildCatalogLedgerEntries('mcp', bundledMcpResults, updatedAt)
       ],
       updatedAt
     );
@@ -183,12 +188,12 @@ async function buildCatalogContext(options: IntegrationCatalogOptions): Promise<
   const state = await loadState(getPowerhousePaths(platform));
   let agents = options.agent ?? [];
 
-  if (agents.length === 0 && options.profile) {
-    const profile = registry.profiles.find((entry) => entry.id === options.profile);
-    if (!profile) {
-      throw new Error(`Unknown profile "${options.profile}".`);
+  if (agents.length === 0 && options.harness) {
+    const harness = registry.harnesses.find((entry) => entry.id === options.harness);
+    if (!harness) {
+      throw new Error(`Unknown harness "${options.harness}".`);
     }
-    agents = profile.defaultAgents;
+    agents = harness.defaultAgents;
   }
 
   if (agents.length === 0 && state?.installedAgents.length) {
@@ -214,4 +219,19 @@ function toInstalledCatalogState(
     scope: result.scope,
     status: result.status
   }));
+}
+
+function formatInstallKind(kind: string): string {
+  switch (kind) {
+    case 'manual':
+      return 'Manual';
+    case 'native-cli':
+      return 'Native CLI';
+    case 'json-config':
+      return 'JSON config update';
+    case 'toml-config':
+      return 'TOML config update';
+    default:
+      return kind;
+  }
 }

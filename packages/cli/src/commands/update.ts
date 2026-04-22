@@ -6,13 +6,14 @@ import {
   installDomainSkills,
   installIntegrations,
   installMcpServers,
-  isBootstrapPlatform,
+  isSetupPlatform,
+  isToolPlanUpToDate,
   loadLedger,
   loadRegistry,
   saveLastRun,
   loadState,
-  mergeBootstrapLedger,
-  resolveBootstrapPlan,
+  mergeSetupLedger,
+  resolveSetupPlan,
   runSkillsUpdate,
   saveLedger,
   saveState
@@ -20,14 +21,11 @@ import {
 import { syncWorkspaceDependencies, syncWorkspaceWithGit } from '@powerhouse/core';
 import { ToolInstallError } from '@powerhouse/core';
 
-import { formatCatalogExecutionSummary, formatExecutionSummary, printInstallerLog } from '../ui/output.ts';
+import { formatCatalogExecutionSummary, formatExecutionSummary, printInstallerLog, printToolFailures } from '../ui/output.ts';
 
 export async function runUpdateCommand(): Promise<void> {
   const platform = detectPlatform();
-  if (!isBootstrapPlatform(platform)) {
-    if (platform.os === 'win32') {
-      throw new Error('Native Windows planning is available, but update is not enabled yet. Run powerhouse under WSL for installs.');
-    }
+  if (!isSetupPlatform(platform)) {
     throw new Error(`Unsupported platform "${platform.os}".`);
   }
 
@@ -37,10 +35,10 @@ export async function runUpdateCommand(): Promise<void> {
   const state = await loadState(paths);
   const existingLedger = await loadLedger(paths);
   if (!state) {
-    throw new Error('No saved powerhouse state found. Run `powerhouse bootstrap` first.');
+    throw new Error('No saved powerhouse state found. Run `powerhouse setup` first.');
   }
 
-  const plan = resolveBootstrapPlan(registry, platform, state.activeProfileId, state.activeDomainId);
+  const plan = resolveSetupPlan(registry, platform, state.activeHarnessIds, state.activeDomainIds, state.selectedToolIds);
   let results = [] as Awaited<ReturnType<typeof executeToolPlan>>;
   let integrationResults = [] as Awaited<ReturnType<typeof installIntegrations>>;
   let mcpServerResults = [] as Awaited<ReturnType<typeof installMcpServers>>;
@@ -55,8 +53,18 @@ export async function runUpdateCommand(): Promise<void> {
       await syncWorkspaceDependencies(registry.rootDir);
     }
 
+    // Fast-path: workspace is current and all tools are already satisfied — skip install pipeline
+    if (workspaceSync.status === 'skipped') {
+      const alreadyUpToDate = await isToolPlanUpToDate(plan);
+      if (alreadyUpToDate) {
+        console.log('Everything is up to date.');
+        return;
+      }
+    }
+
     failureStage = 'tool-install';
     results = await executeToolPlan(plan, platform.os, {
+      continueOnError: true,
       onLog: printInstallerLog,
       knownManagedToolIds: existingLedger.entries.flatMap((entry) =>
         entry.kind === 'tool' && entry.ownership === 'installed' ? [entry.toolId] : []
@@ -71,7 +79,7 @@ export async function runUpdateCommand(): Promise<void> {
       onLog: printInstallerLog
     });
     failureStage = 'skills-install';
-    skillRecords = await installDomainSkills(plan.domain, {
+    skillRecords = await installDomainSkills(plan.domains, {
       agents: plan.agents,
       onLog: printInstallerLog
     });
@@ -81,7 +89,7 @@ export async function runUpdateCommand(): Promise<void> {
     const updatedAt = new Date().toISOString();
     await saveState(paths, {
       ...state,
-      schemaVersion: 2,
+      schemaVersion: 4,
       updatedAt,
       installedToolIds: results.map((result) => result.toolId),
       installedAgents: plan.agents,
@@ -90,14 +98,10 @@ export async function runUpdateCommand(): Promise<void> {
       platformOs: platform.os,
       platformArch: platform.arch
     });
-    const nextLedger = mergeBootstrapLedger(
+    const nextLedger = mergeSetupLedger(
       existingLedger,
       paths,
       platform,
-      {
-        profileId: plan.profile.id,
-        domainId: plan.domain.id
-      },
       results,
       skillRecords,
       integrationResults,
@@ -106,13 +110,13 @@ export async function runUpdateCommand(): Promise<void> {
     );
     await saveLedger(paths, nextLedger);
     await saveLastRun(paths, {
-      schemaVersion: 2,
+      schemaVersion: 4,
       command: 'update',
       status: 'success',
       startedAt,
       finishedAt: new Date().toISOString(),
-      profileId: plan.profile.id,
-      domainId: plan.domain.id,
+      harnessIds: plan.harnesses.map((harness) => harness.id),
+      domainIds: plan.domains.map((domain) => domain.id),
       platformOs: platform.os,
       platformArch: platform.arch,
       installedToolIds: results.filter((result) => result.status === 'installed').map((result) => result.toolId),
@@ -138,6 +142,7 @@ export async function runUpdateCommand(): Promise<void> {
     if (mcpServerResults.length > 0) {
       console.log(formatCatalogExecutionSummary('MCP', mcpServerResults));
     }
+    printToolFailures(results);
     console.log('Update complete.');
   } catch (error) {
     const partialResults = error instanceof ToolInstallError ? error.results : results;
@@ -146,13 +151,13 @@ export async function runUpdateCommand(): Promise<void> {
 
     try {
       await saveLastRun(paths, {
-        schemaVersion: 2,
+        schemaVersion: 4,
         command: 'update',
         status: 'failed',
         startedAt,
         finishedAt: new Date().toISOString(),
-        profileId: plan.profile.id,
-        domainId: plan.domain.id,
+        harnessIds: plan.harnesses.map((harness) => harness.id),
+        domainIds: plan.domains.map((domain) => domain.id),
         platformOs: platform.os,
         platformArch: platform.arch,
         installedToolIds: partialResults.filter((result) => result.status === 'installed').map((result) => result.toolId),

@@ -9,7 +9,7 @@ export async function runDoctorCommand(): Promise<void> {
   const state = await loadState(paths);
   const lastRun = await loadLastRun(paths);
   const ledger = await loadLedger(paths);
-  const checks = await runDoctor(platform, registry, state, lastRun, ledger);
+  const checks = await runDoctor(platform, registry, state, lastRun, ledger, null, [], paths);
 
   printDoctorChecks(checks);
 

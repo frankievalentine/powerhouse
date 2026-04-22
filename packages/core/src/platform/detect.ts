@@ -2,10 +2,11 @@ import os from 'node:os';
 import path from 'node:path';
 
 export const PLATFORM_TARGETS = ['darwin', 'linux', 'win32', 'wsl'] as const;
-export const BOOTSTRAP_PLATFORMS = ['darwin', 'linux', 'wsl'] as const;
+export const SETUP_PLATFORMS = ['darwin', 'linux', 'wsl', 'win32'] as const;
 
 export type PlatformTarget = (typeof PLATFORM_TARGETS)[number];
-export type BootstrapPlatform = (typeof BOOTSTRAP_PLATFORMS)[number];
+export type SetupPlatform = (typeof SETUP_PLATFORMS)[number];
+export type BootstrapPlatform = SetupPlatform;
 export type Platform = PlatformTarget | 'unknown';
 
 export interface DetectedPlatform {
@@ -56,9 +57,12 @@ export function isPlanPlatform(platform: DetectedPlatform): platform is Detected
   return PLATFORM_TARGETS.includes(platform.os as PlatformTarget);
 }
 
-export function isBootstrapPlatform(platform: DetectedPlatform): platform is DetectedPlatform & { os: BootstrapPlatform } {
-  return BOOTSTRAP_PLATFORMS.includes(platform.os as BootstrapPlatform);
+export function isSetupPlatform(platform: DetectedPlatform): platform is DetectedPlatform & { os: SetupPlatform } {
+  return SETUP_PLATFORMS.includes(platform.os as SetupPlatform);
 }
+
+export const BOOTSTRAP_PLATFORMS = SETUP_PLATFORMS;
+export const isBootstrapPlatform = isSetupPlatform;
 
 export function isNativeWindowsPlatform(platform: DetectedPlatform): platform is DetectedPlatform & { os: 'win32' } {
   return platform.os === 'win32';

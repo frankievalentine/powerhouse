@@ -6,20 +6,20 @@ import {
   loadLedger,
   loadRegistry,
   loadState,
-  resolveBootstrapPlan,
+  resolveSetupPlan,
+  resolveDomainSkillPackages,
   summarizeToolOwnership,
   type DetectedPlatform,
   type PlatformTarget
 } from '@powerhouse/core';
 
-import { formatPlan, formatPlanOverview } from '../ui/output.ts';
-
-const DEFAULT_PROFILE_ID = 'claude';
-const DEFAULT_DOMAIN_ID = 'general';
+import { formatPlatform, formatPlan, formatPlanOverview } from '../ui/output.ts';
+import { getActiveSelection } from './selection.ts';
 
 export interface PlanCommandOptions {
-  profile?: string;
-  domain?: string;
+  harness?: string[];
+  domain?: string[];
+  tool?: string[];
   platform?: PlatformTarget;
   json?: boolean;
   integrationScope?: 'auto' | 'global' | 'project' | 'local';
@@ -33,9 +33,11 @@ export async function runPlanCommand(options: PlanCommandOptions): Promise<void>
   const state = await loadState(paths);
   const ledger = await loadLedger(paths);
   const platform = resolveRequestedPlatform(detectedPlatform, options.platform);
-  const profileId = options.profile ?? state?.activeProfileId ?? DEFAULT_PROFILE_ID;
-  const domainId = options.domain ?? state?.activeDomainId ?? DEFAULT_DOMAIN_ID;
-  const plan = resolveBootstrapPlan(registry, platform, profileId, domainId);
+  const activeSelection = getActiveSelection(state);
+  const harnessIds = options.harness && options.harness.length > 0 ? options.harness : activeSelection.harnessIds;
+  const domainIds = options.domain && options.domain.length > 0 ? options.domain : activeSelection.domainIds;
+  const selectedToolIds = options.tool && options.tool.length > 0 ? options.tool : state?.selectedToolIds;
+  const plan = resolveSetupPlan(registry, platform, harnessIds, domainIds, selectedToolIds);
   const pruneAnalysis = computePruneAnalysis(ledger, plan);
   const toolOwnership = summarizeToolOwnership(ledger);
 
@@ -44,9 +46,12 @@ export async function runPlanCommand(options: PlanCommandOptions): Promise<void>
       JSON.stringify(
         {
           platform: platform.os,
-          profile: plan.profile.id,
-          domain: plan.domain.id,
+          harnesses: plan.harnesses.map((harness) => harness.id),
+          domains: plan.domains.map((domain) => domain.id),
+          selectedOptionalToolIds: plan.selectedOptionalTools.map((tool) => tool.id),
           agents: plan.agents,
+          requiredTools: plan.requiredTools.map((tool) => tool.id),
+          recommendedTools: plan.recommendedTools.map((tool) => tool.id),
           tools: plan.tools.map((tool) => ({
             id: tool.id,
             title: tool.title,
@@ -68,7 +73,7 @@ export async function runPlanCommand(options: PlanCommandOptions): Promise<void>
             scopes: server.supportedScopes,
             source: server.source
           })),
-          skillPackages: plan.domain.skillPackages,
+          skillPackages: resolveDomainSkillPackages(plan.domains),
           requestedScopes: {
             integrations: options.integrationScope ?? 'auto',
             mcp: options.mcpScope ?? 'auto'
@@ -96,7 +101,7 @@ export async function runPlanCommand(options: PlanCommandOptions): Promise<void>
   }
 
   console.log(formatPlanOverview(plan));
-  console.log(`Platform ${platform.os}`);
+  console.log(`Target platform: ${formatPlatform(platform.os)}`);
   console.log('');
   console.log(formatPlan(plan));
 }

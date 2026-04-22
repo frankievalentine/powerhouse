@@ -1,53 +1,84 @@
 import { Command } from 'commander';
 
-import { runBootstrapCommand } from './commands/bootstrap.ts';
+import { runSetupCommand } from './commands/setup.ts';
 import { runDoctorCommand } from './commands/doctor.ts';
-import { runDomainCurrentCommand, runDomainListCommand, runDomainShowCommand, runDomainUseCommand } from './commands/domains.ts';
+import {
+  runDomainAddCommand,
+  runDomainCurrentCommand,
+  runDomainListCommand,
+  runDomainRemoveCommand,
+  runDomainShowCommand,
+  runDomainUseCommand
+} from './commands/domains.ts';
+import {
+  runHarnessAddCommand,
+  runHarnessCurrentCommand,
+  runHarnessListCommand,
+  runHarnessRemoveCommand,
+  runHarnessShowCommand,
+  runHarnessUseCommand
+} from './commands/harnesses.ts';
 import { runIntegrationFindCommand, runIntegrationInstallCommand, runIntegrationListCommand, runIntegrationShowCommand } from './commands/integrations.ts';
 import { runMcpFindCommand, runMcpInstallCommand, runMcpListCommand, runMcpShowCommand } from './commands/mcp.ts';
 import { runPlanCommand } from './commands/plan.ts';
-import { runProfileCurrentCommand, runProfileListCommand, runProfileShowCommand, runProfileUseCommand } from './commands/profiles.ts';
 import { runPruneCommand } from './commands/prune.ts';
 import { runRegistryScaffoldCommand } from './commands/registry-scaffold.ts';
 import { runRegistryValidateCommand } from './commands/registry.ts';
+import { appendStringOption } from './commands/selection.ts';
 import { runStatusCommand } from './commands/status.ts';
 import { runSkillsFindCommand, runSkillsInstallCommand, runSkillsListCommand, runSkillsRemoveCommand } from './commands/skills.ts';
-import { runToolListCommand, runToolShowCommand } from './commands/tools.ts';
+import {
+  runToolAddCommand,
+  runToolCurrentCommand,
+  runToolListCommand,
+  runToolRemoveCommand,
+  runToolShowCommand,
+  runToolUseCommand
+} from './commands/tools.ts';
 import { runUninstallCommand } from './commands/uninstall.ts';
 import { runUpdateCommand } from './commands/update.ts';
 
 const program = new Command();
 
+if (process.argv[2] === 'bootstrap') {
+  console.warn('warning: `powerhouse bootstrap` is deprecated. Use `powerhouse setup`.');
+  process.argv[2] = 'setup';
+}
+
+function addSetupOptions(command: Command): Command {
+  return command
+    .option('--harness <id>', 'harness manifest id (repeatable)', appendStringOption, [])
+    .option('--domain <id>', 'domain manifest id (repeatable)', appendStringOption, [])
+    .option('--tool <id>', 'optional tool id (repeatable)', appendStringOption, [])
+    .option('--integration-scope <scope>', 'integration scope: auto, global, project, or local', 'auto')
+    .option('--mcp-scope <scope>', 'MCP scope: auto, global, project, or local', 'auto')
+    .option('--yes', 'skip prompts and use defaults when needed', false)
+    .option('--dry-run', 'print the resolved plan without mutating the machine', false)
+    .action(runSetupCommand);
+}
+
 program
   .name('powerhouse')
-  .description('Bootstrap AI-native development environments.')
+  .description('Set up a curated AI coding environment.')
   .version('0.1.0');
 
-program
-  .command('bootstrap')
-  .description('Resolve and apply a full install plan from profile + domain manifests.')
-  .option('--profile <id>', 'profile manifest id')
-  .option('--domain <id>', 'domain manifest id')
-  .option('--integration-scope <scope>', 'integration scope: auto, global, project, or local', 'auto')
-  .option('--mcp-scope <scope>', 'MCP scope: auto, global, project, or local', 'auto')
-  .option('--yes', 'skip prompts and use defaults when needed', false)
-  .option('--dry-run', 'print the resolved plan without mutating the machine', false)
-  .action(runBootstrapCommand);
+addSetupOptions(program.command('setup').description('Install a harness + domain setup with explicit tools.'));
 
-program.command('doctor').description('Check the current powerhouse environment and saved state.').action(runDoctorCommand);
-program.command('status').description('Summarize the current powerhouse machine state and health.').action(runStatusCommand);
+program.command('doctor').description('Check setup health and saved state.').action(runDoctorCommand);
+program.command('status').description('Show setup state, paths, and health.').action(runStatusCommand);
 program
   .command('plan')
-  .description('Resolve and inspect a bootstrap plan without running installs.')
-  .option('--profile <id>', 'profile manifest id')
-  .option('--domain <id>', 'domain manifest id')
+  .description('Preview a setup plan without changing anything.')
+  .option('--harness <id>', 'harness manifest id (repeatable)', appendStringOption, [])
+  .option('--domain <id>', 'domain manifest id (repeatable)', appendStringOption, [])
+  .option('--tool <id>', 'optional tool id (repeatable)', appendStringOption, [])
   .option('--platform <os>', 'resolve for a target platform (darwin, linux, win32, or wsl)')
   .option('--integration-scope <scope>', 'integration scope: auto, global, project, or local', 'auto')
   .option('--mcp-scope <scope>', 'MCP scope: auto, global, project, or local', 'auto')
   .option('--json', 'print the resolved plan as JSON', false)
   .action(runPlanCommand);
 
-const skills = program.command('skills').description('Manage agent skills via the skills CLI.');
+const skills = program.command('skills').description('Manage skills with the upstream skills CLI.');
 skills
   .command('list')
   .description('List installed skills using the upstream skills CLI.')
@@ -77,19 +108,19 @@ skills
   .option('--yes', 'skip confirmation prompts', false)
   .action(runSkillsRemoveCommand);
 
-const integration = program.command('integration').description('Discover and install curated agent integrations.');
+const integration = program.command('integration').description('Discover and install curated integrations.');
 integration
   .command('list')
-  .description('List integrations for the active or specified profile.')
+  .description('List integrations for the active or specified harness.')
   .option('--agent <agent...>', 'filter to specific agents')
-  .option('--profile <id>', 'profile manifest id')
+  .option('--harness <id>', 'harness manifest id')
   .action(runIntegrationListCommand);
 integration
   .command('find')
-  .description('Search integrations for the active or specified profile.')
+  .description('Search integrations for the active or specified harness.')
   .argument('[query]', 'search query')
   .option('--agent <agent...>', 'filter to specific agents')
-  .option('--profile <id>', 'profile manifest id')
+  .option('--harness <id>', 'harness manifest id')
   .action(runIntegrationFindCommand);
 integration
   .command('show')
@@ -107,16 +138,16 @@ integration
 const mcp = program.command('mcp').description('Discover and install curated MCP servers.');
 mcp
   .command('list')
-  .description('List MCP servers for the active or specified profile.')
+  .description('List MCP servers for the active or specified harness.')
   .option('--agent <agent...>', 'filter to specific agents')
-  .option('--profile <id>', 'profile manifest id')
+  .option('--harness <id>', 'harness manifest id')
   .action(runMcpListCommand);
 mcp
   .command('find')
   .description('Search curated MCP servers.')
   .argument('[query]', 'search query')
   .option('--agent <agent...>', 'filter to specific agents')
-  .option('--profile <id>', 'profile manifest id')
+  .option('--harness <id>', 'harness manifest id')
   .action(runMcpFindCommand);
 mcp
   .command('show')
@@ -131,35 +162,85 @@ mcp
   .option('--dry-run', 'preview the install without changing config', false)
   .action(runMcpInstallCommand);
 
-const profile = program.command('profile').description('Inspect curated powerhouse profiles.');
-profile.command('list').description('List available profiles.').option('--platform <os>', 'filter by target platform').action(runProfileListCommand);
-profile.command('current').description('Show the currently saved active profile.').action(runProfileCurrentCommand);
-profile.command('show').description('Show one profile.').argument('<id>', 'profile id').option('--platform <os>', 'show compatibility for a target platform').action(runProfileShowCommand);
-profile
+const harness = program.command('harness').description('Inspect curated harnesses.');
+harness.command('list').description('List available harnesses.').option('--platform <os>', 'filter by target platform').action(runHarnessListCommand);
+harness.command('current').description('Show the currently saved active harness selection.').action(runHarnessCurrentCommand);
+harness.command('show').description('Show one harness.').argument('<id>', 'harness id').option('--platform <os>', 'show compatibility for a target platform').action(runHarnessShowCommand);
+harness
   .command('use')
-  .description('Apply a profile while preserving the current domain when possible.')
-  .argument('<id>', 'profile id')
+  .description('Replace the active harness set while preserving the current domain selection.')
+  .argument('<ids...>', 'harness ids')
   .option('--dry-run', 'resolve the change without mutating the machine', false)
   .option('--yes', 'skip confirmation prompts', false)
-  .action(runProfileUseCommand);
+  .action(runHarnessUseCommand);
+harness
+  .command('add')
+  .description('Add one or more harnesses to the active selection.')
+  .argument('<ids...>', 'harness ids')
+  .option('--dry-run', 'resolve the change without mutating the machine', false)
+  .option('--yes', 'skip confirmation prompts', false)
+  .action(runHarnessAddCommand);
+harness
+  .command('remove')
+  .description('Remove one or more harnesses from the active selection.')
+  .argument('<ids...>', 'harness ids')
+  .option('--dry-run', 'resolve the change without mutating the machine', false)
+  .option('--yes', 'skip confirmation prompts', false)
+  .action(runHarnessRemoveCommand);
 
-const domain = program.command('domain').description('Inspect curated powerhouse domains.');
+const domain = program.command('domain').description('Inspect curated domains.');
 domain.command('list').description('List available domains.').action(runDomainListCommand);
-domain.command('current').description('Show the currently saved active domain.').action(runDomainCurrentCommand);
+domain.command('current').description('Show the currently saved active domain selection.').action(runDomainCurrentCommand);
 domain.command('show').description('Show one domain.').argument('<id>', 'domain id').action(runDomainShowCommand);
 domain
   .command('use')
-  .description('Apply a domain while preserving the current profile when possible.')
-  .argument('<id>', 'domain id')
+  .description('Replace the active domain set while preserving the current harness selection.')
+  .argument('<ids...>', 'domain ids')
   .option('--dry-run', 'resolve the change without mutating the machine', false)
   .option('--yes', 'skip confirmation prompts', false)
   .action(runDomainUseCommand);
+domain
+  .command('add')
+  .description('Add one or more domains to the active selection.')
+  .argument('<ids...>', 'domain ids')
+  .option('--dry-run', 'resolve the change without mutating the machine', false)
+  .option('--yes', 'skip confirmation prompts', false)
+  .action(runDomainAddCommand);
+domain
+  .command('remove')
+  .description('Remove one or more domains from the active selection.')
+  .argument('<ids...>', 'domain ids')
+  .option('--dry-run', 'resolve the change without mutating the machine', false)
+  .option('--yes', 'skip confirmation prompts', false)
+  .action(runDomainRemoveCommand);
 
-const tool = program.command('tool').description('Inspect curated powerhouse tools.');
+const tool = program.command('tool').description('Inspect and manage curated tools.');
 tool.command('list').description('List available tools.').option('--platform <os>', 'filter by target platform').action(runToolListCommand);
+tool.command('current').description('Show the current required and optional tool selection.').action(runToolCurrentCommand);
 tool.command('show').description('Show one tool.').argument('<id>', 'tool id').option('--platform <os>', 'show compatibility for a target platform').action(runToolShowCommand);
+tool
+  .command('use')
+  .description('Replace the selected optional tool set.')
+  .argument('[ids...]', 'optional tool ids')
+  .option('--dry-run', 'resolve the change without mutating the machine', false)
+  .option('--yes', 'skip confirmation prompts', false)
+  .action(runToolUseCommand);
+tool
+  .command('add')
+  .description('Add one or more optional tools to the active selection.')
+  .argument('<ids...>', 'optional tool ids')
+  .option('--dry-run', 'resolve the change without mutating the machine', false)
+  .option('--yes', 'skip confirmation prompts', false)
+  .action(runToolAddCommand);
+tool
+  .command('remove')
+  .description('Remove one or more optional tools from the active selection.')
+  .argument('<ids...>', 'optional tool ids')
+  .option('--dry-run', 'resolve the change without mutating the machine', false)
+  .option('--yes', 'skip confirmation prompts', false)
+  .action(runToolRemoveCommand);
 
-const registry = program.command('registry').description('Validate and inspect the powerhouse registry.');
+const registry = program.command('registry').description('Validate and inspect the registry.');
 registry.command('validate').description('Validate cross-manifest registry consistency.').action(runRegistryValidateCommand);
 registry
   .command('scaffold-domain')
@@ -169,12 +250,12 @@ registry
   .option('--dry-run', 'print the scaffold without writing it', false)
   .action((id, options) => runRegistryScaffoldCommand('domain', id, options));
 registry
-  .command('scaffold-profile')
-  .description('Create a new profile manifest scaffold.')
-  .argument('<id>', 'profile id')
+  .command('scaffold-harness')
+  .description('Create a new harness manifest scaffold.')
+  .argument('<id>', 'harness id')
   .option('--title <title>', 'optional display title')
   .option('--dry-run', 'print the scaffold without writing it', false)
-  .action((id, options) => runRegistryScaffoldCommand('profile', id, options));
+  .action((id, options) => runRegistryScaffoldCommand('harness', id, options));
 registry
   .command('scaffold-tool')
   .description('Create a new tool manifest scaffold.')
@@ -215,8 +296,7 @@ program
   .option('--force-drift', 'restore tracked config snapshots even when the current file has drifted', false)
   .action(runUninstallCommand);
 
-program.parseAsync(process.argv).catch((error: unknown) => {
-  const message = error instanceof Error ? error.message : String(error);
-  console.error(message);
-  process.exit(1);
+program.parseAsync(process.argv).catch((error) => {
+  console.error(error instanceof Error ? error.message : String(error));
+  process.exitCode = 1;
 });

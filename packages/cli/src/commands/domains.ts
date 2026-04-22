@@ -1,16 +1,32 @@
-import { detectPlatform, getPowerhousePaths, loadRegistry, loadState } from '@powerhouse/core';
+import {
+  detectPlatform,
+  getPowerhousePaths,
+  loadRegistry,
+  loadState,
+  reconcileSelectedOptionalToolIds,
+  resolveDomainRecommendedToolIds,
+  type ToolManifest
+} from '@powerhouse/core';
 
-import { DEFAULT_PROFILE_ID, runBootstrapCommand } from './bootstrap.ts';
-import { printCurrentSelection, printManifestList } from '../ui/output.ts';
+import { runSetupCommand } from './setup.ts';
+import { addSelectionIds, getActiveSelection, normalizeSelectionIds, removeSelectionIds, resolveSelectedManifests } from './selection.ts';
+import { printBulletSection, printCurrentSelection, printKeyValueRows, printManifestList, summarizeDescription } from '../ui/output.ts';
 
-export interface DomainUseCommandOptions {
+export interface DomainSelectionCommandOptions {
   dryRun?: boolean;
   yes?: boolean;
 }
 
 export async function runDomainListCommand(): Promise<void> {
   const registry = await loadRegistry();
-  printManifestList(registry.domains);
+  printManifestList(
+    registry.domains.map((domain) => ({
+      id: domain.id,
+      title: domain.title,
+      description: domain.description,
+      kind: 'domain'
+    }))
+  );
 }
 
 export async function runDomainShowCommand(domainId: string): Promise<void> {
@@ -21,48 +37,105 @@ export async function runDomainShowCommand(domainId: string): Promise<void> {
     throw new Error(`Unknown domain "${domainId}".`);
   }
 
-  console.log(`id: ${domain.id}`);
-  console.log(`title: ${domain.title}`);
-  console.log(`description: ${domain.description}`);
-  console.log(`extra tools: ${domain.extraToolIds.join(', ') || 'none'}`);
-  console.log(
-    `skill packages: ${
-      domain.skillPackages.length > 0
-        ? domain.skillPackages
-            .map((pkg) => `${pkg.source}${pkg.skills.length > 0 ? ` (${pkg.skills.join(', ')})` : ''}`)
-            .join('; ')
-        : 'none'
-    }`
+  const recommendedTools = resolveSelectedManifests(registry.tools, domain.recommendedToolIds);
+
+  console.log(domain.title);
+  console.log(summarizeDescription(domain.description, 'domain'));
+  console.log('');
+  printKeyValueRows([
+    { label: 'ID', value: domain.id },
+    { label: 'Recommended tools', value: recommendedTools.map((tool) => tool.id).join(', ') || 'none' }
+  ]);
+
+  console.log('');
+  printBulletSection(
+    'Skill packages',
+    domain.skillPackages.map((pkg) => `${pkg.source}${pkg.skills.length > 0 ? `: ${pkg.skills.join(', ')}` : ''}`),
+    'No skill packages'
   );
+
+  if (domain.notes.length > 0) {
+    console.log('');
+    printBulletSection('Notes', domain.notes);
+  }
 }
 
 export async function runDomainCurrentCommand(): Promise<void> {
   const platform = detectPlatform();
   const state = await loadState(getPowerhousePaths(platform));
   if (!state) {
-    throw new Error('No saved powerhouse state found. Run `powerhouse bootstrap` first.');
+    throw new Error('No saved powerhouse state found. Run `powerhouse setup` first.');
   }
 
   const registry = await loadRegistry();
-  const domain = registry.domains.find((entry) => entry.id === state.activeDomainId);
-  if (!domain) {
-    throw new Error(`Saved domain "${state.activeDomainId}" no longer exists in the registry.`);
+  const domains = resolveSelectedManifests(registry.domains, state.activeDomainIds);
+  if (domains.length !== state.activeDomainIds.length) {
+    const missing = state.activeDomainIds.filter((domainId) => !domains.some((domain) => domain.id === domainId));
+    throw new Error(`Saved domain selection contains missing manifest(s): ${missing.join(', ')}.`);
   }
 
-  printCurrentSelection('domain', domain, state.updatedAt);
+  printCurrentSelection('domain', domains, state.updatedAt);
 }
 
-export async function runDomainUseCommand(domainId: string, options: DomainUseCommandOptions): Promise<void> {
-  const platform = detectPlatform();
-  const state = await loadState(getPowerhousePaths(platform));
-  const profileId = state?.activeProfileId ?? DEFAULT_PROFILE_ID;
+export async function runDomainUseCommand(domainIds: string[], options: DomainSelectionCommandOptions): Promise<void> {
+  await applyDomainSelectionChange(domainIds, 'use', options);
+}
 
-  await runBootstrapCommand({
-    profile: profileId,
-    domain: domainId,
+export async function runDomainAddCommand(domainIds: string[], options: DomainSelectionCommandOptions): Promise<void> {
+  await applyDomainSelectionChange(domainIds, 'add', options);
+}
+
+export async function runDomainRemoveCommand(domainIds: string[], options: DomainSelectionCommandOptions): Promise<void> {
+  await applyDomainSelectionChange(domainIds, 'remove', options);
+}
+
+async function applyDomainSelectionChange(
+  domainIds: string[],
+  mode: 'use' | 'add' | 'remove',
+  options: DomainSelectionCommandOptions
+): Promise<void> {
+  const platform = detectPlatform();
+  const paths = getPowerhousePaths(platform);
+  const [registry, state] = await Promise.all([loadRegistry(), loadState(paths)]);
+  const activeSelection = getActiveSelection(state);
+
+  const nextDomainIds =
+    mode === 'use'
+      ? normalizeSelectionIds(registry.domains, domainIds, 'domain')
+      : mode === 'add'
+        ? addSelectionIds(registry.domains, activeSelection.domainIds, domainIds, 'domain')
+        : buildRemovedSelection(registry.domains, activeSelection.domainIds, domainIds, 'domain');
+
+  const previousRecommendedToolIds = resolveDomainRecommendedToolIds(
+    resolveSelectedManifests(registry.domains, activeSelection.domainIds)
+  );
+  const nextRecommendedToolIds = resolveDomainRecommendedToolIds(
+    resolveSelectedManifests(registry.domains, nextDomainIds)
+  );
+  const nextSelectedToolIds = reconcileSelectedOptionalToolIds(
+    activeSelection.selectedToolIds,
+    previousRecommendedToolIds,
+    nextRecommendedToolIds
+  );
+
+  await runSetupCommand({
+    harness: activeSelection.harnessIds,
+    domain: nextDomainIds,
+    tool: nextSelectedToolIds,
     dryRun: options.dryRun,
     yes: options.yes,
-    introText: `powerhouse domain use ${domainId}`,
-    interactive: false
+    introText: `powerhouse domain ${mode} ${domainIds.join(' ')}`,
+    interactive: false,
+    applyPrune: mode !== 'add'
   });
+}
+
+function buildRemovedSelection(
+  entries: Array<{ id: string }>,
+  currentIds: string[],
+  removedIds: string[],
+  kind: 'harness' | 'domain' | 'tool'
+): string[] {
+  normalizeSelectionIds(entries, removedIds, kind);
+  return removeSelectionIds(entries, currentIds, removedIds, kind);
 }

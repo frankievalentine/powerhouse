@@ -1,6 +1,6 @@
 import { execa } from 'execa';
 
-import type { DomainManifest } from '../registry/schema.ts';
+import type { DomainManifest, SkillPackage } from '../registry/schema.ts';
 import { resolveSkillsRunner } from '../system/commands.ts';
 
 export const SKILLS_CLI_VERSION = '1.5.1';
@@ -26,9 +26,10 @@ export interface ManagedSkillRemovalResult {
   detail: string;
 }
 
-export async function installDomainSkills(domain: DomainManifest, options: SkillsOptions): Promise<ManagedSkillRecord[]> {
-  const plannedSkills = planManagedSkills(domain, options.agents);
-  if (domain.skillPackages.length === 0 || options.agents.length === 0) {
+export async function installDomainSkills(domains: DomainManifest[], options: SkillsOptions): Promise<ManagedSkillRecord[]> {
+  const plannedPackages = resolveDomainSkillPackages(domains);
+  const plannedSkills = planManagedSkills(domains, options.agents);
+  if (plannedPackages.length === 0 || options.agents.length === 0) {
     return plannedSkills;
   }
 
@@ -38,7 +39,7 @@ export async function installDomainSkills(domain: DomainManifest, options: Skill
   }
   const invocation = buildSkillsInvocation(runner);
 
-  for (const pkg of domain.skillPackages) {
+  for (const pkg of plannedPackages) {
     const args = [...invocation.args, 'add', pkg.source, '--global', '--yes'];
     for (const agent of options.agents) {
       args.push('--agent', agent);
@@ -191,12 +192,12 @@ export function buildSkillsInvocation(runner: 'npx' | 'bunx'): SkillsInvocation 
 }
 
 export function planManagedSkills(
-  domain: DomainManifest,
+  domains: DomainManifest[],
   agents: string[],
   scope: 'global' | 'project' | 'local' = 'global'
 ): ManagedSkillRecord[] {
   const records: ManagedSkillRecord[] = [];
-  for (const pkg of domain.skillPackages) {
+  for (const pkg of resolveDomainSkillPackages(domains)) {
     const skillNames = pkg.skills.length > 0 ? pkg.skills : [null];
     for (const agent of agents) {
       for (const skillName of skillNames) {
@@ -212,6 +213,40 @@ export function planManagedSkills(
   }
 
   return records;
+}
+
+export function resolveDomainSkillPackages(domains: DomainManifest[]): SkillPackage[] {
+  const packages = new Map<string, SkillPackage>();
+
+  for (const domain of domains) {
+    for (const pkg of domain.skillPackages) {
+      const existing = packages.get(pkg.source);
+      if (!existing) {
+        packages.set(pkg.source, {
+          source: pkg.source,
+          skills: [...pkg.skills],
+          description: pkg.description
+        });
+        continue;
+      }
+
+      if (existing.skills.length === 0 || pkg.skills.length === 0) {
+        existing.skills = [];
+      } else {
+        for (const skill of pkg.skills) {
+          if (!existing.skills.includes(skill)) {
+            existing.skills.push(skill);
+          }
+        }
+      }
+
+      if (!existing.description && pkg.description) {
+        existing.description = pkg.description;
+      }
+    }
+  }
+
+  return [...packages.values()];
 }
 
 export async function removeManagedSkills(

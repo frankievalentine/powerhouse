@@ -2,8 +2,7 @@ import { cancel, confirm, intro, isCancel, outro } from '@clack/prompts';
 import {
   detectPlatform,
   getPowerhousePaths,
-  isBootstrapPlatform,
-  ledgerEntryKey,
+  isSetupPlatform,
   loadLedger,
   loadRegistry,
   loadState,
@@ -28,8 +27,8 @@ export async function runUninstallCommand(options: UninstallCommandOptions = {})
   intro('powerhouse uninstall');
 
   const platform = detectPlatform();
-  if (!isBootstrapPlatform(platform)) {
-    cancel(platform.os === 'win32' ? 'Run powerhouse under WSL for install lifecycle commands.' : `Unsupported platform: ${platform.os}.`);
+  if (!isSetupPlatform(platform)) {
+    cancel(`Unsupported platform: ${platform.os}.`);
     process.exitCode = 1;
     return;
   }
@@ -130,7 +129,7 @@ export async function runUninstallCommand(options: UninstallCommandOptions = {})
   }
 
   if (state) {
-    console.log(`Removed powerhouse for ${state.activeProfileId}/${state.activeDomainId}.`);
+    console.log(`Removed powerhouse for harnesses [${state.activeHarnessIds.join(', ')}] and domains [${state.activeDomainIds.join(', ')}].`);
   } else {
     console.log('Removed powerhouse runtime and tracked state.');
   }

@@ -3,21 +3,18 @@ import {
   computePruneAnalysis,
   detectPlatform,
   getPowerhousePaths,
-  isBootstrapPlatform,
+  isSetupPlatform,
   ledgerEntryKey,
   loadLedger,
   loadRegistry,
   loadState,
-  removeInstalledTool,
   removeLedgerEntries,
-  removeManagedSkills,
-  removeTrackedCatalogEntry,
-  resolveBootstrapPlan,
+  resolveSetupPlan,
   saveLedger,
   saveState
 } from '@powerhouse/core';
 
-import { printInstallerLog } from '../ui/output.ts';
+import { applyPruneAnalysis } from './prune-shared.ts';
 
 export interface PruneCommandOptions {
   yes?: boolean;
@@ -29,8 +26,8 @@ export async function runPruneCommand(options: PruneCommandOptions = {}): Promis
   intro('powerhouse prune');
 
   const platform = detectPlatform();
-  if (!isBootstrapPlatform(platform)) {
-    cancel(platform.os === 'win32' ? 'Run powerhouse under WSL for install lifecycle commands.' : `Unsupported platform: ${platform.os}.`);
+  if (!isSetupPlatform(platform)) {
+    cancel(`Unsupported platform: ${platform.os}.`);
     process.exitCode = 1;
     return;
   }
@@ -38,11 +35,11 @@ export async function runPruneCommand(options: PruneCommandOptions = {}): Promis
   const paths = getPowerhousePaths(platform);
   const state = await loadState(paths);
   if (!state) {
-    throw new Error('No saved powerhouse state found. Run `powerhouse bootstrap` first.');
+    throw new Error('No saved powerhouse state found. Run `powerhouse setup` first.');
   }
 
   const [registry, ledger] = await Promise.all([loadRegistry(), loadLedger(paths)]);
-  const plan = resolveBootstrapPlan(registry, platform, state.activeProfileId, state.activeDomainId);
+  const plan = resolveSetupPlan(registry, platform, state.activeHarnessIds, state.activeDomainIds, state.selectedToolIds);
   const analysis = computePruneAnalysis(ledger, plan);
   const removableCount =
     analysis.tools.length + analysis.skills.length + analysis.integrations.length + analysis.mcpServers.length;
@@ -62,83 +59,14 @@ export async function runPruneCommand(options: PruneCommandOptions = {}): Promis
     }
   }
 
-  const removedKeys = new Set<string>();
-  const warnings: string[] = [];
-
-  if (!options.keepTools) {
-    for (const entry of analysis.tools) {
-      const tool = registry.tools.find((candidate) => candidate.id === entry.toolId);
-      if (!tool) {
-        warnings.push(`Cannot prune "${entry.toolId}" because its manifest is no longer present.`);
-        continue;
-      }
-
-      const result = await removeInstalledTool(tool, platform.os, {
-        onLog: printInstallerLog
-      });
-      if (result.status === 'removed') {
-        removedKeys.add(ledgerEntryKey(entry));
-      } else {
-        warnings.push(result.detail);
-      }
-    }
-  } else if (analysis.tools.length > 0) {
-    warnings.push('Skipped tracked tool cleanup due to --keep-tools.');
-  }
-
-  const skillResults = await removeManagedSkills(
-    analysis.skills.map((entry) => ({
-      source: entry.source,
-      skillName: entry.skillName,
-      agent: entry.agent,
-      scope: entry.scope,
-      removable: entry.removable
-    })),
-    {
-      onLog: printInstallerLog
-    }
-  );
-  const removedSkillGroups = new Set(skillResults.filter((result) => result.status === 'removed').map((result) => result.key));
-  for (const entry of analysis.skills) {
-    if (removedSkillGroups.has(`${entry.agent}:${entry.scope}`)) {
-      removedKeys.add(ledgerEntryKey(entry));
-    }
-  }
-  warnings.push(...skillResults.filter((result) => result.status === 'skipped').map((result) => result.detail));
-
-  if (!options.keepConfigs) {
-    for (const entry of [...analysis.integrations, ...analysis.mcpServers]) {
-      const result = await removeTrackedCatalogEntry(entry, {
-        onLog: printInstallerLog
-      });
-      if (result.status === 'removed') {
-        removedKeys.add(ledgerEntryKey(entry));
-      } else {
-        warnings.push(result.detail);
-      }
-    }
-  } else if (analysis.integrations.length > 0 || analysis.mcpServers.length > 0) {
-    warnings.push('Skipped tracked integration and MCP config cleanup due to --keep-configs.');
-  }
-
-  if (analysis.blocked.length > 0) {
-    warnings.push(
-      ...analysis.blocked.map((entry) =>
-        entry.kind === 'tool'
-          ? `Tracked tool "${entry.toolId}" is out of plan but cannot be safely removed automatically.`
-          : entry.kind === 'skill'
-            ? `Tracked skill "${entry.source}" is out of plan but lacks a removable skill identifier.`
-            : `Tracked ${entry.kind} "${entry.id}" is out of plan but has no reversible change record.`
-      )
-    );
-  }
+  const { removedKeys, warnings } = await applyPruneAnalysis(analysis, registry, platform, options);
 
   const updatedAt = new Date().toISOString();
   const nextLedger = removeLedgerEntries(ledger, (entry) => removedKeys.has(ledgerEntryKey(entry)), updatedAt);
   await saveLedger(paths, nextLedger);
   await saveState(paths, {
     ...state,
-    schemaVersion: 2,
+    schemaVersion: 4,
     updatedAt
   });
 

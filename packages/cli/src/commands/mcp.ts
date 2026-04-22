@@ -15,11 +15,19 @@ import {
   type PlatformTarget
 } from '@powerhouse/core';
 
-import { formatCatalogExecutionSummary, printCatalogInstallResult, printCatalogList } from '../ui/output.ts';
+import {
+  formatCatalogExecutionSummary,
+  formatPlatformList,
+  printBulletSection,
+  printCatalogInstallResult,
+  printCatalogList,
+  printKeyValueRows,
+  summarizeDescription
+} from '../ui/output.ts';
 
 export interface McpCatalogOptions {
   agent?: string[];
-  profile?: string;
+  harness?: string;
 }
 
 export interface McpInstallCommandOptions {
@@ -40,7 +48,8 @@ export async function runMcpListCommand(options: McpCatalogOptions): Promise<voi
       description: item.description,
       target: item.targetAgents.join(', '),
       scopes: item.supportedScopes,
-      source: item.source
+      source: item.source,
+      kind: 'mcp'
     }))
   );
 }
@@ -59,7 +68,8 @@ export async function runMcpFindCommand(query: string | undefined, options: McpC
       description: item.description,
       target: item.targetAgents.join(', '),
       scopes: item.supportedScopes,
-      source: item.source
+      source: item.source,
+      kind: 'mcp'
     }))
   );
 }
@@ -71,16 +81,23 @@ export async function runMcpShowCommand(serverId: string): Promise<void> {
     throw new Error(`Unknown MCP server "${serverId}".`);
   }
 
-  console.log(`id: ${server.id}`);
-  console.log(`title: ${server.title}`);
-  console.log(`description: ${server.description}`);
-  console.log(`server name: ${server.serverName}`);
-  console.log(`target agents: ${server.targetAgents.join(', ')}`);
-  console.log(`platforms: ${server.supportedPlatforms.join(', ')}`);
-  console.log(`scopes: ${server.supportedScopes.join(', ')}`);
-  console.log(`server kind: ${server.serverKind}`);
-  console.log(`source: ${server.source}`);
-  console.log(`tags: ${server.tags.join(', ') || 'none'}`);
+  console.log(server.title);
+  console.log(summarizeDescription(server.description, 'mcp'));
+  console.log('');
+  printKeyValueRows([
+    { label: 'ID', value: server.id },
+    { label: 'Server name', value: server.serverName },
+    { label: 'Target agents', value: server.targetAgents.join(', ') },
+    { label: 'Platforms', value: formatPlatformList(server.supportedPlatforms) },
+    { label: 'Scopes', value: server.supportedScopes.join(', ') },
+    { label: 'Server kind', value: formatServerKind(server.serverKind) },
+    { label: 'Source', value: server.source }
+  ]);
+
+  if (server.tags.length > 0) {
+    console.log('');
+    printBulletSection('Tags', [server.tags.join(', ')]);
+  }
 }
 
 export async function runMcpInstallCommand(serverId: string, options: McpInstallCommandOptions): Promise<void> {
@@ -108,21 +125,13 @@ export async function runMcpInstallCommand(serverId: string, options: McpInstall
     const updatedAt = new Date().toISOString();
     await saveState(paths, {
       ...state,
-      schemaVersion: 2,
+      schemaVersion: 4,
       updatedAt,
       installedMcpServers: [...state.installedMcpServers, ...toInstalledCatalogState(results)]
     });
     const nextLedger = upsertLedgerEntries(
       ledger,
-      buildCatalogLedgerEntries(
-        'mcp',
-        results,
-        {
-          profileId: state.activeProfileId,
-          domainId: state.activeDomainId
-        },
-        updatedAt
-      ),
+      buildCatalogLedgerEntries('mcp', results, updatedAt),
       updatedAt
     );
     await saveLedger(paths, nextLedger);
@@ -131,7 +140,7 @@ export async function runMcpInstallCommand(serverId: string, options: McpInstall
   for (const result of results) {
     printCatalogInstallResult(result);
   }
-  console.log(formatCatalogExecutionSummary('MCP', results));
+  console.log(formatCatalogExecutionSummary('MCP servers', results));
 }
 
 async function buildCatalogContext(options: McpCatalogOptions): Promise<{
@@ -144,12 +153,12 @@ async function buildCatalogContext(options: McpCatalogOptions): Promise<{
   const state = await loadState(getPowerhousePaths(platform));
   let agents = options.agent ?? [];
 
-  if (agents.length === 0 && options.profile) {
-    const profile = registry.profiles.find((entry) => entry.id === options.profile);
-    if (!profile) {
-      throw new Error(`Unknown profile "${options.profile}".`);
+  if (agents.length === 0 && options.harness) {
+    const harness = registry.harnesses.find((entry) => entry.id === options.harness);
+    if (!harness) {
+      throw new Error(`Unknown harness "${options.harness}".`);
     }
-    agents = profile.defaultAgents;
+    agents = harness.defaultAgents;
   }
 
   if (agents.length === 0 && state?.installedAgents.length) {
@@ -175,4 +184,15 @@ function toInstalledCatalogState(
     scope: result.scope,
     status: result.status
   }));
+}
+
+function formatServerKind(kind: string): string {
+  switch (kind) {
+    case 'stdio':
+      return 'stdio';
+    case 'http':
+      return 'HTTP';
+    default:
+      return kind;
+  }
 }
