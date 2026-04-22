@@ -20,6 +20,7 @@ description: Anthropic's Claude Code CLI, plus the Claude desktop app on macOS.
 | Integration | Description | Scopes |
 |---|---|---|
 | [`claude-github`](/integrations/claude-github) | Official GitHub plugin for Claude Code. | global, project, local |
+| [`claude-mem`](/integrations/claude-mem) | Persistent memory and context compression for Claude Code. | global |
 
 ## MCP Servers
 

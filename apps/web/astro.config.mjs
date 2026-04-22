@@ -121,7 +121,8 @@ export default defineConfig({
               label: 'Claude',
               collapsed: true,
               items: [
-                { label: 'GitHub', slug: 'integrations/claude-github' }
+                { label: 'GitHub', slug: 'integrations/claude-github' },
+                { label: 'Mem', slug: 'integrations/claude-mem' }
               ]
             },
             {

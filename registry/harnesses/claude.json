@@ -6,7 +6,7 @@
   "extends": "base",
   "supportedPlatforms": ["darwin", "linux", "win32", "wsl"],
   "requiredToolIds": ["claude-code", "claude-app"],
-  "integrationIds": ["claude-github"],
+  "integrationIds": ["claude-github", "claude-mem"],
   "mcpServerIds": ["claude-context7", "claude-sequential-thinking"],
   "defaultAgents": ["claude-code"],
   "notes": ["Skill installs target Claude Code by default."]

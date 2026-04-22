@@ -1,0 +1,23 @@
+{
+  "id": "claude-mem",
+  "title": "Claude Mem",
+  "description": "Persistent memory and context compression plugin for Claude Code. Automatically captures session observations, compresses them with AI, and injects relevant context into future sessions.",
+  "targetAgent": "claude-code",
+  "supportedPlatforms": ["darwin", "linux", "win32", "wsl"],
+  "supportedScopes": ["global"],
+  "installKind": "native-cli",
+  "source": "thedotmack/claude-mem",
+  "tags": ["memory", "plugin", "persistent-context", "claude-code"],
+  "bundledMcpIds": [],
+  "install": {
+    "kind": "native-cli",
+    "command": "npx",
+    "args": ["claude-mem", "install"],
+    "cwd": "home",
+    "env": {},
+    "scopeMap": {
+      "global": "user"
+    },
+    "restartRequired": true
+  }
+}
