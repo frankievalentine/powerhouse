@@ -11,7 +11,10 @@ import {
   POWERHOUSE_REPO,
   type UpdateStatus,
   type ModelProvider,
+  type AttachmentInfo,
   LIVE_PHASES,
+  MEMORY_LIMITS,
+  type MemoryInfo,
   MODELS,
   type OrgSettings,
   type OrgState,
@@ -28,6 +31,7 @@ import {
   type TeamChoice,
   TOOL_IDS,
   type ToolId,
+  UPLOAD_LIMITS,
 } from "../shared";
 import {
   Agent,
@@ -39,13 +43,23 @@ import {
   getCurrentAgent,
 } from "agents";
 import { generateText } from "ai";
+import { withVoiceInput, WorkersAINova3STT } from "agents/voice";
 import { createWorkersAI } from "workers-ai-provider";
 import { MEMBER_EMAIL_HEADER } from "./auth";
 import { applyDeploymentConfig, deployment } from "./deployment";
 import { devEmail } from "./dev";
 import { capabilitiesFor, providersFor, vapidFor } from "./capabilities";
 import { gatewayModel, modelSetupFailure, TEST_MODELS } from "./models";
-import { JobAgent } from "./job-agent";
+import { harnessFor, JOB_CLASS_NAMES, jobClassFor } from "./harnesses";
+import { ftsQuery, validMemory } from "./memory";
+import {
+  convertGitHubManifest,
+  GITHUB_MCP_URL,
+  githubAppManifest,
+  githubManifestTarget,
+  type OAuthClient,
+  PreregisteredOAuthProvider,
+} from "./oauth-clients";
 import {
   DEFAULT_ROLE_ID,
   DEFAULT_ROLES,
@@ -115,6 +129,9 @@ const MAX_ROLES = 50;
 /** Longest text a run row keeps, since rows are broadcast to every member. */
 const RUN_TEXT_LIMITS = { activity: 300, error: 2000, prompt: 4000, summary: 4000 } as const;
 
+/** A run routing for longer than this when the Org starts is given up rather than routed again. */
+const ROUTING_RESUME_MS = 10 * 60_000;
+
 /** Push devices kept per member, and how long one lasts after its member was last here. */
 const PUSH_DEVICES_PER_MEMBER = 5;
 const PUSH_DEVICE_TTL_MS = 30 * DAY_SECONDS * 1000;
@@ -166,7 +183,74 @@ async function fetchLatestRelease(): Promise<UpdateStatus["latest"]> {
 }
 
 /** A stored schedule without its alarm bookkeeping. */
-function publicSchedule({ alarmId: _alarmId, anchorAt: _anchorAt, ...info }: StoredSchedule): ScheduleInfo {
+/** "Mon, Oct 19, 9:00 AM" in the org's time zone (UTC until one is set). */
+function formatReportTime(at: number, timeZone: string) {
+  const when = new Intl.DateTimeFormat("en-US", {
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    month: "short",
+    timeZone: timeZone || "UTC",
+    weekday: "short",
+  }).format(at);
+  return timeZone ? when : `${when} UTC`;
+}
+
+interface MemoryRow {
+  id: string;
+  title: string;
+  content: string;
+  status: "proposed" | "approved";
+  proposed_by: string;
+  run_id: string | null;
+  approved_by: string | null;
+  created_at: number;
+  updated_at: number;
+}
+
+function memoryInfo(row: MemoryRow): MemoryInfo {
+  return {
+    approvedBy: row.approved_by,
+    content: row.content,
+    createdAt: row.created_at,
+    id: row.id,
+    proposedBy: row.proposed_by,
+    runId: row.run_id,
+    status: row.status,
+    title: row.title,
+    updatedAt: row.updated_at,
+  };
+}
+
+/** Files uploaded but never sent with a job are deleted after this long. */
+const UPLOAD_UNSENT_MS = 24 * 60 * 60_000;
+/** Files one member may have waiting to be sent. */
+const UPLOAD_PENDING_PER_MEMBER = 20;
+
+/** How long a started GitHub App flow stays valid, like the code GitHub returns. */
+const GITHUB_APP_STATE_MS = 60 * 60_000;
+
+function githubInstallUrl(slug: string) {
+  return `https://github.com/apps/${encodeURIComponent(slug)}/installations/new`;
+}
+
+/** Client credentials entered with a custom server: both or neither. */
+function ownClient(clientId: unknown, clientSecret: unknown): OAuthClient | null {
+  const id = typeof clientId === "string" ? clientId.trim() : "";
+  const secret = typeof clientSecret === "string" ? clientSecret.trim() : "";
+  if (!(id || secret)) {
+    return null;
+  }
+  if (!(id && secret)) {
+    throw new Error("Enter both the client ID and the client secret of the server's OAuth app, or neither.");
+  }
+  if (id.length > 200 || secret.length > 500) {
+    throw new Error("That client ID or secret is too long.");
+  }
+  return { clientId: id, clientSecret: secret };
+}
+
+function publicSchedule({ alarmId: _alarmId, anchorAt: _anchorAt, lastReport: _lastReport, ...info }: StoredSchedule): ScheduleInfo {
   return info;
 }
 
@@ -212,7 +296,25 @@ function firstIssue(error: { issues: { path: PropertyKey[]; message: string }[] 
  * runAgentTool, and their lifecycle is projected into state, which syncs to
  * every connected pulse client.
  */
-export class Org extends Agent<Env, OrgState> {
+/**
+ * Org with the Agents SDK's voice input: the composer's microphone streams
+ * to this agent, which transcribes with Workers AI (Deepgram Nova 3) and
+ * sends the text back for the member to edit before sending.
+ */
+const VoiceInputAgent = withVoiceInput(Agent);
+
+export class Org extends VoiceInputAgent<Env, OrgState> {
+  /** Dictation (Settings > Jobs > Voice): Workers AI Nova 3, billed per minute, over this agent's socket. */
+  transcriber = new WorkersAINova3STT(this.env.AI);
+
+  /** A call starts only while voice is on, and only for a signed-in member. */
+  beforeCallStart(connection: Connection) {
+    return this.state.settings.voice && Boolean((connection as Connection<MemberConnectionState>).state?.email);
+  }
+
+  /** The client keeps the transcript and puts it in the composer; nothing is stored here. */
+  onTranscript() {}
+
   initialState: OrgState = {
     admins: [],
     setupKind: "cli",
@@ -230,6 +332,8 @@ export class Org extends Agent<Env, OrgState> {
     spendLimits: null,
     settings: defaultSettings("org"),
     teamPending: false,
+    memoryProposals: 0,
+    mcpAccessReady: false,
   };
 
   /**
@@ -275,6 +379,14 @@ export class Org extends Agent<Env, OrgState> {
     this.sql`CREATE TABLE IF NOT EXISTS push_subscriptions (endpoint TEXT PRIMARY KEY, email TEXT NOT NULL, p256dh TEXT NOT NULL, auth TEXT NOT NULL, created_at INTEGER NOT NULL)`;
     this.sql`CREATE TABLE IF NOT EXISTS settings (id INTEGER PRIMARY KEY CHECK (id = 1), config TEXT NOT NULL)`;
     this.sql`CREATE TABLE IF NOT EXISTS meta (key TEXT PRIMARY KEY, value TEXT NOT NULL)`;
+    this.sql`CREATE TABLE IF NOT EXISTS memories (id TEXT PRIMARY KEY, title TEXT NOT NULL, content TEXT NOT NULL, status TEXT NOT NULL, proposed_by TEXT NOT NULL, run_id TEXT, approved_by TEXT, created_at INTEGER NOT NULL, updated_at INTEGER NOT NULL)`;
+    // OAuth apps of the org's own, for servers without dynamic registration.
+    this.sql`CREATE TABLE IF NOT EXISTS oauth_clients (server_id TEXT PRIMARY KEY, client_id TEXT NOT NULL, client_secret TEXT NOT NULL, app_slug TEXT, created_by TEXT NOT NULL, created_at INTEGER NOT NULL)`;
+    // Files attached to jobs, as converted text; run_id is null until the job is sent.
+    this.sql`CREATE TABLE IF NOT EXISTS uploads (id TEXT PRIMARY KEY, name TEXT NOT NULL, text TEXT NOT NULL, created_by TEXT NOT NULL, created_at INTEGER NOT NULL, run_id TEXT)`;
+    this.sql`CREATE TABLE IF NOT EXISTS github_app_states (state TEXT PRIMARY KEY, email TEXT NOT NULL, created_at INTEGER NOT NULL)`;
+    // Approved notes only, so a proposal never reaches a job.
+    this.sql`CREATE VIRTUAL TABLE IF NOT EXISTS memories_fts USING fts5(id UNINDEXED, title, content)`;
     const [{ count } = { count: 0 }] = this.sql<{ count: number }>`SELECT COUNT(*) AS count FROM roles`;
     if (count === 0) {
       DEFAULT_ROLES.forEach((role, position) => {
@@ -305,11 +417,11 @@ export class Org extends Agent<Env, OrgState> {
         .filter(([id]) => capabilities[id as ToolId])
         .map(([id, failure]) => [id, failure && { ...failure, message: SHORTENED_FAILURES[failure.message] ?? failure.message }]),
     );
-    // Routing runs in memory only. A run still routing when the Org starts
-    // was cut off by an eviction or deploy, and its job never started; it is
-    // not retried, since the prompt may already have been sent again.
+    // Routing runs in memory, so a run still routing when the Org starts was
+    // cut off by an eviction or deploy. It is routed again below, unless it
+    // has been stuck long enough that something other than a restart is wrong.
     const runs = this.state.runs.map((run) =>
-      run.phase === "routing"
+      run.phase === "routing" && Date.now() - run.startedAt > ROUTING_RESUME_MS
         ? { ...run, completedAt: Date.now(), error: "Routing was interrupted. Send the job again.", phase: "interrupted" as const }
         : run,
     );
@@ -330,11 +442,18 @@ export class Org extends Agent<Env, OrgState> {
       settings,
       setupKind: saved ? "browser" : "cli",
       teamPending: pending?.value === "1",
+      memoryProposals: this.memoryProposalCount(),
+      mcpAccessReady: this.mcpAccessReady(),
     });
     this.publishRoles();
     this.publishConnections();
     this.publishAdmins();
     await this.reconcileSchedules();
+    // runAgentTool with a run id it already knows returns without starting a
+    // second job, so a run whose job did start before the restart is safe here.
+    for (const run of runs.filter((r) => r.phase === "routing")) {
+      void this.keepAliveWhile(() => this.startJob(run.runId, run.prompt, run.roleId ?? undefined));
+    }
   }
 
   /**
@@ -518,6 +637,12 @@ export class Org extends Agent<Env, OrgState> {
     const live = this.state.runs.filter((r) => LIVE_PHASES.has(r.phase));
     this.deleteJobs(this.state.runs.filter((r) => !LIVE_PHASES.has(r.phase)));
     this.setState({ ...this.state, runs: live });
+    // Scheduled runs would otherwise keep quoting the history just cleared.
+    for (const { lastReport, ...schedule } of this.storedSchedules()) {
+      if (lastReport) {
+        this.writeSchedule(schedule);
+      }
+    }
   }
 
   // ---------------------------------------------------------- connections
@@ -528,7 +653,7 @@ export class Org extends Agent<Env, OrgState> {
    * popup, and the provider redirects back to /agents/org/{orgId}/callback.
    */
   @callable()
-  async addConnection(source: { catalogId: string } | { name: string; url: string }) {
+  async addConnection(source: { catalogId: string } | { name: string; url: string; clientId?: string; clientSecret?: string }) {
     this.requireAdmin();
     const { connection } = getCurrentAgent<Org>();
     const member = connection as Connection<MemberConnectionState> | undefined;
@@ -539,6 +664,10 @@ export class Org extends Agent<Env, OrgState> {
     if ("catalogId" in source && !entry) {
       throw new Error(`Unknown connection "${source.catalogId}".`);
     }
+    if (entry?.setup === "github-app") {
+      throw new Error("GitHub connects through a GitHub App: use Create the GitHub App in Settings > Connections.");
+    }
+    const ownApp = "url" in source ? ownClient(source.clientId, source.clientSecret) : null;
     let url: URL;
     try {
       url = new URL(entry?.url ?? ("url" in source ? source.url.trim() : ""));
@@ -552,15 +681,127 @@ export class Org extends Agent<Env, OrgState> {
       throw new Error("That server is already connected.");
     }
     const name = (entry?.name ?? ("name" in source ? source.name.trim() : "")) || url.hostname;
-    // Explicit, so the OAuth redirect always returns to the hostname the
-    // member is signed in on, which Access protects.
-    const result = await this.addMcpServer(name.slice(0, 60), url.toString(), {
+    return this.connectServer({
+      catalogId: entry?.id ?? null,
+      // Explicit, so the OAuth redirect always returns to the hostname the
+      // member is signed in on, which Access protects.
       callbackHost: new URL(member.uri).origin,
+      client: ownApp,
+      email: this.callerEmail(),
+      name,
+      url: url.toString(),
     });
+  }
+
+  /**
+   * Adds the server under an id chosen here, so its own OAuth app (if any)
+   * is stored before the SDK first asks the provider for client details.
+   */
+  private async connectServer(options: {
+    catalogId: string | null;
+    callbackHost: string;
+    client: (OAuthClient & { slug?: string }) | null;
+    email: string;
+    name: string;
+    url: string;
+  }) {
+    // Already in the SDK's normalized form (lowercase, starting with a
+    // letter), so the server keeps exactly this id and its OAuth app is found.
+    const id = `c-${newRunId().toLowerCase()}`;
+    if (options.client) {
+      this.sql`INSERT OR REPLACE INTO oauth_clients (server_id, client_id, client_secret, app_slug, created_by, created_at)
+        VALUES (${id}, ${options.client.clientId}, ${options.client.clientSecret}, ${options.client.slug ?? null}, ${options.email}, ${Date.now()})`;
+    }
+    let result: Awaited<ReturnType<Org["addMcpServer"]>>;
+    try {
+      result = await this.addMcpServer(options.name.slice(0, 60), options.url, { callbackHost: options.callbackHost, id });
+    } catch (error) {
+      this.sql`DELETE FROM oauth_clients WHERE server_id = ${id}`;
+      throw error;
+    }
     this.sql`INSERT OR REPLACE INTO connections (id, catalog_id, added_by, added_at)
-      VALUES (${result.id}, ${entry?.id ?? null}, ${this.callerEmail()}, ${Date.now()})`;
+      VALUES (${result.id}, ${options.catalogId}, ${options.email}, ${Date.now()})`;
     this.publishConnections();
     return { authUrl: result.state === "authenticating" ? result.authUrl : null, id: result.id };
+  }
+
+  /** Servers with the org's own OAuth app sign in with it; every other server registers as before. */
+  createMcpOAuthProvider(callbackUrl: string) {
+    return new PreregisteredOAuthProvider(this.ctx.storage, this.name, callbackUrl, (serverId) => {
+      const [row] = this.sql<{ client_id: string; client_secret: string }>`
+        SELECT client_id, client_secret FROM oauth_clients WHERE server_id = ${serverId}`;
+      return row ? { clientId: row.client_id, clientSecret: row.client_secret } : null;
+    });
+  }
+
+  /**
+   * The first step of connecting GitHub: what the client posts to GitHub to
+   * create a private GitHub App from a manifest, owned by the admin's
+   * account or by the GitHub organization they name. GitHub sends the admin
+   * back to /api/github-app/created, which finishes in finishGitHubApp.
+   */
+  @callable()
+  startGitHubApp(owner?: string) {
+    this.requireAdmin();
+    const { connection } = getCurrentAgent<Org>();
+    const member = connection as Connection<MemberConnectionState> | undefined;
+    if (!member?.uri) {
+      throw new Error("Connections can only be added from the app.");
+    }
+    if (this.state.connections.some((c) => c.catalogId === "github")) {
+      throw new Error("GitHub is already connected.");
+    }
+    const org = owner?.trim() || null;
+    if (org && !/^[A-Za-z0-9](?:[A-Za-z0-9-]{0,37}[A-Za-z0-9])?$/.test(org)) {
+      throw new Error("Enter the GitHub organization's name as it appears in its URL, or leave it empty for your own account.");
+    }
+    const origin = new URL(member.uri).origin;
+    const state = newRunId() + newRunId();
+    // One pending app at a time per org; an hour, like GitHub's code.
+    this.sql`DELETE FROM github_app_states WHERE created_at < ${Date.now() - GITHUB_APP_STATE_MS}`;
+    this.sql`INSERT INTO github_app_states (state, email, created_at) VALUES (${state}, ${this.callerEmail()}, ${Date.now()})`;
+    return {
+      action: githubManifestTarget(org, state),
+      manifest: JSON.stringify(
+        githubAppManifest({
+          callbackUrl: `${origin}/agents/org/${this.name}/callback`,
+          orgName: this.state.settings.orgName,
+          origin,
+          suffix: newRunId().slice(0, 4).toLowerCase(),
+        }),
+      ),
+    };
+  }
+
+  /**
+   * GitHub's redirect after the app was created, from the Worker route (so
+   * the admin is signed in through Access). The state must be one this org
+   * issued to this admin within the hour. Keeps only the client id and
+   * secret, then adds the connection, which waits for sign-in. Not @callable.
+   */
+  async finishGitHubApp(code: string, state: string, email: string, origin: string) {
+    const caller = email.toLowerCase();
+    const [issued] = this.sql<{ email: string; created_at: number }>`SELECT email, created_at FROM github_app_states WHERE state = ${state}`;
+    this.sql`DELETE FROM github_app_states WHERE state = ${state}`;
+    if (!issued || issued.email !== caller || Date.now() - issued.created_at > GITHUB_APP_STATE_MS) {
+      throw new Error("This link has expired or was started by someone else. Start again from Settings > Connections.");
+    }
+    if (!this.isAdmin(caller)) {
+      throw new Error("Only admins can connect GitHub.");
+    }
+    if (this.state.connections.some((c) => c.catalogId === "github")) {
+      throw new Error("GitHub is already connected.");
+    }
+    const app = await convertGitHubManifest(code);
+    await this.connectServer({
+      callbackHost: origin,
+      catalogId: "github",
+      client: app,
+      email: caller,
+      name: "GitHub",
+      url: GITHUB_MCP_URL,
+    });
+    return { installUrl: githubInstallUrl(app.slug), owner: app.owner, slug: app.slug };
   }
 
   /** Reconnects with the stored tokens, or returns a new sign-in URL when they are gone. */
@@ -586,6 +827,7 @@ export class Org extends Agent<Env, OrgState> {
     this.requireConnection(id);
     await this.removeMcpServer(id);
     this.sql`DELETE FROM connections WHERE id = ${id}`;
+    this.sql`DELETE FROM oauth_clients WHERE server_id = ${id}`;
     this.publishConnections();
   }
 
@@ -633,6 +875,125 @@ export class Org extends Agent<Env, OrgState> {
     return { content: result.content as unknown[], isError: result.isError === true };
   }
 
+  // ---------------------------------------------------------- team memory
+
+  /** Every note, proposals first. Members may read them; only admins change them. */
+  @callable()
+  listMemories(): MemoryInfo[] {
+    return this.sql<MemoryRow>`SELECT * FROM memories ORDER BY status = 'approved', updated_at DESC`.map(memoryInfo);
+  }
+
+  /**
+   * Adds a note (no id) or edits one. Saved by an admin, so it is approved:
+   * editing a proposal approves it.
+   */
+  @callable()
+  saveMemory(input: { id?: string; title?: string; content: string }): MemoryInfo {
+    this.requireAdmin();
+    const { content, title } = validMemory(input?.title, input?.content);
+    const caller = this.callerEmail();
+    const now = Date.now();
+    const existing = input.id ? this.memoryRow(input.id) : null;
+    if (input.id && !existing) {
+      throw new Error("That note no longer exists.");
+    }
+    if (existing?.status !== "approved" && this.approvedMemoryCount() >= MEMORY_LIMITS.approved) {
+      throw new Error(`Team memory holds up to ${MEMORY_LIMITS.approved} notes. Delete some first.`);
+    }
+    const id = existing?.id ?? newRunId();
+    this.sql`INSERT OR REPLACE INTO memories (id, title, content, status, proposed_by, run_id, approved_by, created_at, updated_at)
+      VALUES (${id}, ${title}, ${content}, 'approved', ${existing?.proposed_by ?? caller}, ${existing?.run_id ?? null}, ${caller}, ${existing?.created_at ?? now}, ${now})`;
+    this.indexMemory(id, title, content);
+    this.publishMemoryProposals();
+    return memoryInfo(this.memoryRow(id) as MemoryRow);
+  }
+
+  @callable()
+  approveMemory(id: string) {
+    this.requireAdmin();
+    const row = this.memoryRow(id);
+    if (!row) {
+      throw new Error("That note no longer exists.");
+    }
+    return this.saveMemory({ content: row.content, id, title: row.title });
+  }
+
+  /** Rejects a proposal or deletes a note. */
+  @callable()
+  deleteMemory(id: string) {
+    this.requireAdmin();
+    this.sql`DELETE FROM memories WHERE id = ${id}`;
+    this.sql`DELETE FROM memories_fts WHERE id = ${id}`;
+    this.publishMemoryProposals();
+  }
+
+  /** Approved notes matching free text, best first. Called by jobs over RPC; not @callable. */
+  searchMemories(text: string, limit: number): Pick<MemoryInfo, "title" | "content">[] {
+    const query = ftsQuery(text);
+    if (!query) {
+      return [];
+    }
+    return this.sql<{ title: string; content: string }>`
+      SELECT m.title, m.content FROM memories_fts f JOIN memories m ON m.id = f.id
+      WHERE memories_fts MATCH ${query} AND m.status = 'approved' ORDER BY f.rank LIMIT ${limit}`;
+  }
+
+  /** Called by jobs over RPC; not @callable. */
+  approvedMemoryCount() {
+    const [row] = this.sql<{ n: number }>`SELECT COUNT(*) AS n FROM memories WHERE status = 'approved'`;
+    return row?.n ?? 0;
+  }
+
+  /**
+   * A job's set_context call: a proposal an admin reviews, never a note jobs
+   * see. The same title from the same job updates its proposal. Called by
+   * jobs over RPC; not @callable. Returns what the model is told.
+   */
+  proposeMemory(runId: string, rawTitle: string, rawContent: string): string {
+    let note: { title: string; content: string };
+    try {
+      note = validMemory(rawTitle, rawContent);
+    } catch (error) {
+      return error instanceof Error ? error.message : String(error);
+    }
+    const [same] = this.sql<{ id: string }>`SELECT id FROM memories WHERE status = 'approved' AND content = ${note.content}`;
+    if (same) {
+      return `Team memory already has this note.`;
+    }
+    const [own] = this.sql<{ id: string; created_at: number }>`
+      SELECT id, created_at FROM memories WHERE status = 'proposed' AND run_id = ${runId} AND title = ${note.title}`;
+    if (!own && this.memoryProposalCount() >= MEMORY_LIMITS.proposed) {
+      return "The review list is full, so this note was not proposed. Tell the reader to ask an admin to review Settings > Team memory.";
+    }
+    const now = Date.now();
+    this.sql`INSERT OR REPLACE INTO memories (id, title, content, status, proposed_by, run_id, approved_by, created_at, updated_at)
+      VALUES (${own?.id ?? newRunId()}, ${note.title}, ${note.content}, 'proposed', ${this.run(runId)?.startedBy ?? "a job"}, ${runId}, NULL, ${own?.created_at ?? now}, ${now})`;
+    this.publishMemoryProposals();
+    return `Proposed "${note.title}" for team memory. An admin reviews it in Settings before jobs use it; say so if it matters to the reader.`;
+  }
+
+  private memoryRow(id: string) {
+    const [row] = this.sql<MemoryRow>`SELECT * FROM memories WHERE id = ${id}`;
+    return row ?? null;
+  }
+
+  private indexMemory(id: string, title: string, content: string) {
+    this.sql`DELETE FROM memories_fts WHERE id = ${id}`;
+    this.sql`INSERT INTO memories_fts (id, title, content) VALUES (${id}, ${title}, ${content})`;
+  }
+
+  private memoryProposalCount() {
+    const [row] = this.sql<{ n: number }>`SELECT COUNT(*) AS n FROM memories WHERE status = 'proposed'`;
+    return row?.n ?? 0;
+  }
+
+  private publishMemoryProposals() {
+    const memoryProposals = this.memoryProposalCount();
+    if (memoryProposals !== this.state.memoryProposals) {
+      this.setState({ ...this.state, memoryProposals });
+    }
+  }
+
   // ------------------------------------------------------------ schedules
 
   /** Creates a schedule (no id) or updates one, and arms its next run. */
@@ -666,6 +1027,8 @@ export class Org extends Agent<Env, OrgState> {
       ? {
           ...existing,
           ...fields,
+          // A report on a different job would mislead the next run.
+          ...(existing.prompt !== fields.prompt || existing.roleId !== fields.roleId ? { lastReport: undefined } : {}),
           // A new rhythm starts from now; an unchanged one keeps its anchor.
           anchorAt: JSON.stringify(existing.rule) === JSON.stringify(fields.rule) ? existing.anchorAt : now,
         }
@@ -1153,7 +1516,7 @@ export class Org extends Agent<Env, OrgState> {
    * rerouted.
    */
   @callable()
-  async dispatch(prompt: string, roleId?: string): Promise<DispatchResult> {
+  async dispatch(prompt: string, roleId?: string | null, uploadIds?: string[]): Promise<DispatchResult> {
     const text = typeof prompt === "string" ? prompt.trim() : "";
     if (!text) {
       throw new Error("Describe the job first.");
@@ -1164,14 +1527,160 @@ export class Org extends Agent<Env, OrgState> {
     if (roleId && !this.roles().some((r) => r.id === roleId)) {
       throw new Error(`Unknown role "${roleId}".`);
     }
-    return { runId: this.enqueueRun(text, roleId, undefined, this.callerEmail()) };
+    const files = this.claimableUploads(this.callerEmail(), uploadIds ?? []);
+    return { runId: this.enqueueRun(text, roleId ?? undefined, undefined, this.callerEmail(), undefined, files) };
+  }
+
+  // -------------------------------------------------------------- uploads
+
+  /**
+   * A file a member is attaching to their next job, already converted to
+   * text by the Worker (/api/uploads). Called over RPC; not @callable.
+   * Files never sent are deleted after a day.
+   */
+  saveUpload(email: string, name: string, text: string): AttachmentInfo {
+    const member = email.toLowerCase();
+    this.sql`DELETE FROM uploads WHERE run_id IS NULL AND created_at < ${Date.now() - UPLOAD_UNSENT_MS}`;
+    const [pending] = this.sql<{ n: number }>`SELECT COUNT(*) AS n FROM uploads WHERE run_id IS NULL AND created_by = ${member}`;
+    if ((pending?.n ?? 0) >= UPLOAD_PENDING_PER_MEMBER) {
+      throw new Error("Too many files are waiting to be sent. Send a job with them, or try again tomorrow.");
+    }
+    const id = newRunId();
+    const kept = text.slice(0, UPLOAD_LIMITS.chars);
+    this.sql`INSERT INTO uploads (id, name, text, created_by, created_at, run_id) VALUES (${id}, ${name}, ${kept}, ${member}, ${Date.now()}, NULL)`;
+    return { chars: kept.length, id, name };
+  }
+
+  /** The caller's own files not yet sent with a job; any other id is refused. */
+  private claimableUploads(email: string, ids: unknown[]): AttachmentInfo[] {
+    const wanted = [...new Set(ids.filter((id): id is string => typeof id === "string"))];
+    if (wanted.length > UPLOAD_LIMITS.files) {
+      throw new Error(`Attach up to ${UPLOAD_LIMITS.files} files to a job.`);
+    }
+    return wanted.map((id) => {
+      const [row] = this.sql<{ name: string; chars: number }>`
+        SELECT name, length(text) AS chars FROM uploads WHERE id = ${id} AND created_by = ${email.toLowerCase()} AND run_id IS NULL`;
+      if (!row) {
+        throw new Error("An attached file is gone (files not sent within a day are deleted). Attach it again.");
+      }
+      return { chars: row.chars, id, name: row.name };
+    });
+  }
+
+  private attachmentsFor(runId: string): AttachmentInfo[] {
+    return this.sql<{ id: string; name: string; chars: number }>`
+      SELECT id, name, length(text) AS chars FROM uploads WHERE run_id = ${runId} ORDER BY created_at`;
+  }
+
+  /** A window of an attached file's text, for its job's read_attachment tool. Not @callable. */
+  readUpload(runId: string, fileId: string, offset: number, length: number) {
+    const [row] = this.sql<{ name: string; text: string }>`SELECT name, text FROM uploads WHERE id = ${fileId} AND run_id = ${runId}`;
+    if (!row) {
+      return null;
+    }
+    const start = Math.max(0, Math.floor(offset));
+    return { name: row.name, offset: start, text: row.text.slice(start, start + length), total: row.text.length };
+  }
+
+  // ------------------------------------------------- use from other apps (MCP)
+  //
+  // Called by the Worker's MCP tools over RPC with the member's email from
+  // their grant, which Access verified when they approved the app. Not
+  // @callable. Each refuses while an admin has the feature off, so turning it
+  // off stops every app at once, whatever tokens they hold.
+
+  private requireMcp() {
+    if (!this.state.settings.mcpServer) {
+      throw new Error("Using powerhouse from other apps is turned off. An admin can turn it on in Settings.");
+    }
+  }
+
+  mcpEnabled() {
+    return this.state.settings.mcpServer;
+  }
+
+  /** For the Worker's read-aloud route. Not @callable. */
+  voiceEnabled() {
+    return this.state.settings.voice;
+  }
+
+  /** A job's answer for read-aloud: anyone who can see the job may hear it, as in the app. Not @callable. */
+  answerToSpeak(runId: string) {
+    return this.run(runId)?.summary ?? null;
+  }
+
+  /** After Settings added the Access step: picks up the saved config so the page shows it done. Not @callable. */
+  async refreshMcpAccess() {
+    const saved = await deployment(this.env).config();
+    this.setState({ ...this.state, mcpAccessReady: this.mcpAccessReady() || saved?.mcpAccess === true });
+  }
+
+  /**
+   * setup.mjs's var, or Finish setup's config mapped onto env. Local dev has
+   * no Access, so nothing stands in an app's way there.
+   */
+  private mcpAccessReady() {
+    return import.meta.env.DEV || this.env.MCP_ACCESS === "on";
+  }
+
+  /** For the Worker's connected-apps routes, which act on other members' apps only for admins. */
+  memberIsAdmin(email: string) {
+    return this.isAdmin(email.toLowerCase());
+  }
+
+  /** The roles a member can send jobs to. */
+  rolesForApp() {
+    this.requireMcp();
+    return this.roles().map(({ id, name, purpose }) => ({ id, name, purpose }));
+  }
+
+  /** dispatch, as the member, from an app: same limits and routing. */
+  startJobFromApp(email: string, prompt: string, roleId: string | undefined, via: string): DispatchResult {
+    this.requireMcp();
+    const text = typeof prompt === "string" ? prompt.trim() : "";
+    if (!text) {
+      throw new Error("Describe the job first.");
+    }
+    if (text.length > RUN_TEXT_LIMITS.prompt) {
+      throw new Error(`Keep the job under ${RUN_TEXT_LIMITS.prompt} characters.`);
+    }
+    if (roleId && !this.roles().some((r) => r.id === roleId)) {
+      throw new Error(`Unknown role "${roleId}". list_roles gives the ids.`);
+    }
+    this.recordMember(email.toLowerCase());
+    return { runId: this.enqueueRun(text, roleId, undefined, email.toLowerCase(), via.slice(0, 60) || "another app") };
+  }
+
+  /** The member's own recent jobs, newest first. */
+  jobsForApp(email: string, limit: number): RunSummary[] {
+    this.requireMcp();
+    const me = email.toLowerCase();
+    return this.state.runs.filter((r) => r.startedBy?.toLowerCase() === me).slice(0, Math.min(Math.max(limit, 1), 20));
+  }
+
+  /** One job, for the member who started it or an admin, as the app may see it. */
+  jobForApp(email: string, runId: string): RunSummary | null {
+    this.requireMcp();
+    const run = this.run(runId);
+    const me = email.toLowerCase();
+    if (!run || !(this.isAdmin(me) || run.startedBy?.toLowerCase() === me)) {
+      return null;
+    }
+    return run;
   }
 
   /**
    * Lists a run and starts it in the background; shared by dispatch and
    * schedules. Throws when the org is at its concurrency cap.
    */
-  private enqueueRun(text: string, roleId: string | undefined, scheduleId: string | undefined, startedBy: string) {
+  private enqueueRun(
+    text: string,
+    roleId: string | undefined,
+    scheduleId: string | undefined,
+    startedBy: string,
+    via?: string,
+    files: AttachmentInfo[] = [],
+  ) {
     // Checked here as well as by runAgentTool, so a job over the cap is
     // refused before spending a routing call. Runs parked on an approval do
     // not hold a slot (see maxConcurrentAgentTools).
@@ -1182,12 +1691,24 @@ export class Org extends Agent<Env, OrgState> {
     const runId = newRunId();
     this.upsertRun(
       runId,
-      { phase: "routing", prompt: text, roleId: roleId ?? null, started: false, startedBy, ...(scheduleId ? { scheduleId } : {}) },
+      {
+        phase: "routing",
+        prompt: text,
+        roleId: roleId ?? null,
+        started: false,
+        startedBy,
+        ...(scheduleId ? { scheduleId } : {}),
+        ...(via ? { via } : {}),
+        ...(files.length > 0 ? { files: files.map((f) => f.name) } : {}),
+      },
       { create: true },
     );
+    for (const file of files) {
+      this.sql`UPDATE uploads SET run_id = ${runId} WHERE id = ${file.id}`;
+    }
     // Not awaited: the caller returns now. keepAliveWhile holds the Durable
     // Object in memory until the job has started; if it is evicted anyway,
-    // onStart marks the run interrupted.
+    // onStart routes the run again.
     void this.keepAliveWhile(() => this.startJob(runId, text, roleId));
     return runId;
   }
@@ -1206,20 +1727,28 @@ export class Org extends Agent<Env, OrgState> {
       if (this.run(runId)?.phase !== "routing") {
         return;
       }
-      this.upsertRun(runId, { roleId: role.id, ...(routed.unsure ? { routedUnsure: true } : {}) });
+      const harness = harnessFor(role);
+      this.upsertRun(runId, { harness, roleId: role.id, ...(routed.unsure ? { routedUnsure: true } : {}) });
+      const scheduleId = this.run(runId)?.scheduleId;
+      const report = scheduleId ? this.storedSchedule(scheduleId)?.lastReport : undefined;
+      const attachments = this.attachmentsFor(runId);
       const input: JobInput = {
+        ...(attachments.length > 0 ? { attachments } : {}),
+        ...(report ? { previousReport: { summary: report.summary, when: formatReportTime(report.at, settings.timeZone) } } : {}),
         prompt: text,
         role,
         settings: {
           approveBrowserActions: settings.approveBrowserActions,
           blockedHosts: settings.blockedHosts,
           companyProfile: settings.companyProfile,
+          conciseAnswers: settings.conciseAnswers,
+          member: this.run(runId)?.startedBy?.toLowerCase(),
           maxSteps: settings.maxSteps,
           website: settings.website || undefined,
           model: resolveModel(role.model ?? settings.jobModel, this.state.providers),
         },
       };
-      const result = await this.runAgentTool(JobAgent, {
+      const result = await this.runAgentTool(jobClassFor(harness), {
         detached: true,
         display: { name: role.name },
         input,
@@ -1266,8 +1795,9 @@ export class Org extends Agent<Env, OrgState> {
    * ids never spawn a facet, and cleared runs are not recreated empty.
    */
   async onBeforeSubAgent(_request: Request, child: { className: string; name: string }) {
-    const listed = this.state.runs.some((r) => r.runId === child.name);
-    if (child.className !== "JobAgent" || !listed || !this.hasAgentToolRun(JobAgent, child.name)) {
+    const run = this.state.runs.find((r) => r.runId === child.name);
+    const harness = run?.harness ?? "think";
+    if (!(run && child.className === JOB_CLASS_NAMES[harness] && this.hasAgentToolRun(jobClassFor(harness), child.name))) {
       return new Response("Not found", { status: 404 });
     }
   }
@@ -1299,6 +1829,20 @@ export class Org extends Agent<Env, OrgState> {
       }
     }
     this.upsertRun(runId, patch);
+    if (patch.phase === "completed") {
+      this.recordScheduleReport(runId);
+    }
+  }
+
+  /** A schedule's newest run finished: its answer is what the next run builds on. */
+  private recordScheduleReport(runId: string) {
+    const run = this.run(runId);
+    const schedule = run?.scheduleId ? this.storedSchedule(run.scheduleId) : null;
+    // Only the newest run counts, so a follow-up on an older run never replaces it.
+    if (!(run?.summary && schedule && schedule.last?.runId === runId)) {
+      return;
+    }
+    this.writeSchedule({ ...schedule, lastReport: { at: run.startedAt, runId, summary: run.summary } });
   }
 
   /**
@@ -1402,6 +1946,12 @@ export class Org extends Agent<Env, OrgState> {
       this.sql<{ id: string; catalog_id: string | null; added_by: string; added_at: number }>`
         SELECT id, catalog_id, added_by, added_at FROM connections`.map((row) => [row.id, row]),
     );
+    const apps = new Map(
+      this.sql<{ server_id: string; app_slug: string | null }>`SELECT server_id, app_slug FROM oauth_clients`.map((row) => [
+        row.server_id,
+        row.app_slug,
+      ]),
+    );
     const connections: ConnectionInfo[] = this.mcp
       .listServers()
       .map((server) => {
@@ -1412,7 +1962,9 @@ export class Org extends Agent<Env, OrgState> {
           // A server added by its URL is still that catalog entry.
           catalogId: row?.catalog_id ?? CONNECTION_CATALOG.find((entry) => entry.url === server.server_url)?.id ?? null,
           id: server.id,
+          installUrl: apps.get(server.id) ? githubInstallUrl(apps.get(server.id) as string) : null,
           name: server.name,
+          ownApp: apps.has(server.id),
           // Members see the host only: some servers put a key in the path or query.
           url: originOf(server.server_url),
         };
@@ -1567,7 +2119,8 @@ export class Org extends Agent<Env, OrgState> {
   /** Best effort: a failed delete only leaves storage behind, never a visible run. */
   private deleteJobs(runs: RunSummary[]) {
     for (const run of runs) {
-      this.deleteSubAgent(JobAgent, run.runId).catch((error) => {
+      this.sql`DELETE FROM uploads WHERE run_id = ${run.runId}`;
+      this.deleteSubAgent(jobClassFor(run.harness), run.runId).catch((error) => {
         console.warn(`Deleting job ${run.runId} failed`, safeError(error));
       });
     }

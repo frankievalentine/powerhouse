@@ -23,6 +23,8 @@ import { formatUsd, spentToday } from "../lib/spend";
 import { formatAgo } from "../lib/time";
 import { type ConnectionSource, useOrg } from "../org/org-context";
 import styles from "./sheet.module.css";
+import { AppsSection, listApps, removeApp } from "./apps-section";
+import { MemorySection } from "./memory-section";
 import { useModal } from "./use-modal";
 
 const lines = (value: string) =>
@@ -270,6 +272,32 @@ export function SettingsSheet({ focus, onClose }: { focus?: "tools"; onClose: ()
               />
             </label>
             <label className={styles.check}>
+              <input
+                checked={draft.conciseAnswers}
+                onChange={(e) => set("conciseAnswers", e.target.checked)}
+                type="checkbox"
+              />
+              <span>
+                <span className={styles.toolName}>Concise answers</span>
+                <span className={styles.hint}>
+                  Answers lead with the result in a few short lines, and offer details instead of including them.
+                  Documents stay full length. Applies to jobs started after the change.
+                </span>
+              </span>
+            </label>
+            <label className={styles.check}>
+              <input checked={draft.voice} onChange={(e) => set("voice", e.target.checked)} type="checkbox" />
+              <span>
+                <span className={styles.toolName}>Voice</span>
+                <span className={styles.hint}>
+                  A microphone in the composer (Workers AI Nova 3, about $0.01 per minute of speech) and Read aloud on
+                  answers (Aura 1, $0.015 per 1,000 characters). Billed only when used. On the Workers Free plan this
+                  shares the 10,000 free daily Workers AI units with routing, so heavy use can pause routing until the
+                  next day.
+                </span>
+              </span>
+            </label>
+            <label className={styles.check}>
               <input checked={draft.autoRoute} onChange={(e) => set("autoRoute", e.target.checked)} type="checkbox" />
               <span>
                 <span className={styles.toolName}>Route prompts automatically</span>
@@ -387,6 +415,10 @@ export function SettingsSheet({ focus, onClose }: { focus?: "tools"; onClose: ()
           <fieldset className={styles.plainFieldset} disabled={!isAdmin}>
             <ConnectionsSection />
           </fieldset>
+
+          <MemorySection />
+
+          <AppsSection />
 
           {isAdmin && <MembersSection />}
 
@@ -592,6 +624,7 @@ function AiModelsStatus() {
             </div>
             <p className={styles.hint}>
               {state.spendLimits ? "Your AI Gateway caps what Claude and GPT can spend." : "Recommended: cap what Claude and GPT can spend."}{" "}
+              For a budget per member, add a rule that limits by metadata <code>member</code> and splits by value.{" "}
               <a
                 className={styles.checkLink}
                 href={AI_GATEWAY_DASHBOARD}
@@ -699,7 +732,7 @@ function UpdateNotice({ repository, setupKind }: { repository: string; setupKind
 }
 
 function MembersSection() {
-  const { listMembers, me, setAdmin } = useOrg();
+  const { listMembers, me, setAdmin, state } = useOrg();
   const [members, setMembers] = useState<MemberInfo[] | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -709,6 +742,20 @@ function MembersSection() {
   useEffect(() => {
     void load();
   }, [load]);
+
+  /** Offboarding: Access stops new sign-ins, but apps a member connected keep working until removed. */
+  const disconnectApps = async (member: MemberInfo) => {
+    setBusy(member.email);
+    setError(null);
+    try {
+      const apps = await listApps(member.email);
+      await Promise.all(apps.map((app) => removeApp(app.grantId, member.email)));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setBusy(null);
+    }
+  };
 
   const toggle = async (member: MemberInfo) => {
     setBusy(member.email);
@@ -745,8 +792,8 @@ function MembersSection() {
               Last seen {formatAgo(member.lastSeen, now)}
               {member.fromSetup && " · Admin from setup (change with node setup.mjs --admins)"}
             </p>
-            {!member.fromSetup && (
-              <div className={styles.actions}>
+            <div className={styles.actions}>
+              {!member.fromSetup && (
                 <button
                   className={styles.secondary}
                   disabled={busy !== null}
@@ -755,8 +802,19 @@ function MembersSection() {
                 >
                   {member.admin ? "Make member" : "Make admin"}
                 </button>
-              </div>
-            )}
+              )}
+              {state.settings.mcpServer && (
+                <button
+                  className={styles.secondary}
+                  disabled={busy !== null}
+                  onClick={() => void disconnectApps(member)}
+                  title="Removes the apps (Claude, ChatGPT, Cursor) this member connected. Do this when someone leaves: removing them from Access alone does not."
+                  type="button"
+                >
+                  Disconnect their apps
+                </button>
+              )}
+            </div>
           </li>
         ))}
       </ul>
@@ -786,11 +844,16 @@ const CONNECTION_STATUS: Record<string, { label: string; status: "on" | "off" | 
  * still counts as a user gesture, and pointed at the provider afterwards.
  */
 function ConnectionsSection() {
-  const { addConnection, mcp, removeConnection, retryConnection, state } = useOrg();
+  const { addConnection, mcp, orgId, removeConnection, retryConnection, startGitHubApp, state } = useOrg();
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [name, setName] = useState("");
   const [url, setUrl] = useState("");
+  const [ownApp, setOwnApp] = useState(false);
+  const [clientId, setClientId] = useState("");
+  const [clientSecret, setClientSecret] = useState("");
+  // The repository saved in Settings > Organization usually names the GitHub organization.
+  const [githubOwner, setGithubOwner] = useState(state.settings.repository.split("/")[0] ?? "");
   const [confirmRemove, setConfirmRemove] = useState<string | null>(null);
   const now = Date.now();
 
@@ -822,6 +885,34 @@ function ConnectionsSection() {
     if (await run(key, signIn, () => addConnection(source))) {
       setName("");
       setUrl("");
+      setOwnApp(false);
+      setClientId("");
+      setClientSecret("");
+    }
+  };
+
+  /**
+   * Posts the manifest to GitHub in this tab: a tab opened after the await
+   * would be blocked, and GitHub's page links back here when it is done.
+   */
+  const createGitHubApp = async () => {
+    setBusy("github");
+    setError(null);
+    try {
+      const { action, manifest } = await startGitHubApp(githubOwner.trim());
+      const form = document.createElement("form");
+      form.method = "post";
+      form.action = action;
+      const field = document.createElement("input");
+      field.type = "hidden";
+      field.name = "manifest";
+      field.value = manifest;
+      form.appendChild(field);
+      document.body.appendChild(form);
+      form.submit();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+      setBusy(null);
     }
   };
 
@@ -867,7 +958,28 @@ function ConnectionsSection() {
       )}
       {available.length > 0 && (
         <ul className={styles.checklist}>
-          {available.map((entry) => (
+          {available.map((entry) =>
+            entry.setup === "github-app" ? (
+              <li className={styles.checkItem} data-status="off" key={entry.id}>
+                <div className={styles.checkHead}>
+                  <span className={styles.checkLabel}>{entry.name}</span>
+                  <button className={styles.secondary} disabled={busy !== null} onClick={() => void createGitHubApp()} type="button">
+                    {busy === "github" ? "Opening GitHub..." : "Create the GitHub App"}
+                  </button>
+                </div>
+                <p className={styles.hint}>
+                  {entry.description} GitHub opens with the app filled in: click Create GitHub App, choose the repositories
+                  it may reach, then sign in here.
+                </p>
+                <input
+                  aria-label="GitHub organization"
+                  className={styles.input}
+                  onChange={(e) => setGithubOwner(e.target.value)}
+                  placeholder="GitHub organization (empty for your own account)"
+                  value={githubOwner}
+                />
+              </li>
+            ) : (
             <li className={styles.checkItem} data-status="off" key={entry.id}>
               <div className={styles.checkHead}>
                 <span className={styles.checkLabel}>{entry.name}</span>
@@ -882,7 +994,8 @@ function ConnectionsSection() {
               </div>
               <p className={styles.hint}>{entry.description}</p>
             </li>
-          ))}
+            ),
+          )}
         </ul>
       )}
       <div className={styles.field}>
@@ -896,12 +1009,44 @@ function ConnectionsSection() {
           placeholder="https://example.com/mcp"
           value={url}
         />
+        <label className={styles.check}>
+          <input checked={ownApp} onChange={(e) => setOwnApp(e.target.checked)} type="checkbox" />
+          <span>
+            <span className={styles.toolName}>Uses its own OAuth app</span>
+            <span className={styles.hint}>
+              For servers that cannot register powerhouse themselves. Create an OAuth app at the provider with this
+              callback URL, then enter its client ID and secret.
+            </span>
+          </span>
+        </label>
+        {ownApp && (
+          <>
+            <code className={styles.snippet}>{`${location.origin}/agents/org/${orgId}/callback`}</code>
+            <input
+              aria-label="Client ID"
+              autoComplete="off"
+              className={styles.input}
+              onChange={(e) => setClientId(e.target.value)}
+              placeholder="Client ID"
+              value={clientId}
+            />
+            <input
+              aria-label="Client secret"
+              autoComplete="off"
+              className={styles.input}
+              onChange={(e) => setClientSecret(e.target.value)}
+              placeholder="Client secret"
+              type="password"
+              value={clientSecret}
+            />
+          </>
+        )}
       </div>
       <div className={styles.actions}>
         <button
           className={styles.secondary}
-          disabled={!url.trim() || busy !== null}
-          onClick={() => void add("custom", { name, url }, true)}
+          disabled={!url.trim() || busy !== null || (ownApp && !(clientId.trim() && clientSecret.trim()))}
+          onClick={() => void add("custom", ownApp ? { clientId, clientSecret, name, url } : { name, url }, true)}
           type="button"
         >
           {busy === "custom" ? "Connecting..." : "Connect server"}
@@ -957,10 +1102,19 @@ function ConnectionItem({
           {server.error}
         </p>
       )}
+      {connection.installUrl && !confirmRemove && (
+        <p className={styles.hint}>
+          Jobs reach only the repositories you choose for powerhouse's GitHub App.{" "}
+          <a href={connection.installUrl} rel="noopener noreferrer" target="_blank">
+            Choose repositories
+          </a>
+        </p>
+      )}
       {confirmRemove && signIn && (
         <p className={styles.hint}>
-          Removing deletes powerhouse's sign-in for {connection.name}. To revoke its access completely, also remove it
-          from the connected apps in your {connection.name} account.
+          {connection.installUrl
+            ? "Removing deletes powerhouse's sign-in and its copy of the GitHub App's credentials. To revoke access completely, also delete the app in your GitHub settings (Developer settings > GitHub Apps)."
+            : `Removing deletes powerhouse's sign-in for ${connection.name}. To revoke its access completely, also remove it from the connected apps in your ${connection.name} account.`}
         </p>
       )}
       <div className={styles.actions}>

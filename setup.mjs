@@ -20,6 +20,12 @@ const LOCAL_CONFIG = join(ROOT, "wrangler.local.jsonc");
 const WRANGLER = join(ROOT, "node_modules", "wrangler", "bin", "wrangler.js");
 const API = "https://api.cloudflare.com/client/v4";
 const POLICY_NAME = "powerhouse members";
+// MCP clients (Claude, ChatGPT, Cursor) call these paths without an Access
+// session; powerhouse checks their OAuth tokens itself, and answers 404 while
+// Settings > Use from other apps is off.
+const MCP_APP_NAME = "powerhouse apps (MCP)";
+const MCP_POLICY_NAME = "powerhouse apps (MCP clients)";
+const MCP_PATHS = ["mcp", "oauth/*", ".well-known/*"];
 const IS_WINDOWS = process.platform === "win32";
 
 const HELP = `Usage: node setup.mjs [options]
@@ -155,7 +161,8 @@ async function main() {
     teamDomain = await zeroTrustTeam(cf);
     const idps = await loginMethods(cf);
     const aud = await accessApplication(cf, { account, hostname, idps });
-    writeLocalConfig({ ACCESS_AUD: aud, ACCESS_TEAM_DOMAIN: `https://${teamDomain}` });
+    await mcpAccessApplication(cf, hostname);
+    writeLocalConfig({ ACCESS_AUD: aud, ACCESS_TEAM_DOMAIN: `https://${teamDomain}`, MCP_ACCESS: "on" });
     url = `https://${hostname}`;
   } else {
     teamDomain = new URL(readLocalVars().ACCESS_TEAM_DOMAIN).hostname;
@@ -324,7 +331,9 @@ function workerName() {
 async function setupToken(account, aiMethod) {
   const configured = readLocalVars();
   const provided = args.token ?? process.env.POWERHOUSE_SETUP_TOKEN;
-  if (!provided && configured.ACCESS_AUD && configured.ACCESS_TEAM_DOMAIN && !args.allow && !aiMethod) {
+  // MCP_ACCESS is written once the MCP paths' Access bypass exists, so a
+  // deployment set up before it asks for a token once more to add it.
+  if (!provided && configured.ACCESS_AUD && configured.ACCESS_TEAM_DOMAIN && configured.MCP_ACCESS === "on" && !args.allow && !aiMethod) {
     done("access-token", "not needed: Access and the AI Gateway are already configured");
     return null;
   }
@@ -470,6 +479,31 @@ async function accessApplication(cf, { account, hostname, idps }) {
     : await cf.post("/access/apps", body, "access-app");
   done("access-app", `${existing ? "updated" : "created"} application for ${hostname}`);
   return app.aud;
+}
+
+/**
+ * A second Access application for the MCP paths only, with a Bypass policy:
+ * the more specific application wins over the hostname's, so those paths are
+ * public and everything else stays behind the members policy.
+ */
+async function mcpAccessApplication(cf, hostname) {
+  const policies = await cf.get("/access/policies", "access-mcp");
+  const policyBody = { decision: "bypass", include: [{ everyone: {} }], name: MCP_POLICY_NAME };
+  const existingPolicy = policies.find((p) => p.name === MCP_POLICY_NAME);
+  const policy = existingPolicy
+    ? await cf.put(`/access/policies/${existingPolicy.id}`, policyBody, "access-mcp")
+    : await cf.post("/access/policies", policyBody, "access-mcp");
+  const apps = await cf.get("/access/apps", "access-mcp");
+  const existing = apps.find((a) => a.name === MCP_APP_NAME && a.domain?.startsWith(`${hostname}/`));
+  const body = {
+    destinations: MCP_PATHS.map((path) => ({ type: "public", uri: `${hostname}/${path}` })),
+    domain: `${hostname}/${MCP_PATHS[0]}`,
+    name: MCP_APP_NAME,
+    policies: [{ id: policy.id, precedence: 1 }],
+    type: "self_hosted",
+  };
+  await (existing ? cf.put(`/access/apps/${existing.id}`, body, "access-mcp") : cf.post("/access/apps", body, "access-mcp"));
+  done("access-mcp", `${existing ? "updated" : "created"} the Access bypass for ${hostname}'s MCP paths (answered only when Settings > Use from other apps is on)`);
 }
 
 async function allowList(account) {
@@ -738,10 +772,20 @@ async function removePowerhouse(account) {
   const policies = await cf.get("/access/policies", "remove");
   const policy = policies.find((p) => p.name === POLICY_NAME);
   const policyShared = Boolean(policy && apps.some((a) => a.id !== app?.id && (a.policies ?? []).some((p) => p.id === policy.id)));
+  const mcpApp = hostname ? apps.find((a) => a.name === MCP_APP_NAME && a.domain?.startsWith(`${hostname}/`)) : null;
+  const mcpPolicy = policies.find((p) => p.name === MCP_POLICY_NAME);
+  const mcpPolicyShared = Boolean(
+    mcpPolicy && apps.some((a) => a.id !== mcpApp?.id && (a.policies ?? []).some((p) => p.id === mcpPolicy.id)),
+  );
+  // The namespace Wrangler created for the MCP grants outlives the Worker.
+  const oauthKv = script?.bindings?.find((b) => b.type === "kv_namespace" && b.name === "OAUTH_KV")?.namespace_id ?? null;
   const gateway = await cf.get(`/ai-gateway/gateways/${gatewayId}`, "remove").catch(missing);
 
   const plan = [
     app && `Access application "${app.name}" for ${hostname}`,
+    mcpApp && `Access application "${MCP_APP_NAME}"`,
+    mcpPolicy && !mcpPolicyShared && `Access policy "${MCP_POLICY_NAME}"`,
+    oauthKv && "The KV namespace holding apps connected over MCP",
     policy && !policyShared && `Access policy "${POLICY_NAME}"`,
     script && `Worker "${worker}" and all its data: roles, jobs, settings, members, schedules, connections`,
     gateway && `AI Gateway "${gatewayId}", with any provider keys and logs stored on it`,
@@ -772,6 +816,15 @@ async function removePowerhouse(account) {
     removed.push(`Access application "${app.name}"`);
     done("remove", `deleted the Access application for ${hostname}`);
   }
+  if (mcpApp) {
+    await cf.delete(`/access/apps/${mcpApp.id}`, "remove");
+    removed.push(`Access application "${MCP_APP_NAME}"`);
+    done("remove", `deleted the Access application "${MCP_APP_NAME}"`);
+  }
+  if (mcpPolicy && !mcpPolicyShared) {
+    await cf.delete(`/access/policies/${mcpPolicy.id}`, "remove");
+    removed.push(`Access policy "${MCP_POLICY_NAME}"`);
+  }
   if (policy && !policyShared) {
     await cf.delete(`/access/policies/${policy.id}`, "remove");
     removed.push(`Access policy "${POLICY_NAME}"`);
@@ -782,6 +835,15 @@ async function removePowerhouse(account) {
     await cf.delete(`/workers/scripts/${worker}?force=true`, "remove");
     removed.push(`Worker "${worker}" and its data`);
     done("remove", `deleted the Worker "${worker}" and its data`);
+  }
+  if (oauthKv) {
+    // Best effort: the removal token's pre-filled permissions cannot name KV.
+    try {
+      await cf.delete(`/storage/kv/namespaces/${oauthKv}`, "remove");
+      removed.push("The KV namespace for apps connected over MCP");
+    } catch {
+      kept.push(`The KV namespace ${oauthKv} for apps connected over MCP: delete it under Storage & Databases > KV`);
+    }
   }
   if (gateway) {
     await cf.delete(`/ai-gateway/gateways/${gatewayId}`, "remove");

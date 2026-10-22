@@ -12,26 +12,31 @@ import { type ComponentProps, type ReactNode, useState } from "react";
 import { AgentGlyph } from "../components/agent-state";
 import { useApprovalRecord, useJobAccess, useJobConnection, whoCanAct } from "./job-connection";
 import styles from "./live-session.module.css";
+import { CodeBlock, Collapsible, DocumentCard, MarkdownImage, REMARK_PLUGINS } from "./markdown-card";
+
+const MARKDOWN_COMPONENTS = { img: MarkdownImage, SyntaxHighlighter: CodeBlock, CodeHeader: () => null };
+// Jobs hand over documents as fenced markdown (DOCUMENT_GUIDANCE on the server).
+const DOCUMENT_BLOCK = { CodeHeader: () => null, SyntaxHighlighter: DocumentCard };
+const BY_LANGUAGE = { markdown: DOCUMENT_BLOCK, md: DOCUMENT_BLOCK };
 
 /**
- * Images in model output render as links, never load: a reply can repeat
- * text injected by a fetched page or a connection, and an image URL that
- * loads on its own would send data out with no click (the CSP blocks it
- * too).
+ * Model output is markdown; MarkdownTextPrimitive reads the part from context
+ * and smooths streaming. A long finished answer starts collapsed, so the
+ * narrow job window stays readable when a model skips the document fence.
  */
-const MarkdownImage = ({ src, alt }: { src?: string | Blob; alt?: string }) =>
-  typeof src === "string" && /^https?:/i.test(src) ? (
-    <a href={src} rel="noopener noreferrer" target="_blank">
-      {alt ? `Image: ${alt}` : "Image link"}
-    </a>
-  ) : (
-    <span>{alt ? `[Image: ${alt}]` : "[Image]"}</span>
+const Text: TextMessagePartComponent = ({ status }) => {
+  const [expanded, setExpanded] = useState(false);
+  return (
+    <Collapsible expanded={expanded || status.type === "running"} limit={480} onExpand={() => setExpanded(true)}>
+      <MarkdownTextPrimitive
+        className={styles.text}
+        components={MARKDOWN_COMPONENTS}
+        componentsByLanguage={BY_LANGUAGE}
+        remarkPlugins={REMARK_PLUGINS}
+      />
+    </Collapsible>
   );
-
-/** Model output is markdown; MarkdownTextPrimitive reads the part from context and smooths streaming. */
-const Text: TextMessagePartComponent = () => (
-  <MarkdownTextPrimitive className={styles.text} components={{ img: MarkdownImage }} />
-);
+};
 
 /**
  * Collapsed by default: the transcript leads with what the job did and said,

@@ -1,7 +1,11 @@
 import { Hono } from "hono";
 import { agentsMiddleware } from "hono-agents";
 import { type AuthVariables, accessAuth, forwardMember, orgGuard } from "./auth";
-import { setupRoutes } from "./setup-routes";
+import { githubAppRoutes } from "./github-app-routes";
+import { authorizeRoutes, connectedAppsRoutes, handleMcpRequest, isMcpPath } from "./mcp";
+import { mcpAccessRoutes, setupRoutes } from "./setup-routes";
+import { uploadRoutes } from "./upload-routes";
+import { voiceRoutes } from "./voice-routes";
 
 // Runs the model-written browser code in a Worker Loader sandbox (browser tool).
 export { CodemodeRuntime } from "agents/browser";
@@ -27,5 +31,22 @@ app.use("/agents/*", async (c, next) => {
 app.use("/agents/*", agentsMiddleware());
 
 app.get("/api/me", (c) => c.json({ email: c.get("email"), orgId: c.get("orgId") }));
+app.route("/api/github-app", githubAppRoutes);
+app.route("/api/apps", connectedAppsRoutes);
+app.route("/api/mcp-access", mcpAccessRoutes);
+app.route("/api/uploads", uploadRoutes);
+app.route("/api/voice", voiceRoutes);
+// The consent page for MCP clients; reached through handleMcpRequest, which
+// gives it the OAuth helpers (env.OAUTH_PROVIDER).
+app.route("/authorize", authorizeRoutes as unknown as typeof app);
 
-export default app;
+export default {
+  fetch(request: Request, env: Env, ctx: ExecutionContext) {
+    // The MCP server and its OAuth endpoints go through the OAuth provider,
+    // which hands everything else (the consent page) back to the app.
+    if (isMcpPath(new URL(request.url).pathname)) {
+      return handleMcpRequest(request, env, ctx, app as unknown as ExportedHandler<Env>);
+    }
+    return app.fetch(request, env, ctx);
+  },
+} satisfies ExportedHandler<Env>;

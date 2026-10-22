@@ -1,6 +1,7 @@
 import type {
   DispatchResult,
   MemberInfo,
+  MemoryInfo,
   UpdateStatus,
   OrgSettings,
   OrgState,
@@ -38,16 +39,23 @@ export interface ScheduleDraft {
 }
 
 /** A connection to add: one from the catalog, or a custom server. */
-export type ConnectionSource = { catalogId: string } | { name: string; url: string };
+export type ConnectionSource = { catalogId: string } | { name: string; url: string; clientId?: string; clientSecret?: string };
 
 interface OrgContextValue {
   /** Resolves with the sign-in URL when the server needs OAuth. */
   addConnection: (source: ConnectionSource) => Promise<{ authUrl: string | null; id: string }>;
+  /** What to post to GitHub to create the org's GitHub App; owner is a GitHub organization, or empty for the admin's account. */
+  startGitHubApp: (owner: string) => Promise<{ action: string; manifest: string }>;
   addFromLibrary: (templateId: string) => Promise<RoleConfig>;
   /** Admins change settings, roles and connections, and act on anyone's jobs and schedules. */
   isAdmin: boolean;
   /** For admins: everyone who has signed in. */
   listMembers: () => Promise<MemberInfo[]>;
+  /** Team memory: every note, proposals first. Changes are admin-only. */
+  listMemories: () => Promise<MemoryInfo[]>;
+  saveMemory: (note: { id?: string; title?: string; content: string }) => Promise<MemoryInfo>;
+  approveMemory: (id: string) => Promise<MemoryInfo>;
+  deleteMemory: (id: string) => Promise<void>;
   setAdmin: (email: string, admin: boolean) => Promise<void>;
   /** Deployments set up in the browser switch web search here (it has no binding). */
   setWebSearch: (on: boolean) => Promise<void>;
@@ -62,7 +70,8 @@ interface OrgContextValue {
   connected: boolean;
   deleteRole: (id: string) => Promise<void>;
   /** Without a roleId the Org agent routes the prompt to a role. */
-  dispatch: (prompt: string, roleId?: string) => Promise<DispatchResult>;
+  /** uploadIds: files from /api/uploads, attached to the job. */
+  dispatch: (prompt: string, roleId?: string, uploadIds?: string[]) => Promise<DispatchResult>;
   listLibrary: () => Promise<RoleTemplate[]>;
   /** Full role configs, including prompts; fetched on demand by the roles editor. */
   listRoles: () => Promise<RoleConfig[]>;
@@ -119,12 +128,17 @@ export function OrgProvider({ me, children }: { me: Me; children: ReactNode }) {
     runs: [],
     // Off until the Org says otherwise, so the picker never flashes for an existing org.
     teamPending: false,
+    memoryProposals: 0,
+    mcpAccessReady: false,
     // Replaced by the Org's state as soon as the socket opens.
     settings: {
       approveBrowserActions: false,
       autoRoute: true,
       blockedHosts: [],
       companyProfile: "",
+      conciseAnswers: true,
+      mcpServer: false,
+      voice: false,
       dailyBudgetUsd: 0,
       fallbackRoleId: "",
       historyLimit: 50,
@@ -152,9 +166,14 @@ export function OrgProvider({ me, children }: { me: Me; children: ReactNode }) {
   const value = useMemo<OrgContextValue>(
     () => ({
       addConnection: (source) => org.call<{ authUrl: string | null; id: string }>("addConnection", [source]),
+      startGitHubApp: (owner) => org.call<{ action: string; manifest: string }>("startGitHubApp", [owner]),
       addFromLibrary: (templateId) => org.call<RoleConfig>("addFromLibrary", [templateId]),
       isAdmin: state.admins.includes(me.email.toLowerCase()),
       listMembers: () => org.call<MemberInfo[]>("listMembers", []),
+      listMemories: () => org.call<MemoryInfo[]>("listMemories", []),
+      saveMemory: (note) => org.call<MemoryInfo>("saveMemory", [note]),
+      approveMemory: (id) => org.call<MemoryInfo>("approveMemory", [id]),
+      deleteMemory: (id) => org.call<void>("deleteMemory", [id]),
       setAdmin: (email, admin) => org.call<void>("setAdmin", [email, admin]),
       setWebSearch: (on) => org.call<void>("setWebSearch", [on]),
       updateStatus: () => org.call<UpdateStatus>("updateStatus", []),
@@ -165,8 +184,8 @@ export function OrgProvider({ me, children }: { me: Me; children: ReactNode }) {
       clearHistory: () => org.call<void>("clearHistory", []),
       connected,
       deleteRole: (id) => org.call<void>("deleteRole", [id]),
-      dispatch: (prompt, roleId) =>
-        org.call<DispatchResult>("dispatch", roleId ? [prompt, roleId] : [prompt]),
+      dispatch: (prompt, roleId, uploadIds) =>
+        org.call<DispatchResult>("dispatch", uploadIds?.length ? [prompt, roleId ?? null, uploadIds] : roleId ? [prompt, roleId] : [prompt]),
       listLibrary: () => org.call<RoleTemplate[]>("listLibrary", []),
       listRoles: () => org.call<RoleConfig[]>("listRoles", []),
       me,

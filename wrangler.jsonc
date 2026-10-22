@@ -15,8 +15,12 @@
   "ai": { "binding": "AI", "remote": true },
   "assets": {
     "not_found_handling": "single-page-application",
-    "run_worker_first": ["/agents/*", "/api/*"]
+    // The MCP server and its OAuth endpoints are answered by the Worker, not the app shell.
+    "run_worker_first": ["/agents/*", "/api/*", "/mcp", "/authorize", "/oauth/*", "/.well-known/*"]
   },
+  // Grants and registered clients of MCP clients (Settings > Use from other
+  // apps). No id: Wrangler creates the namespace on the first deploy.
+  "kv_namespaces": [{ "binding": "OAUTH_KV" }],
   // Org is the only top-level agent. JobAgent runs as an Org sub-agent (facet) and needs no binding.
   // Deployment keeps settings made in the browser (Finish setup), such as Access.
   // Access settings set by setup.mjs are vars in wrangler.local.jsonc instead,

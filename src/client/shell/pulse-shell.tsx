@@ -24,7 +24,7 @@ import { useOrg } from "../org/org-context";
 
 interface ShellContextValue {
   /** Dispatch, then open the window next to the element marked with `data-job-anchor`. Resolves null on failure. */
-  dispatchAndOpen: (prompt: string, roleId?: string) => Promise<DispatchResult | null>;
+  dispatchAndOpen: (prompt: string, roleId?: string, uploadIds?: string[]) => Promise<DispatchResult | null>;
   /** Last dispatch failure from any entry point (composer or palette), cleared by the next success. */
   dispatchError: string | null;
   openDispatch: (roleId?: string) => void;
@@ -133,10 +133,10 @@ export function PulseShell({ children, className }: { children: ReactNode; class
   }, []);
 
   const dispatchAndOpen = useCallback(
-    async (prompt: string, roleId?: string) => {
+    async (prompt: string, roleId?: string, uploadIds?: string[]) => {
       let result: DispatchResult;
       try {
-        result = await dispatch(prompt, roleId);
+        result = await dispatch(prompt, roleId, uploadIds);
       } catch (error) {
         setDispatchError(error instanceof Error ? error.message : String(error));
         return null;

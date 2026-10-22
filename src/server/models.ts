@@ -4,6 +4,31 @@ import { modelInfo } from "../shared";
 import { createAI } from "agents/models/ai-sdk";
 
 /**
+ * Keys a job's gateway requests carry, at most five (the gateway ignores the
+ * rest). An admin can split a spend limit by `member` for a budget per
+ * member, or by `role`.
+ */
+export type GatewayMetadata = {
+  member?: string;
+  role?: string;
+  run?: string;
+};
+
+/**
+ * The AI Gateway refused a request because a spend limit was reached: the
+ * team's, or one split per member. Not a setup problem, so it is not shown
+ * as the model needing attention for everyone.
+ */
+export function isSpendLimit(error: unknown) {
+  const e = error as { status?: number; statusCode?: number; code?: string; message?: string; responseBody?: string };
+  const status = e?.status ?? e?.statusCode;
+  return (status === 429 || e?.code === "rate-limit") && /spend|budget/i.test(`${e?.message ?? ""} ${e?.responseBody ?? ""}`);
+}
+
+export const SPEND_LIMIT_REACHED =
+  "An AI Gateway spend limit was reached: your own, if an admin gave each member a budget, or the team's. Jobs on this model can continue when the limit's window resets; an admin can raise it in the Cloudflare dashboard under AI > AI Gateway > Settings > Spend limits.";
+
+/**
  * A vendor model (Claude, GPT) routed through the deployment's AI Gateway
  * over the AI binding. Requests keep the vendor's native format, so
  * streaming, tool calls, approvals and thinking go through the vendor's own
@@ -11,12 +36,12 @@ import { createAI } from "agents/models/ai-sdk";
  * it for that vendor, or Unified Billing credits ("cloudflare" is a
  * placeholder the gateway strips).
  */
-export function gatewayModel(env: Env, id: string) {
+export function gatewayModel(env: Env, id: string, metadata?: GatewayMetadata) {
   const info = modelInfo(id);
   if (!(info && info.provider !== "workers-ai" && env.AI_GATEWAY_ID)) {
     throw new Error(`${id} needs the AI Gateway, which this deployment has not set up. Rerun setup.`);
   }
-  const ai = createAI({ binding: env.AI, id: env.AI_GATEWAY_ID });
+  const ai = createAI({ binding: env.AI, id: env.AI_GATEWAY_ID, ...(metadata ? { metadata } : {}) });
   const vendorId = id.slice(id.indexOf("/") + 1);
   return info.provider === "anthropic"
     ? ai(createAnthropic({ apiKey: "cloudflare" })(vendorId))
@@ -54,7 +79,7 @@ export function modelSetupFailure(error: unknown, vendor: string): string | null
     return `The ${vendor} key stored on the AI Gateway was rejected. Rerun setup with a new key in POWERHOUSE_${vendor.toUpperCase()}_KEY.`;
   }
   // The gateway's own spend limits answer 429 as well; budgets are set there.
-  if ((status === 429 || e?.code === "rate-limit") && /spend|budget/i.test(text)) {
+  if (isSpendLimit(error)) {
     return "The AI Gateway's spend limit was reached. Jobs on this model resume when its window resets, or raise the limit in the Cloudflare dashboard under AI > AI Gateway > Settings > Spend limits.";
   }
   if (status === 429 || e?.code === "rate-limit") {

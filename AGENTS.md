@@ -34,6 +34,8 @@ When asked to set up, install or deploy powerhouse, run the setup script. Do not
 
 To turn tools on or off later, rerun with `--enable` or `--disable`. Settings in the app shows which tools are on, what they cost, and which need attention.
 
+Setup also adds a second Access application, "powerhouse apps (MCP)", that lets MCP clients (Claude, ChatGPT, Cursor) reach `/mcp`, `/oauth/*` and `/.well-known/*`. Those paths answer only after an admin turns on Settings > Use from other apps; tell people it exists if they ask about using powerhouse from Claude. A deployment set up before it asks for a token once more on the next run to add it.
+
 Rerunning setup is safe: it skips finished steps. To update a deployment to the latest release, run `node setup.mjs --update` (a Deploy to Cloudflare copy updates through the pull requests its Update powerhouse workflow opens). `node setup.mjs --help` lists every flag.
 
 ## Removing powerhouse
@@ -51,7 +53,7 @@ bun run push:keys                # optional: push notification keys for local de
 bun run dev                      # Vite + the Worker; Workers AI and the browser run remotely and bill the account
 bun run typecheck                # tsc for the app and the Vite config
 bun run test                     # bun test: schedule time math, Web Push crypto, models, connection tools
-bun run skills:sync              # re-vendor skills pinned in skills.lock.json; rewrites the README table
+bun run skills:sync              # re-vendor skills pinned in skills.lock.json
 bun run route:eval               # compare router models on accuracy and latency (calls Workers AI, billed)
 ```
 
@@ -61,6 +63,7 @@ Where things are:
 - `src/server/org.ts`: the Org agent, one per Access team: roles, settings, routing, dispatch, connections (MCP), schedules, push notifications, spend. Its `@callable` methods are what clients can call; every other method is internal.
 - `src/server/job-agent.ts`: one Think agent per job (an Org sub-agent): tools, skills, connection tools and model per turn.
 - `src/server/tools.ts`, `connections.ts`, `skills.ts`: the tools a role is given; connection tools call back into Org, which holds the OAuth tokens.
+- `src/server/mcp.ts`, `mcp-text.ts`: powerhouse as an MCP server for Claude, ChatGPT and Cursor: the OAuth provider (grants in KV), the consent page behind Access, and the tools, which call Org as the member.
 - `src/server/models.ts`, `router.ts`, `clef.ts`: models through AI Gateway or Workers AI, and Clef decision models for routing and skill suggestions.
 - `src/server/web-push.ts`, `schedule-rules.ts`, `schedules.ts`: Web Push (WebCrypto), schedule time math in the org's time zone.
 - `src/shared/index.ts`: types and constants the server and client share (models, limits, catalog).
@@ -76,4 +79,4 @@ Rules:
 - Every release must keep working with data saved by earlier versions (Durable Object storage, stored roles, settings and schedules): read old shapes with defaults and upgrade them on read, never assume a fresh org. Deployments update in place.
 - Releasing: bump `version` in `package.json`, move CHANGELOG.md's Unreleased notes under the new version, commit, tag `vX.Y.Z`, push the tag, and create the GitHub release with those notes (`gh release create vX.Y.Z --notes-file ...`). Deployments update to the latest release, so only tag what works.
 - `.github/workflows/update.yml` is a reusable workflow every Deploy to Cloudflare copy calls from `main` (through the short workflow in `src/shared/update-workflow.ts`, which copies add once). A broken `main` breaks updates everywhere, so test changes to it before merging. Keep the caller in `update-workflow.ts` unchanged: copies cannot update it.
-- Run `bun run typecheck` and `bun run test` before committing. `ROADMAP.md` lists planned work, decisions and known issues; update it when you finish or change course on something listed there.
+- Run `bun run typecheck` and `bun run test` before committing. `ROADMAP.md` lists features teams asked for and the decisions on them; add a request there when one comes in, and move it as it is planned or shipped. The maintainers' working plan (planned work, known issues, what to verify) is `ROADMAP.local.md`, kept out of git; update it when you finish or change course on something listed there, if you have it.

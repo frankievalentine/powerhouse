@@ -36,7 +36,7 @@ Other scripts:
 ```sh
 bun run deploy       # build and deploy with your wrangler.local.jsonc
 bun run types        # regenerate env.d.ts after changing wrangler.jsonc (move .dev.vars aside first, or its local values end up in the types)
-bun run skills:sync  # re-vendor skills pinned in skills.lock.json; rewrites the README table
+bun run skills:sync  # re-vendor skills pinned in skills.lock.json
 bun run route:eval   # compare router models on accuracy and latency (calls Workers AI, billed)
 ```
 
@@ -48,7 +48,7 @@ The repository is one Bun package: `src/server` is the Worker, `src/client` the 
 - `setup.mjs` stays plain ESM with no dependencies, because it runs before anything is installed.
 - Tools that change something outside powerhouse need approval, and content from pages, connections and tools is untrusted.
 
-[ROADMAP.md](ROADMAP.md) lists planned work, decisions and known issues.
+[ROADMAP.md](ROADMAP.md) lists features teams asked for and the decisions on them. To ask for one, open an issue describing the job you wanted done.
 
 ## Security
 

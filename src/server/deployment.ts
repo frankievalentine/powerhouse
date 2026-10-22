@@ -25,6 +25,8 @@ export interface DeploymentConfig {
   webSearch?: boolean;
   /** Entered in Finish setup; the org's Website setting starts from it. */
   website?: string;
+  /** The MCP paths' Access bypass exists (Finish setup, or Settings > Use from other apps for older copies). */
+  mcpAccess?: boolean;
   /** The copy's GitHub repository ("owner/name"), entered in Finish setup, for update links. */
   repository?: string;
   completedAt: number;
@@ -48,6 +50,17 @@ export class Deployment extends DurableObject<Env> {
 
   async save(config: DeploymentConfig) {
     await this.ctx.storage.put("config", config);
+  }
+
+  /** The MCP paths' Access bypass was created. Returns the updated config. */
+  async setMcpAccess(): Promise<DeploymentConfig | null> {
+    const config = await this.config();
+    if (!config) {
+      return null;
+    }
+    const next = { ...config, mcpAccess: true };
+    await this.ctx.storage.put("config", next);
+    return next;
   }
 
   /** Settings > Tools: web search on or off. Returns the updated config. */
@@ -91,6 +104,7 @@ export function applyDeploymentConfig(env: Env, config: DeploymentConfig | null)
     VAPID_PUBLIC_KEY: config.vapid.publicKey,
     VAPID_SUBJECT: config.vapid.subject,
     WEB_SEARCH: config.webSearch ? "on" : undefined,
+    MCP_ACCESS: config.mcpAccess ? "on" : undefined,
   };
   const merged: Record<string, unknown> = { ...env };
   for (const [key, value] of Object.entries(saved)) {

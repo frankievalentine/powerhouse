@@ -43,3 +43,6 @@ export const JobApprovalsContext = createContext<Record<string, ApprovalRecord>>
 export function useApprovalRecord(toolCallId: string): ApprovalRecord | undefined {
   return useContext(JobApprovalsContext)[toolCallId];
 }
+
+/** Messages after which the open job's older steps were summarized for the model. */
+export const JobCompactionsContext = createContext<ReadonlySet<string>>(new Set());

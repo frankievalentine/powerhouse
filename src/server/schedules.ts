@@ -51,6 +51,12 @@ export interface StoredSchedule extends ScheduleInfo {
   anchorAt: number;
   /** The SDK schedule for the next run, if armed. */
   alarmId: string | null;
+  /**
+   * What the newest completed run reported, given to the next run so it can
+   * say what changed. Absent until a run completes, after the job or role
+   * is edited, after history is cleared, and for schedules saved before it.
+   */
+  lastReport?: { at: number; runId: string; summary: string };
 }
 
 /** A run that fires this late (Org was unavailable) is skipped, not run hours late. */

@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
-import { AUTO_MODEL, DEFAULT_MODEL, estimateCostUsd, resolveModel } from "../shared";
-import { modelSetupFailure } from "./models";
+import { AUTO_MODEL, DEFAULT_MODEL, estimateCostUsd, MODELS, resolveModel, summaryModelFor } from "../shared";
+import { isSpendLimit, modelSetupFailure } from "./models";
 
 describe("estimateCostUsd", () => {
   test("uses the model's list price per million tokens", () => {
@@ -8,6 +8,24 @@ describe("estimateCostUsd", () => {
     expect(estimateCostUsd("anthropic/claude-opus-5-5", { inputTokens: 50_000, outputTokens: 2_000 })).toBeCloseTo(0.24, 6);
     expect(estimateCostUsd("anthropic/claude-opus-5-5", {})).toBe(0);
     expect(estimateCostUsd("unknown/model", { inputTokens: 1_000_000 })).toBe(0);
+  });
+});
+
+describe("summaryModelFor", () => {
+  test("vendor models summarize with the vendor's cheapest model", () => {
+    expect(summaryModelFor("anthropic/claude-opus-5-5")).toBe("anthropic/claude-haiku-5-5");
+    expect(summaryModelFor("openai/gpt-6-sol")).toBe("openai/gpt-6-luna");
+  });
+
+  test("open models and unknown ids summarize with themselves", () => {
+    expect(summaryModelFor(DEFAULT_MODEL)).toBe(DEFAULT_MODEL);
+    expect(summaryModelFor("removed/model")).toBe("removed/model");
+  });
+
+  test("every model has a context window above the compaction threshold", () => {
+    for (const model of MODELS) {
+      expect(model.contextWindow).toBeGreaterThan(200_000);
+    }
   });
 });
 
@@ -48,6 +66,13 @@ describe("modelSetupFailure", () => {
   test("the gateway's spend limit is told apart from rate limits", () => {
     expect(modelSetupFailure({ message: "Spend limit exceeded for this gateway", status: 429 }, "anthropic")).toContain("spend limit");
     expect(modelSetupFailure({ status: 429 }, "anthropic")).toContain("Rate limited");
+  });
+
+  test("a spend limit is recognized on its own, apart from rate limits", () => {
+    expect(isSpendLimit({ message: "Spend limit exceeded", status: 429 })).toBe(true);
+    expect(isSpendLimit({ code: "rate-limit", responseBody: "budget reached" })).toBe(true);
+    expect(isSpendLimit({ status: 429 })).toBe(false);
+    expect(isSpendLimit({ message: "spend", status: 500 })).toBe(false);
   });
 
   test("gateway authentication off", () => {

@@ -8,8 +8,18 @@ export type RunPhase =
   | "aborted"
   | "interrupted";
 
+/**
+ * Agent loops a job can run on, mapped to the job agent's route name (its
+ * class name in kebab case), which the job window connects to. Only Think
+ * today; see src/server/harnesses.ts.
+ */
+export const JOB_HARNESSES = { think: "job-agent" } as const;
+export type JobHarness = keyof typeof JOB_HARNESSES;
+
 export interface RunSummary {
   activity: string | null;
+  /** Set once the run has a role; absent for runs from before harnesses were recorded, which ran on Think. */
+  harness?: JobHarness;
   completedAt: number | null;
   error: string | null;
   phase: RunPhase;
@@ -19,6 +29,10 @@ export interface RunSummary {
   runId: string;
   /** Set when a schedule started the run. */
   scheduleId?: string;
+  /** The app a member started the run from over MCP ("Claude"), as the app named itself. */
+  via?: string;
+  /** Names of the files attached when the job was sent. */
+  files?: string[];
   /** Estimated model cost so far, in USD (see estimateCostUsd). */
   costUsd?: number;
   /** The router was not sure which role fits, so the fallback role took the job. */
@@ -162,22 +176,22 @@ export type ModelProvider = "anthropic" | "openai" | "workers-ai";
  * powerhouse's tools and approvals.
  */
 export const MODELS = [
-  { id: "anthropic/claude-opus-5-5", label: "Claude Opus 5.5", provider: "anthropic", tested: true, workersPaid: false, price: { input: 4, output: 20 } },
-  { id: "anthropic/claude-sonnet-5-5", label: "Claude Sonnet 5.5", provider: "anthropic", tested: false, workersPaid: false, price: { input: 2, output: 10 } },
-  { id: "anthropic/claude-haiku-5-5", label: "Claude Haiku 5.5", provider: "anthropic", tested: false, workersPaid: false, price: { input: 0.1, output: 0.5 } },
-  { id: "openai/gpt-6-sol", label: "GPT-6 Sol", provider: "openai", tested: false, workersPaid: false, price: { input: 2, output: 10 } },
-  { id: "openai/gpt-6-luna", label: "GPT-6 Luna", provider: "openai", tested: false, workersPaid: false, price: { input: 0.1, output: 0.5 } },
-  { id: "@cf/moonshotai/kimi-k2.7-code", label: "Kimi K2.7 Code", provider: "workers-ai", tested: true, workersPaid: true, price: { input: 0.95, output: 4 } },
-  { id: "@cf/moonshotai/kimi-k2.6", label: "Kimi K2.6", provider: "workers-ai", tested: false, workersPaid: true, price: { input: 0.95, output: 4 } },
-  { id: "@cf/zai-org/glm-5.3", label: "GLM 5.3", provider: "workers-ai", tested: false, workersPaid: true, price: { input: 1.4, output: 4.4 } },
-  { id: "@cf/zai-org/glm-5.3-flash", label: "GLM 5.3 Flash", provider: "workers-ai", tested: false, workersPaid: true, price: { input: 0.15, output: 0.5 } },
+  { id: "anthropic/claude-opus-5-5", label: "Claude Opus 5.5", provider: "anthropic", tested: true, workersPaid: false, price: { input: 4, output: 20 }, contextWindow: 1_000_000 },
+  { id: "anthropic/claude-sonnet-5-5", label: "Claude Sonnet 5.5", provider: "anthropic", tested: false, workersPaid: false, price: { input: 2, output: 10 }, contextWindow: 1_000_000 },
+  { id: "anthropic/claude-haiku-5-5", label: "Claude Haiku 5.5", provider: "anthropic", tested: false, workersPaid: false, price: { input: 0.1, output: 0.5 }, contextWindow: 1_000_000 },
+  { id: "openai/gpt-6-sol", label: "GPT-6 Sol", provider: "openai", tested: false, workersPaid: false, price: { input: 2, output: 10 }, contextWindow: 1_050_000 },
+  { id: "openai/gpt-6-luna", label: "GPT-6 Luna", provider: "openai", tested: false, workersPaid: false, price: { input: 0.1, output: 0.5 }, contextWindow: 1_050_000 },
+  { id: "@cf/moonshotai/kimi-k2.7-code", label: "Kimi K2.7 Code", provider: "workers-ai", tested: true, workersPaid: true, price: { input: 0.95, output: 4 }, contextWindow: 262_144 },
+  { id: "@cf/moonshotai/kimi-k2.6", label: "Kimi K2.6", provider: "workers-ai", tested: false, workersPaid: true, price: { input: 0.95, output: 4 }, contextWindow: 262_144 },
+  { id: "@cf/zai-org/glm-5.3", label: "GLM 5.3", provider: "workers-ai", tested: false, workersPaid: true, price: { input: 1.4, output: 4.4 }, contextWindow: 1_048_576 },
+  { id: "@cf/zai-org/glm-5.3-flash", label: "GLM 5.3 Flash", provider: "workers-ai", tested: false, workersPaid: true, price: { input: 0.15, output: 0.5 }, contextWindow: 1_048_576 },
   {
     id: "@cf/deepseek-ai/deepseek-v4.1-flash-1017",
     label: "DeepSeek V4.1 Flash",
     provider: "workers-ai",
     tested: false,
-    workersPaid: true, price: { input: 0.3, output: 1.2 } },
-  { id: "@cf/qwen/qwen3.8-27b", label: "Qwen 3.8 27B", provider: "workers-ai", tested: false, workersPaid: false, price: { input: 0.45, output: 3.2 } },
+    workersPaid: true, price: { input: 0.3, output: 1.2 }, contextWindow: 1_048_576 },
+  { id: "@cf/qwen/qwen3.8-27b", label: "Qwen 3.8 27B", provider: "workers-ai", tested: false, workersPaid: false, price: { input: 0.45, output: 3.2 }, contextWindow: 262_144 },
 ] as const satisfies readonly {
   id: string;
   label: string;
@@ -186,6 +200,8 @@ export const MODELS = [
   workersPaid: boolean;
   /** List price in USD per million input and output tokens, checked 2026-10-21. */
   price: { input: number; output: number };
+  /** Input tokens the model accepts, from the vendor's or Workers AI's model page, checked 2026-10-22. */
+  contextWindow: number;
 }[];
 
 export type ModelId = (typeof MODELS)[number]["id"];
@@ -200,6 +216,17 @@ const AUTO_ORDER: readonly ModelId[] = ["anthropic/claude-opus-5-5", "openai/gpt
 
 export function modelInfo(id: string) {
   return MODELS.find((m) => m.id === id);
+}
+
+/** The vendor's cheapest model, which summarizes a job's older steps; open models summarize themselves. */
+const SUMMARY_MODELS: Partial<Record<ModelProvider, ModelId>> = {
+  anthropic: "anthropic/claude-haiku-5-5",
+  openai: "openai/gpt-6-luna",
+};
+
+export function summaryModelFor(id: string): string {
+  const provider = modelInfo(id)?.provider;
+  return (provider && SUMMARY_MODELS[provider]) ?? id;
 }
 
 /**
@@ -238,6 +265,16 @@ export interface OrgSettings {
   blockedHosts: string[];
   /** What the organization does, for whom and how it talks; added to every job's instructions. */
   companyProfile: string;
+  /** Short answers that lead with the result, added to every job's instructions. */
+  conciseAnswers: boolean;
+  /** Members may start and read their jobs from MCP clients (Claude, ChatGPT, Cursor) at /mcp. Off by default. */
+  mcpServer: boolean;
+  /**
+   * Dictation in the composer and answers read aloud, on Workers AI (billed
+   * per use). Off by default: on Workers Free, its usage shares the daily
+   * free allocation with routing.
+   */
+  voice: boolean;
   /** Role that unrouted prompts go to, and the router's fallback. */
   fallbackRoleId: string;
   /** Finished runs kept in history; live runs are always kept. */
@@ -283,6 +320,14 @@ export interface JobSettings {
   blockedHosts: string[];
   /** Absent for jobs dispatched before the company profile existed. */
   companyProfile?: string;
+  /** Absent for jobs dispatched before concise answers existed, which ran without them. */
+  conciseAnswers?: boolean;
+  /**
+   * Who started the job (lowercase email), sent to the AI Gateway as the
+   * `member` metadata key so spend limits can be split per member. Absent for
+   * older jobs and for scheduled runs from before it existed.
+   */
+  member?: string;
   /** Absent when the organization has not set one. */
   website?: string;
   maxSteps: number;
@@ -339,12 +384,82 @@ export interface OrgState {
   roles: RoleSummary[];
   runs: RunSummary[];
   settings: OrgSettings;
+  /** Team memory notes jobs proposed that wait for an admin. */
+  memoryProposals: number;
+  /** The Access bypass MCP clients need exists (setup or Settings added it); see Settings > Use from other apps. */
+  mcpAccessReady: boolean;
+}
+
+/**
+ * A team memory note: something the team wants every job to know. Jobs
+ * propose notes; only approved ones reach jobs, and only admins approve.
+ */
+export interface MemoryInfo {
+  id: string;
+  title: string;
+  content: string;
+  status: "proposed" | "approved";
+  /** Who proposed it: the member whose job proposed it, or the admin who wrote it. */
+  proposedBy: string;
+  /** The job that proposed it; null when an admin wrote it in Settings. */
+  runId: string | null;
+  approvedBy: string | null;
+  createdAt: number;
+  updatedAt: number;
+}
+
+export const MEMORY_LIMITS = { approved: 500, content: 1000, proposed: 100, title: 80 } as const;
+
+/**
+ * Files attached to a job: converted to Markdown when uploaded (Workers AI
+ * Markdown Conversion, as the SDK's web_fetch does), kept as text only.
+ * `bytes` matches web_fetch's default cap; `chars` bounds the stored text.
+ */
+export const UPLOAD_LIMITS = { bytes: 5_000_000, chars: 2_000_000, files: 5, name: 120 } as const;
+
+/** An uploaded file, before and after it is attached to a job. */
+export interface AttachmentInfo {
+  id: string;
+  name: string;
+  /** Length of its text, in characters. */
+  chars: number;
+}
+
+/** Read-aloud stops here (Aura 1 bills per character: about $0.06 at most). */
+export const VOICE_SPEAK_CHARS = 4000;
+
+/**
+ * An answer as it should sound: Markdown's marks, code and links left out,
+ * so the voice reads words, not symbols.
+ */
+export function speakableText(markdown: string) {
+  return markdown
+    .replace(/```[\s\S]*?```/g, " (code left out) ")
+    .replace(/`([^`]*)`/g, "$1")
+    .replace(/!\[([^\]]*)\]\([^)]*\)/g, "$1")
+    .replace(/\[([^\]]+)\]\([^)]*\)/g, "$1")
+    .replace(/https?:\/\/\S+/g, "a link")
+    .replace(/^\s{0,3}(#{1,6}|[-*+]|\d+\.|>)\s+/gm, "")
+    .replace(/[*_~|]+/g, "")
+    .replace(/\n{2,}/g, ".\n")
+    .replace(/[ \t]+/g, " ")
+    .trim();
 }
 
 export interface JobInput {
   prompt: string;
   role: RoleConfig;
   settings: JobSettings;
+  /** For a scheduled run: what the schedule's last completed run reported. */
+  previousReport?: PreviousReport;
+  /** Files the member attached; the job reads them with read_attachment. */
+  attachments?: AttachmentInfo[];
+}
+
+export interface PreviousReport {
+  /** When that run started, written out in the org's time zone. */
+  when: string;
+  summary: string;
 }
 
 /** The roles a new org starts with: default roles to keep and library templates to add. */
@@ -369,8 +484,9 @@ export const LIVE_PHASES: ReadonlySet<RunPhase> = new Set([
 
 /**
  * Remote MCP servers offered in Settings. Each signs in with OAuth dynamic
- * client registration (or needs no sign-in), checked 2026-10-21; servers that
- * need a pre-registered OAuth app are left out until that is supported.
+ * client registration (or needs no sign-in), checked 2026-10-21, except
+ * GitHub, whose sign-in has no registration endpoint (checked 2026-10-22):
+ * it uses a GitHub App the org creates (`setup`).
  */
 export interface CatalogConnection {
   id: string;
@@ -379,6 +495,11 @@ export interface CatalogConnection {
   url: string;
   /** False for servers that need no sign-in, so no sign-in window opens. */
   signIn: boolean;
+  /**
+   * "github-app": the server has no dynamic registration, so Settings first
+   * creates a GitHub App for the org through GitHub's manifest flow.
+   */
+  setup?: "github-app";
 }
 
 export const CONNECTION_CATALOG: readonly CatalogConnection[] = [
@@ -392,6 +513,14 @@ export const CONNECTION_CATALOG: readonly CatalogConnection[] = [
     url: "https://mcp.atlassian.com/v1/mcp",
   },
   { description: "Errors and performance issues.", id: "sentry", name: "Sentry", signIn: true, url: "https://mcp.sentry.dev/mcp" },
+  {
+    description: "Repositories, issues and pull requests, through a GitHub App you create in one click.",
+    id: "github",
+    name: "GitHub",
+    setup: "github-app",
+    signIn: true,
+    url: "https://api.githubcopilot.com/mcp/",
+  },
   {
     description: "Search Cloudflare's developer documentation. No sign-in.",
     id: "cloudflare-docs",
@@ -411,6 +540,10 @@ export interface ConnectionInfo {
   catalogId: string | null;
   addedBy: string;
   addedAt: number;
+  /** Signs in with the org's own OAuth app (a GitHub App, or one entered by hand) instead of registering one. */
+  ownApp: boolean;
+  /** For a GitHub App: where to choose which repositories it reaches. */
+  installUrl: string | null;
 }
 
 /** A connection tool as Org hands it to a job, which builds an AI SDK tool from it. */

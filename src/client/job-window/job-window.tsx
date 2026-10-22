@@ -15,6 +15,7 @@ import { formatElapsed, useNow } from "../lib/time";
 import { useOrg } from "../org/org-context";
 import { LiveSession } from "../lib/lazy-parts";
 import styles from "./job-window.module.css";
+import { ReadAloud } from "./read-aloud";
 
 gsap.registerPlugin(useGSAP);
 
@@ -316,6 +317,7 @@ export function JobWindow({
             <span className={styles.deptDot} />
             <span className={styles.role}>{name}</span>
             <span className={styles.spacer} />
+            {state.settings.voice && run.summary && !live && <ReadAloud runId={run.runId} />}
             <button
               aria-label="Close"
               className={styles.iconButton}
@@ -333,7 +335,11 @@ export function JobWindow({
               {formatElapsed(run.startedAt, run.completedAt ?? now)}
             </span>
           </div>
-          <div className={styles.machine}>{role?.purpose ?? "Picking the best role for this job."}</div>
+          <div className={styles.machine}>
+            {role?.purpose ?? "Picking the best role for this job."}
+            {run.via && ` Started from ${run.via}${run.startedBy ? ` by ${run.startedBy}` : ""}.`}
+            {run.files?.length ? ` Files: ${run.files.join(", ")}.` : ""}
+          </div>
         </div>
         <div className={styles.body}>
           {/* The job agent does not exist until routing is done, and never
@@ -350,7 +356,7 @@ export function JobWindow({
             </div>
           ) : (
             <Suspense fallback={<p className={styles.loading}>Loading the transcript...</p>}>
-              <LiveSession access={access} live={live} runId={run.runId} />
+              <LiveSession access={access} harness={run.harness} live={live} runId={run.runId} />
             </Suspense>
           )}
         </div>

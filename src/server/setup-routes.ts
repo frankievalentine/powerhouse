@@ -1,9 +1,15 @@
+import { getAgentByName } from "agents";
 import { Hono } from "hono";
 import { accessSettings } from "./auth";
 import { type DeploymentConfig, deployment } from "./deployment";
 import { safeError } from "./log";
 import { isRepoSlug } from "../shared";
 import { toBase64Url } from "./web-push";
+
+/** The MCP paths' Access bypass, as setup.mjs creates it (same names, so either can update it). */
+const MCP_APP_NAME = "powerhouse apps (MCP)";
+const MCP_POLICY_NAME = "powerhouse apps (MCP clients)";
+const MCP_PATHS = ["mcp", "oauth/*", ".well-known/*"];
 
 /**
  * Finish setup: the wizard a deployment made with the Deploy to Cloudflare
@@ -88,7 +94,7 @@ function workersDevHost(url: string) {
   const match = /^([a-z0-9-]+)\.([a-z0-9-]+)\.workers\.dev$/.exec(host);
   if (!match) {
     throw new SetupProblem(
-      `Finish setup from this Worker's workers.dev address. ${host} is not one; open the Worker in the Cloudflare dashboard to find it.`,
+      `Do this from the Worker's workers.dev address. ${host} is not one; open the Worker in the Cloudflare dashboard to find it.`,
     );
   }
   return { host, script: match[1], subdomain: match[2] };
@@ -130,6 +136,76 @@ async function claim(token: string, url: string): Promise<Claim> {
     "That token is for a different Cloudflare account than the one this powerhouse runs in. Create the token while signed in to the account that owns this Worker.",
   );
 }
+
+/**
+ * MCP clients (Claude, ChatGPT, Cursor) reach /mcp, /oauth/* and
+ * /.well-known/* without an Access session: a second, more specific Access
+ * application bypasses Access on those paths only, as setup.mjs's
+ * mcpAccessApplication does (same names, so either can update it). The
+ * Worker answers them only when Settings > Use from other apps is on.
+ */
+async function mcpAccessBypass(cf: ReturnType<typeof api>, acct: string, host: string) {
+  const policies = await cf.must<{ id: string; name: string }[]>("GET", `${acct}/access/policies`, "list Access policies");
+  const policyBody = { decision: "bypass", include: [{ everyone: {} }], name: MCP_POLICY_NAME };
+  const existingPolicy = policies.find((p) => p.name === MCP_POLICY_NAME);
+  const policy = existingPolicy
+    ? await cf.must<{ id: string }>("PUT", `${acct}/access/policies/${existingPolicy.id}`, "update the MCP policy", policyBody)
+    : await cf.must<{ id: string }>("POST", `${acct}/access/policies`, "create the MCP policy", policyBody);
+  const apps = await cf.must<{ id: string; name?: string; domain?: string }[]>("GET", `${acct}/access/apps`, "list Access applications");
+  const existing = apps.find((a) => a.name === MCP_APP_NAME && a.domain?.startsWith(`${host}/`));
+  const body = {
+    destinations: MCP_PATHS.map((path) => ({ type: "public", uri: `${host}/${path}` })),
+    domain: `${host}/${MCP_PATHS[0]}`,
+    name: MCP_APP_NAME,
+    policies: [{ id: policy.id, precedence: 1 }],
+    type: "self_hosted",
+  };
+  await (existing
+    ? cf.must("PUT", `${acct}/access/apps/${existing.id}`, "update the MCP Access application", body)
+    : cf.must("POST", `${acct}/access/apps`, "create the MCP Access application", body));
+}
+
+/** Only what the MCP Access step needs: Access, and reading this Worker to prove the token's account owns it. */
+const MCP_TOKEN_PERMISSIONS = [
+  { key: "access", type: "edit" },
+  { key: "access_acct", type: "edit" },
+  { key: "workers_scripts", type: "read" },
+];
+
+const MCP_TOKEN_URL =
+  "https://dash.cloudflare.com/profile/api-tokens" +
+  `?permissionGroupKeys=${encodeURIComponent(JSON.stringify(MCP_TOKEN_PERMISSIONS))}` +
+  `&zoneId=all&name=${encodeURIComponent("powerhouse access step")}`;
+
+/**
+ * Settings > Use from other apps, for deployments made before the MCP
+ * bypass existed: an admin pastes a one-time token, which adds the Access
+ * application and is then dropped. Mounted under /api (behind Access); the
+ * admin check is passed in by the caller, which can reach Org.
+ */
+export const mcpAccessRoutes = new Hono<{ Bindings: Env; Variables: { email: string; orgId: string } }>();
+
+mcpAccessRoutes.get("/", (c) => c.json({ tokenUrl: MCP_TOKEN_URL }));
+
+mcpAccessRoutes.post("/", async (c) => {
+  try {
+    const org = await getAgentByName(c.env.Org, c.get("orgId"));
+    if (!(await org.memberIsAdmin(c.get("email")))) {
+      return c.json({ error: "Only admins can add the Access step.", link: null }, 403);
+    }
+    const { token } = await c.req.json<{ token?: string }>().catch(() => ({ token: undefined }));
+    if (!token?.trim()) {
+      return c.json({ error: "Paste the API token first.", link: null }, 400);
+    }
+    const found = await claim(token.trim(), c.req.url);
+    await mcpAccessBypass(api(token.trim()), `/accounts/${found.accountId}`, found.host);
+    await deployment(c.env).setMcpAccess();
+    await org.refreshMcpAccess();
+    return c.json({ ok: true });
+  } catch (error) {
+    return c.json(problem(error), 400);
+  }
+});
 
 function isHttps(value: string) {
   try {
@@ -282,6 +358,9 @@ setupRoutes.post("/finish", async (c) => {
       : await cf.must<{ aud: string }>("POST", `${acct}/access/apps`, "create the Access application", appBody);
     steps.push(`Protected ${found.host} with Cloudflare Access`);
 
+    await mcpAccessBypass(cf, acct, found.host);
+    steps.push("Let apps such as Claude reach powerhouse's MCP paths (answered once an admin turns it on in Settings)");
+
     // AI Gateway, like setup.mjs: authentication on, logs on, caching off.
     let aiGatewayId: string | undefined;
     if (ai !== "skip") {
@@ -319,6 +398,7 @@ setupRoutes.post("/finish", async (c) => {
       webSearch,
       website: website || undefined,
       repository: repository || undefined,
+      mcpAccess: true,
     };
     // Takes effect on the next request: auth.ts caches only saved settings.
     await deployment(c.env).save(config);

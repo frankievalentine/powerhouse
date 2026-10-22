@@ -9,3 +9,4 @@ wrangler.merged.json
 wrangler.dev.json
 *.tsbuildinfo
 SECURITY-NOTES.md
+ROADMAP.local.md

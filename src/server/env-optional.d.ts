@@ -38,6 +38,8 @@ interface OptionalBindings {
   VAPID_SUBJECT?: string;
   /** "on" stores message and tool payloads on traces; they can contain personal data. */
   TRACE_PAYLOADS?: string;
+  /** "on" once the MCP paths' Access bypass exists: written by setup.mjs, or mapped from Finish setup's config. */
+  MCP_ACCESS?: string;
   /** "on" enables the webSearch tool. */
   WEB_SEARCH?: string;
   /** AI Gateway id that routes and bills searches; defaults to "default". */

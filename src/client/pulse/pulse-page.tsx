@@ -1,6 +1,6 @@
-import { LIVE_PHASES, type RoleSummary, type RunSummary, runnableSuggestions } from "../../shared";
-import { ArrowUp, Clock, CornerDownRight, X } from "lucide-react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { type AttachmentInfo, LIVE_PHASES, type RoleSummary, type RunSummary, runnableSuggestions, UPLOAD_LIMITS } from "../../shared";
+import { ArrowUp, Clock, CornerDownRight, Paperclip, X } from "lucide-react";
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AgentGlyph } from "../components/agent-state";
 import { oklchToRgb, prefersReducedMotion } from "../lib/color";
 import { useResolvedTheme } from "../lib/theme";
@@ -63,6 +63,9 @@ function statusSentence(connected: boolean, live: number, approvals: number) {
   return approvals > 0 ? `${working}. ${approvals} ${approvals === 1 ? "needs" : "need"} you.` : `${working}.`;
 }
 
+/** Loaded only when voice is on, so its code stays out of everyone else's page. */
+const Dictation = lazy(() => import("./dictation"));
+
 export function PulsePage() {
   const blobHost = useRef<HTMLDivElement>(null);
   const blobRef = useRef<PulseBlob | null>(null);
@@ -73,6 +76,16 @@ export function PulsePage() {
   const now = useNow(1000);
   const [text, setText] = useState("");
   const [sending, setSending] = useState(false);
+  const [files, setFiles] = useState<AttachmentInfo[]>([]);
+  const [uploading, setUploading] = useState(0);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const fileInput = useRef<HTMLInputElement>(null);
+  const [heard, setHeard] = useState<string | null>(null);
+  const addDictation = useCallback((said: string) => {
+    if (said) {
+      setText((current) => (current.trim() ? `${current.trimEnd()} ${said}` : said));
+    }
+  }, []);
   const [routed, setRouted] = useState<{ role: RoleSummary; unsure: boolean } | null>(null);
   // The run just sent from the composer, until routing gives it a role.
   const [pendingRunId, setPendingRunId] = useState<string | null>(null);
@@ -100,7 +113,11 @@ export function PulsePage() {
   // Each role's first suggestion that can run here (tools on, website set).
   const suggestions = useMemo(() => {
     const ctx = { capabilities: state.capabilities, me: me.email, website: state.settings.website };
-    return state.roles.flatMap((r) => runnableSuggestions(r.suggestions, ctx).slice(0, 1));
+    return state.roles.flatMap((r) =>
+      runnableSuggestions(r.suggestions, ctx)
+        .slice(0, 1)
+        .map((text) => ({ roleId: r.id, text })),
+    );
   }, [state.roles, state.capabilities, state.settings.website, me.email]);
   const liveKey = live.map((r) => `${r.runId}:${r.phase === "awaiting_approval"}:${r.roleId}`).join();
 
@@ -163,18 +180,51 @@ export function PulsePage() {
     return () => clearTimeout(id);
   }, [routed]);
 
-  const send = async (prompt: string) => {
+  // A suggestion names its role, so it skips the router. Attached files go
+  // with what is typed in the composer, not with a suggestion.
+  const send = async (prompt: string, roleId?: string) => {
     const value = prompt.trim();
-    if (!value || sending) {
+    if (!value || sending || uploading > 0) {
       return;
     }
     setSending(true);
-    const result = await dispatchAndOpen(value);
+    const attached = roleId ? [] : files.map((f) => f.id);
+    const result = await dispatchAndOpen(value, roleId, attached);
     setSending(false);
     if (result) {
       setText("");
+      if (attached.length > 0) {
+        setFiles([]);
+      }
       setRouted(null);
       setPendingRunId(result.runId);
+    }
+  };
+
+  /** Each file becomes text on the server (Workers AI for documents) before the job is sent. */
+  const attach = async (picked: FileList | File[]) => {
+    setUploadError(null);
+    const room = UPLOAD_LIMITS.files - files.length;
+    const list = [...picked].slice(0, Math.max(room, 0));
+    if (picked.length > list.length) {
+      setUploadError(`Attach up to ${UPLOAD_LIMITS.files} files to a job.`);
+    }
+    for (const file of list) {
+      setUploading((n) => n + 1);
+      try {
+        const body = new FormData();
+        body.append("file", file);
+        const response = await fetch("/api/uploads", { body, method: "POST" });
+        const result = (await response.json()) as AttachmentInfo & { error?: string };
+        if (!response.ok) {
+          throw new Error(result.error ?? `Could not attach ${file.name}.`);
+        }
+        setFiles((current) => [...current, { chars: result.chars, id: result.id, name: result.name }]);
+      } catch (err) {
+        setUploadError(err instanceof Error ? err.message : String(err));
+      } finally {
+        setUploading((n) => n - 1);
+      }
     }
   };
 
@@ -191,6 +241,11 @@ export function PulsePage() {
         </button>
         <button className={`${styles.headerLink} ${styles.headerLinkNext}`} onClick={() => openSettings()} type="button">
           Settings
+          {isAdmin && state.memoryProposals > 0 && (
+            <span className={styles.reviewCount} title="Team memory notes to review">
+              {state.memoryProposals}
+            </span>
+          )}
         </button>
         <a className={styles.signout} href="/cdn-cgi/access/logout">
           Sign out
@@ -206,6 +261,17 @@ export function PulsePage() {
 
       <form
         className={styles.composer}
+        onDragOver={(e) => {
+          if (e.dataTransfer.types.includes("Files")) {
+            e.preventDefault();
+          }
+        }}
+        onDrop={(e) => {
+          if (e.dataTransfer.files.length > 0) {
+            e.preventDefault();
+            void attach(e.dataTransfer.files);
+          }
+        }}
         onSubmit={(e) => {
           e.preventDefault();
           void send(text);
@@ -229,6 +295,28 @@ export function PulsePage() {
           rows={2}
           value={text}
         />
+        {heard && (
+          <p aria-live="polite" className={styles.heard}>
+            {heard}
+          </p>
+        )}
+        {(files.length > 0 || uploading > 0) && (
+          <ul aria-label="Attached files" className={styles.files}>
+            {files.map((f) => (
+              <li className={styles.fileChip} key={f.id}>
+                <span>{f.name}</span>
+                <button
+                  aria-label={`Remove ${f.name}`}
+                  onClick={() => setFiles((current) => current.filter((x) => x.id !== f.id))}
+                  type="button"
+                >
+                  <X size={12} />
+                </button>
+              </li>
+            ))}
+            {uploading > 0 && <li className={styles.fileChip}>Reading {uploading === 1 ? "a file" : `${uploading} files`}...</li>}
+          </ul>
+        )}
         <div className={styles.composerFoot}>
           <span aria-live="polite" className={styles.route} data-visible={sending || pendingRunId || routed ? true : undefined}>
             {(sending || pendingRunId) && (state.settings.autoRoute ? "Routing..." : "Sending...")}
@@ -240,11 +328,46 @@ export function PulsePage() {
               </>
             )}
           </span>
-          <button aria-label="Send" className={styles.send} disabled={!text.trim() || sending} type="submit">
-            <ArrowUp size={16} />
-          </button>
+          <span className={styles.composerActions}>
+            <input
+              accept=".pdf,.doc,.docx,.xls,.xlsx,.ods,.odt,.txt,.md,.csv,.tsv,.json,.xml,.html,.htm"
+              hidden
+              multiple
+              onChange={(e) => {
+                if (e.target.files) {
+                  void attach(e.target.files);
+                }
+                e.target.value = "";
+              }}
+              ref={fileInput}
+              type="file"
+            />
+            {state.settings.voice && (
+              <Suspense fallback={null}>
+                <Dictation disabled={sending} onInterim={setHeard} onText={addDictation} orgId={orgId} />
+              </Suspense>
+            )}
+            <button
+              aria-label="Attach files"
+              className={styles.attach}
+              disabled={sending || files.length >= UPLOAD_LIMITS.files}
+              onClick={() => fileInput.current?.click()}
+              title="Attach documents or text (up to 5 files, 5 MB each)"
+              type="button"
+            >
+              <Paperclip size={15} />
+            </button>
+            <button aria-label="Send" className={styles.send} disabled={!text.trim() || sending || uploading > 0} type="submit">
+              <ArrowUp size={16} />
+            </button>
+          </span>
         </div>
       </form>
+      {uploadError && (
+        <p className={styles.error} role="alert">
+          {uploadError}
+        </p>
+      )}
       {dispatchError && (
         <p className={styles.error} role="alert">
           {dispatchError}
@@ -258,8 +381,14 @@ export function PulsePage() {
       )}
       <div className={styles.suggestions}>
         {suggestions.map((s) => (
-          <button className={styles.suggestion} disabled={sending} key={s} onClick={() => void send(s)} type="button">
-            {s}
+          <button
+            className={styles.suggestion}
+            disabled={sending}
+            key={`${s.roleId}:${s.text}`}
+            onClick={() => void send(s.text, s.roleId)}
+            type="button"
+          >
+            {s.text}
           </button>
         ))}
       </div>

@@ -70,9 +70,12 @@ Rerunning setup is safe: it skips what is done. It is also how you update (see [
 - **One prompt, routed.** Type what needs doing and Clef-Flash, a Cloudflare decision model, picks the role in under a second. Press Cmd+K to pick one yourself.
 - **Roles you define.** Each role has a purpose, instructions, a model, tools, allowed sites, connections and skills. Start from the defaults or the library (researcher, competitor watcher, site QA tester, product manager, support replies and more), and pick your team when an org starts.
 - **Real tools.** Read web pages, search the web, drive a real browser with screenshots and takeover, and send email. Optional tools stay off until you turn them on.
-- **Connected accounts.** Connect Linear, Notion, Atlassian, Sentry or any remote MCP server once, and allow it for the roles that need it.
+- **Connected accounts.** Connect Linear, Notion, Atlassian, Sentry, GitHub or any remote MCP server once, and allow it for the roles that need it. GitHub gets its own private GitHub App in one click, limited to the repositories you choose; servers that cannot register powerhouse themselves take an OAuth app's client ID and secret.
 - **Skills.** 32 bundled [Agent Skills](https://agentskills.io) (copywriting, PRDs, contract review, research synthesis and more). The role editor suggests the ones that fit a role.
 - **Safe by default.** Emails, writes to connected accounts and (for roles with connections) reading unknown sites and browser actions wait for your approval, with the full details shown.
+- **Voice.** Once an admin turns it on (Settings > Jobs), speak a job instead of typing it, and have an answer read aloud. Runs on Workers AI and is billed only when used.
+- **Attach files.** Drop PDFs, Word and Excel documents, CSVs or text files on the composer (up to 5, 5 MB each). powerhouse turns them into text with Workers AI and the job reads them. Images are not supported yet.
+- **Use it from your own agent.** Start jobs and read their results from Claude, ChatGPT or Cursor: once an admin turns on Settings > Use from other apps, add `https://<your powerhouse>/mcp` to your agent and click Allow. This is how powerhouse reaches you outside its own page; it has no Slack or other chat integrations.
 - **Schedules.** Run a job every day, on weekdays, on chosen days or every few hours, in your time zone.
 - **Push notifications.** Get notified on your devices when a job needs you, fails, or finishes a scheduled run.
 - **Live fleet view.** Every job shows as a pill with its current step and estimated cost, and everyone in your org sees the same live state.
@@ -84,11 +87,40 @@ Rerunning setup is safe: it skips what is done. It is also how you update (see [
 - **Models:** jobs run on Claude Opus 5.5 (or GPT-6 Sol) through your AI Gateway by default. Open-weight Workers AI models (Kimi K2.7 Code, DeepSeek, GLM, Qwen) are the alternative, per org or per role. Routing and skill suggestions use Clef-Flash.
 - **Stack:** Cloudflare Workers, Durable Objects, AI Gateway, Workers AI, Hono, Vite and React, assistant-ui.
 
+## What it sets up in your Cloudflare account
+
+Everything powerhouse runs on lives in your own Cloudflare account. Setup (the Finish setup page, or `node setup.mjs`) creates these for you, except Zero Trust, which you turn on once yourself.
+
+**Always**
+
+| Service | What powerhouse uses it for | Created by | Plan |
+| --- | --- | --- | --- |
+| **Workers** | The powerhouse Worker: the app, its API and its `workers.dev` address | Deploy (the button or setup) | Free |
+| **Durable Objects** (SQLite) | Your org's data: roles, settings, jobs and their conversations, schedules, team memory, attached files (as text), connection sign-ins. One `Org` object per Access team, with each job inside it; a `Deployment` object keeps what Finish setup saved | Deploy | Free |
+| **Workers KV** | One namespace (`OAUTH_KV`) for the apps members connect over MCP (Claude, ChatGPT, Cursor) | Created automatically on the first deploy | Free |
+| **Workers AI** | Routing prompts to roles, skill suggestions, turning documents and web pages into text, open-weight models if you pick them, and voice if you turn it on | Nothing to create (the `AI` binding) | Free daily allowance; some open models need Workers Paid |
+| **AI Gateway** (`powerhouse`) | Claude and GPT, with your provider keys or Cloudflare credits; logs, spend limits; web search | Setup | Free (models are billed by their provider or your credits) |
+| **Zero Trust: Access** | Sign-in. A login method (One-time PIN codes by email, if you have none), the **powerhouse members** policy (who may sign in), the **powerhouse** application for your hostname, and **powerhouse apps (MCP)** with its Bypass policy, which lets MCP clients reach `/mcp`, `/oauth/*` and `/.well-known/*` (powerhouse answers there only when an admin turns it on) | You turn on Zero Trust; setup creates the rest | Free plan (asks for a payment method) |
+
+**With Deploy to Cloudflare:** a copy of this repository in your GitHub account, and **Workers Builds**, which deploys it on every push and when you merge an update pull request.
+
+**Only if you turn them on** (Settings > Tools shows how)
+
+| Service | For | Plan |
+| --- | --- | --- |
+| **Browser Run** and **Worker Loader** | The browser tool | Workers Paid |
+| **Email Service** | Sending email, from a domain you add | Free to verified addresses; sending to anyone needs Workers Paid |
+| **AI Gateway web search** | The web search tool | Billed per search (credits or a search provider key on the gateway) |
+
+**API tokens:** setup asks you to create one ("powerhouse setup") from a pre-filled link and uses it once; it is never saved, and you delete it afterwards. Removing powerhouse uses a "powerhouse remove" token the same way. powerhouse keeps no Cloudflare API token.
+
+**Not used:** R2, D1, Queues and Containers. Nothing outside your account: no powerhouse server sits between you and Cloudflare.
+
 ## Costs
 
 powerhouse itself is free. Running it uses your accounts:
 
-- **Claude or GPT:** billed by Anthropic or OpenAI on your keys, or to your Cloudflare credits. Each job shows an estimated cost. Set a **spend limit on your AI Gateway** (dashboard > AI > AI Gateway > your gateway > Settings > Spend limits); powerhouse also has an optional daily budget in Settings that pauses scheduled jobs.
+- **Claude or GPT:** billed by Anthropic or OpenAI on your keys, or to your Cloudflare credits. Each job shows an estimated cost. Set a **spend limit on your AI Gateway** (dashboard > AI > AI Gateway > your gateway > Settings > Spend limits); powerhouse also has an optional daily budget in Settings that pauses scheduled jobs. Every job's requests carry `member` (who started it), `role` and `run` as gateway metadata, so a rule that limits by metadata `member` and splits by value gives each member their own budget. Open models on Workers AI do not go through the gateway, so its limits do not cover them.
 - **Cloudflare:** Workers, Durable Objects and a small Workers AI cost for routing. Open-weight models, the browser ([Browser Run](https://developers.cloudflare.com/browser-run/pricing/)), web search and email are billed only if you use them.
 
 Browsers close at the end of every turn, and stay open for up to five minutes only while a job waits for you to take over.
@@ -100,6 +132,7 @@ Browsers close at the end of every turn, and stay open for up to five minutes on
 - **Untrusted content:** pages, search results, connection results and server-written tool descriptions are marked as untrusted for the model. The app's Content-Security-Policy stops model output from loading images or contacting other sites.
 - **Keys and tokens:** AI provider keys live on your AI Gateway; connection tokens live in your Org's storage; the setup token is used once and never saved.
 - **Admins and members:** Access decides who may sign in. Admins change settings, roles and connections, and can act on anyone's jobs and schedules; members send jobs and act on their own, and can watch everyone else's. The email you set up with is an admin (`--admins` names others); admins add more in Settings > Members.
+- **Use from other apps (MCP):** off until an admin turns it on in Settings. Members then connect Claude, ChatGPT or Cursor to `https://<your powerhouse>/mcp`; the app opens powerhouse's Allow page, behind Access, and gets a token that acts as that member (an hour, refreshed for up to 30 days). Approvals still happen only in powerhouse. Members remove their apps in Settings; admins can disconnect a member's apps in Settings > Members, which matters when someone leaves, since removing them from Access does not end tokens they already have. Turning the switch off stops every app at once. MCP clients reach `/mcp`, `/oauth/*` and `/.well-known/*` without an Access session, so setup adds a second Access application for those paths with a Bypass policy; while the switch is off, they answer 404.
 - **Live View links** are bearer credentials: fetched only when you open the browser, never stored and never given to the model. **Trace payloads** can contain personal data and are off unless you set `TRACE_PAYLOADS` to `"on"`.
 
 ## Configure
@@ -134,6 +167,15 @@ Push notifications need a VAPID key pair: the public key in `VAPID_PUBLIC_KEY`, 
 
 Working on powerhouse's code? [CONTRIBUTING.md](CONTRIBUTING.md) covers local development, tests and the code layout.
 
+## Use from other apps
+
+Settings > Use from other apps lets members start jobs and read their results from Claude, ChatGPT or Cursor (see Security for how sign-in works). An admin turns it on there.
+
+It needs an Access bypass for the MCP paths, which setup creates. Deployments set up before 2026-10-22:
+
+- **From a copy on your computer:** run `node setup.mjs` again; it asks for a token once to add the bypass.
+- **With Deploy to Cloudflare:** Settings > Use from other apps shows "One step left" once an admin turns it on: create the one-time API token from its link, paste it, and powerhouse adds the Access application (the token is used once and not kept). By hand instead: Zero Trust > Access controls > Applications > Add an application > Self-hosted, named "powerhouse apps (MCP)", with your powerhouse hostname three times and the paths `mcp`, `oauth/*` and `.well-known/*`, and a policy with the action Bypass that includes Everyone.
+
 ## Updating
 
 powerhouse updates follow its [releases](https://github.com/frankievalentine/powerhouse/releases) ([CHANGELOG](CHANGELOG.md)). Settings > Status says when a newer one is out.
@@ -161,50 +203,9 @@ Removing powerhouse deletes everything it stored (roles, jobs, settings, members
 - Cloudflare Zero Trust and its login methods (One-time PIN): your account's, and other applications may use them.
 - A Secrets Store named "powerhouse", if setup stored provider keys there: delete it only if it holds nothing else.
 - Email Service domains: yours.
-- Connected services such as Linear or Notion: revoke powerhouse's access in each service's settings.
+- Connected services such as Linear or Notion: revoke powerhouse's access in each service's settings. For GitHub, also delete powerhouse's GitHub App (GitHub Settings > Developer settings > GitHub Apps).
 - Your GitHub repository, if you used Deploy to Cloudflare, and your local folder with `wrangler.local.jsonc`.
-
-## Bundled skills
-
-Roles can use these [Agent Skills](https://agentskills.io). Each job loads only its role's skills, as instructions; skill scripts never run. Vendored skills are pinned to an upstream commit in `skills.lock.json`. Their license files, and a `CHANGES.md` listing what powerhouse changed, are in [`skills-licenses/`](skills-licenses). Settings in the app shows the same list, with the roles that use each skill.
-
-<!-- skills:start (written by `bun run skills:sync`; do not edit by hand) -->
-| Skill | Source | License | Pinned |
-| --- | --- | --- | --- |
-| accessibility | [addyosmani/web-quality-skills](https://github.com/addyosmani/web-quality-skills) | MIT | [`afa8da9`](https://github.com/addyosmani/web-quality-skills/tree/afa8da942115f2961fdbfa80807ea0b232ff6c00/skills/accessibility) |
-| account-research | [anthropics/knowledge-work-plugins](https://github.com/anthropics/knowledge-work-plugins) | Apache-2.0 | [`bc8f692`](https://github.com/anthropics/knowledge-work-plugins/tree/bc8f6922cfeea215a202cdcc9f0d299a990889a8/sales/skills/account-research) |
-| answer-from-docs | powerhouse | MIT |  |
-| changelog-digest | powerhouse | MIT |  |
-| cold-email | [coreyhaines31/marketingskills](https://github.com/coreyhaines31/marketingskills) | MIT | [`e85f3cb`](https://github.com/coreyhaines31/marketingskills/tree/e85f3cbc2e4a79bf33b2a12e9bdd9087d414735b/skills/cold-email) |
-| competitive-battlecard | [phuryn/pm-skills](https://github.com/phuryn/pm-skills) | MIT | [`07b34f6`](https://github.com/phuryn/pm-skills/tree/07b34f64ee828df08953f505b7f747aef85ae7c6/pm-go-to-market/skills/competitive-battlecard) |
-| competitive-brief | [anthropics/knowledge-work-plugins](https://github.com/anthropics/knowledge-work-plugins) | Apache-2.0 | [`bc8f692`](https://github.com/anthropics/knowledge-work-plugins/tree/bc8f6922cfeea215a202cdcc9f0d299a990889a8/marketing/skills/competitive-brief) |
-| competitor-profiling | [coreyhaines31/marketingskills](https://github.com/coreyhaines31/marketingskills) | MIT | [`e85f3cb`](https://github.com/coreyhaines31/marketingskills/tree/e85f3cbc2e4a79bf33b2a12e9bdd9087d414735b/skills/competitor-profiling) |
-| content-strategy | [coreyhaines31/marketingskills](https://github.com/coreyhaines31/marketingskills) | MIT | [`e85f3cb`](https://github.com/coreyhaines31/marketingskills/tree/e85f3cbc2e4a79bf33b2a12e9bdd9087d414735b/skills/content-strategy) |
-| copy-editing | [coreyhaines31/marketingskills](https://github.com/coreyhaines31/marketingskills) | MIT | [`e85f3cb`](https://github.com/coreyhaines31/marketingskills/tree/e85f3cbc2e4a79bf33b2a12e9bdd9087d414735b/skills/copy-editing) |
-| copywriting | [coreyhaines31/marketingskills](https://github.com/coreyhaines31/marketingskills) | MIT | [`e85f3cb`](https://github.com/coreyhaines31/marketingskills/tree/e85f3cbc2e4a79bf33b2a12e9bdd9087d414735b/skills/copywriting) |
-| create-prd | [phuryn/pm-skills](https://github.com/phuryn/pm-skills) | MIT | [`07b34f6`](https://github.com/phuryn/pm-skills/tree/07b34f64ee828df08953f505b7f747aef85ae7c6/pm-execution/skills/create-prd) |
-| customer-research | [coreyhaines31/marketingskills](https://github.com/coreyhaines31/marketingskills) | MIT | [`e85f3cb`](https://github.com/coreyhaines31/marketingskills/tree/e85f3cbc2e4a79bf33b2a12e9bdd9087d414735b/skills/customer-research) |
-| draft-response | [anthropics/knowledge-work-plugins](https://github.com/anthropics/knowledge-work-plugins) | Apache-2.0 | [`bc8f692`](https://github.com/anthropics/knowledge-work-plugins/tree/bc8f6922cfeea215a202cdcc9f0d299a990889a8/customer-support/skills/draft-response) |
-| exploratory-testing | [petrkindlmann/qa-skills](https://github.com/petrkindlmann/qa-skills) | MIT | [`462126b`](https://github.com/petrkindlmann/qa-skills/tree/462126bcc4d3bfe94a7c064b848c690c1366f343/skills/exploratory-testing) |
-| internal-comms | [anthropics/skills](https://github.com/anthropics/skills) | Apache-2.0 | [`dbd4588`](https://github.com/anthropics/skills/tree/dbd4588f9e1033efb41dad4bef2f7947c8993d44/skills/internal-comms) |
-| kb-article | [anthropics/knowledge-work-plugins](https://github.com/anthropics/knowledge-work-plugins) | Apache-2.0 | [`bc8f692`](https://github.com/anthropics/knowledge-work-plugins/tree/bc8f6922cfeea215a202cdcc9f0d299a990889a8/customer-support/skills/kb-article) |
-| launch | [coreyhaines31/marketingskills](https://github.com/coreyhaines31/marketingskills) | MIT | [`e85f3cb`](https://github.com/coreyhaines31/marketingskills/tree/e85f3cbc2e4a79bf33b2a12e9bdd9087d414735b/skills/launch) |
-| legal-risk-assessment | [anthropics/knowledge-work-plugins](https://github.com/anthropics/knowledge-work-plugins) | Apache-2.0 | [`bc8f692`](https://github.com/anthropics/knowledge-work-plugins/tree/bc8f6922cfeea215a202cdcc9f0d299a990889a8/legal/skills/legal-risk-assessment) |
-| pre-mortem | [phuryn/pm-skills](https://github.com/phuryn/pm-skills) | MIT | [`07b34f6`](https://github.com/phuryn/pm-skills/tree/07b34f64ee828df08953f505b7f747aef85ae7c6/pm-execution/skills/pre-mortem) |
-| price-check | powerhouse | MIT |  |
-| product-marketing | [coreyhaines31/marketingskills](https://github.com/coreyhaines31/marketingskills) | MIT | [`e85f3cb`](https://github.com/coreyhaines31/marketingskills/tree/e85f3cbc2e4a79bf33b2a12e9bdd9087d414735b/skills/product-marketing) |
-| prospecting | [coreyhaines31/marketingskills](https://github.com/coreyhaines31/marketingskills) | MIT | [`e85f3cb`](https://github.com/coreyhaines31/marketingskills/tree/e85f3cbc2e4a79bf33b2a12e9bdd9087d414735b/skills/prospecting) |
-| release-notes | [phuryn/pm-skills](https://github.com/phuryn/pm-skills) | MIT | [`07b34f6`](https://github.com/phuryn/pm-skills/tree/07b34f64ee828df08953f505b7f747aef85ae7c6/pm-execution/skills/release-notes) |
-| review-contract | [anthropics/knowledge-work-plugins](https://github.com/anthropics/knowledge-work-plugins) | Apache-2.0 | [`bc8f692`](https://github.com/anthropics/knowledge-work-plugins/tree/bc8f6922cfeea215a202cdcc9f0d299a990889a8/legal/skills/review-contract) |
-| sales-discovery-questions | [mbfinotti/sales-skills](https://github.com/mbfinotti/sales-skills) | MIT | [`1ef6888`](https://github.com/mbfinotti/sales-skills/tree/1ef68881b2ed853fb1f02272b57dc71dd375677f/skills/sales-discovery-questions) |
-| seo-audit | [coreyhaines31/marketingskills](https://github.com/coreyhaines31/marketingskills) | MIT | [`e85f3cb`](https://github.com/coreyhaines31/marketingskills/tree/e85f3cbc2e4a79bf33b2a12e9bdd9087d414735b/skills/seo-audit) |
-| stakeholder-update | [anthropics/knowledge-work-plugins](https://github.com/anthropics/knowledge-work-plugins) | Apache-2.0 | [`bc8f692`](https://github.com/anthropics/knowledge-work-plugins/tree/bc8f6922cfeea215a202cdcc9f0d299a990889a8/product-management/skills/stakeholder-update) |
-| synthesize-research | [anthropics/knowledge-work-plugins](https://github.com/anthropics/knowledge-work-plugins) | Apache-2.0 | [`bc8f692`](https://github.com/anthropics/knowledge-work-plugins/tree/bc8f6922cfeea215a202cdcc9f0d299a990889a8/product-management/skills/synthesize-research) |
-| ticket-triage | [anthropics/knowledge-work-plugins](https://github.com/anthropics/knowledge-work-plugins) | Apache-2.0 | [`bc8f692`](https://github.com/anthropics/knowledge-work-plugins/tree/bc8f6922cfeea215a202cdcc9f0d299a990889a8/customer-support/skills/ticket-triage) |
-| triage-nda | [anthropics/knowledge-work-plugins](https://github.com/anthropics/knowledge-work-plugins) | Apache-2.0 | [`bc8f692`](https://github.com/anthropics/knowledge-work-plugins/tree/bc8f6922cfeea215a202cdcc9f0d299a990889a8/legal/skills/triage-nda) |
-| web-research | powerhouse | MIT |  |
-<!-- skills:end -->
 
 ## License
 
-[MIT](LICENSE). Bundled skills keep their own licenses, listed above.
+[MIT](LICENSE). Bundled skills keep their own licenses (MIT or Apache-2.0): each skill's license and what powerhouse changed are in [`skills-licenses/`](skills-licenses), and Settings in the app lists every skill with its source, license and pinned commit.

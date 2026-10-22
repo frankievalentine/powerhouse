@@ -51,6 +51,22 @@ export async function accessSettings(env: Env): Promise<AccessSettings | null> {
   return settings;
 }
 
+/**
+ * This deployment's org, for requests that carry no Access session (the MCP
+ * server's public paths): one Access team, one org. Null until set up.
+ */
+export async function deploymentOrgId(env: Env, url: string): Promise<string | null> {
+  if (import.meta.env.DEV && LOCAL_HOSTS.has(new URL(url).hostname)) {
+    return LOCAL_ORG_ID;
+  }
+  const access = await accessSettings(env);
+  try {
+    return access ? orgIdForTeam(access.teamDomain) : null;
+  } catch {
+    return null;
+  }
+}
+
 let jwks: ReturnType<typeof createRemoteJWKSet> | null = null;
 let jwksTeam: string | null = null;
 

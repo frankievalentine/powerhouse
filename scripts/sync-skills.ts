@@ -18,10 +18,6 @@
 // outside the bundle, with a CHANGES.md listing every change, as the
 // Apache-2.0 license requires.
 //
-// Finally, the "Bundled skills" table in the repository README is rewritten
-// between its skills:start and skills:end markers, so it always matches the
-// lockfile.
-//
 //   bun run skills:sync            fetch exactly the pinned commits
 //   bun run skills:sync --update   move every pin to its repo's latest commit
 
@@ -48,10 +44,8 @@ const APP = resolve(import.meta.dirname, "..");
 const LOCK = join(APP, "skills.lock.json");
 const SKILLS = join(APP, "skills");
 const LICENSES = join(APP, "skills-licenses");
-/** Our own skills, which this script never touches except to list them. */
-const OWN_SKILLS = join(APP, "skills-local");
-const README = resolve(APP, "README.md");
-const README_TABLE = /(<!-- skills:start[^>]*-->\n)[\s\S]*?(<!-- skills:end -->)/;
+/** Credits in skills-licenses/ for material that is not a vendored skill. */
+const OTHER_CREDITS = new Set(["i-have-adhd"]);
 /** Top-level entries the plugin bundles as they are. */
 const BUNDLED_ROOTS = new Set(["SKILL.md", "references", "assets"]);
 const LICENSE_FILE = /^(LICENSE|NOTICE|COPYING)/i;
@@ -137,32 +131,6 @@ function stripSection(text: string, heading: string) {
 function frontmatterName(skillMd: string) {
   const frontmatter = /^---\r?\n([\s\S]*?)\r?\n---/.exec(skillMd)?.[1] ?? "";
   return /^name:\s*["']?([^"'\r\n]+?)["']?\s*$/m.exec(frontmatter)?.[1] ?? null;
-}
-
-/** The README's skills table: vendored skills by lockfile, then our own. */
-function writeReadmeTable() {
-  const own = readdirSync(OWN_SKILLS, { withFileTypes: true })
-    .filter((dir) => dir.isDirectory())
-    .map((dir) => dir.name);
-  const rows = [
-    ...lock.skills.map((s) => ({
-      license: s.license,
-      name: s.name,
-      pinned: `[\`${s.commit.slice(0, 7)}\`](https://github.com/${s.repo}/tree/${s.commit}/${s.path})`,
-      source: `[${s.repo}](https://github.com/${s.repo})`,
-    })),
-    ...own.map((name) => ({ license: "MIT", name, pinned: "", source: "powerhouse" })),
-  ].sort((a, b) => a.name.localeCompare(b.name));
-  const table = [
-    "| Skill | Source | License | Pinned |",
-    "| --- | --- | --- | --- |",
-    ...rows.map((r) => `| ${r.name} | ${r.source} | ${r.license} | ${r.pinned} |`),
-  ].join("\n");
-  const readme = readFileSync(README, "utf8");
-  if (!README_TABLE.test(readme)) {
-    throw new Error("README.md has no skills:start / skills:end markers for the skills table");
-  }
-  writeFileSync(README, readme.replace(README_TABLE, (_, start, end) => `${start}${table}\n${end}`));
 }
 
 try {
@@ -278,7 +246,7 @@ try {
     }
     console.log(`${entry.name}: ${entry.repo}@${entry.commit.slice(0, 12)} (${entry.license})`);
   }
-  const wanted = new Set(lock.skills.map((s) => s.name));
+  const wanted = new Set([...lock.skills.map((s) => s.name), ...OTHER_CREDITS]);
   for (const root of [SKILLS, LICENSES]) {
     for (const dir of readdirSync(root, { withFileTypes: true })) {
       if (dir.isDirectory() && !wanted.has(dir.name)) {
@@ -287,8 +255,6 @@ try {
       }
     }
   }
-  writeReadmeTable();
-  console.log("README.md: skills table updated");
 } finally {
   for (const dir of checkouts.values()) {
     rmSync(dir, { force: true, recursive: true });
