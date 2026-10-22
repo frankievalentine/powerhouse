@@ -1,6 +1,7 @@
 import type {
   DispatchResult,
   MemberInfo,
+  UpdateStatus,
   OrgSettings,
   OrgState,
   RoleConfig,
@@ -50,6 +51,8 @@ interface OrgContextValue {
   setAdmin: (email: string, admin: boolean) => Promise<void>;
   /** Deployments set up in the browser switch web search here (it has no binding). */
   setWebSearch: (on: boolean) => Promise<void>;
+  /** The running version and the latest release (checked at most daily). */
+  updateStatus: () => Promise<UpdateStatus>;
   chooseTeam: (choice: TeamChoice) => Promise<RoleConfig[]>;
   listSkills: () => Promise<SkillInfo[]>;
   /** Skill names that suit a role, from the Clef decision model; empty when it cannot say. */
@@ -153,6 +156,7 @@ export function OrgProvider({ me, children }: { me: Me; children: ReactNode }) {
       listMembers: () => org.call<MemberInfo[]>("listMembers", []),
       setAdmin: (email, admin) => org.call<void>("setAdmin", [email, admin]),
       setWebSearch: (on) => org.call<void>("setWebSearch", [on]),
+      updateStatus: () => org.call<UpdateStatus>("updateStatus", []),
       chooseTeam: (choice) => org.call<RoleConfig[]>("chooseTeam", [choice]),
       listSkills: () => org.call<SkillInfo[]>("listSkills", []),
       suggestSkills: (role) => org.call<string[]>("suggestSkills", [role]),

@@ -69,4 +69,7 @@ Rules:
 - Never edit `wrangler.jsonc` for one deployment; deployment settings go in the gitignored `wrangler.local.jsonc`.
 - Provider API keys and setup tokens never pass through you: they go on the AI Gateway (dashboard) or through environment variables read from the clipboard, as in the setup steps above.
 - Keep approvals safe by default: tools that change something outside powerhouse (email, connection writes, browser actions where required) need approval; content from pages, connections and tools is untrusted.
+- Every release must keep working with data saved by earlier versions (Durable Object storage, stored roles, settings and schedules): read old shapes with defaults and upgrade them on read, never assume a fresh org. Deployments update in place.
+- Releasing: bump `version` in `package.json`, move CHANGELOG.md's Unreleased notes under the new version, commit, tag `vX.Y.Z`, push the tag, and create the GitHub release with those notes (`gh release create vX.Y.Z --notes-file ...`). Deployments update to the latest release, so only tag what works.
+- `.github/workflows/update.yml` runs in every Deploy to Cloudflare copy, and a copy cannot update its own workflows: change it rarely and say so in the release notes.
 - Run `bun run typecheck` and `bun run test` before committing. `ROADMAP.md` lists planned work, decisions and known issues; update it when you finish or change course on something listed there.

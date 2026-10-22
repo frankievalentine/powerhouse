@@ -123,7 +123,12 @@ Working on powerhouse's code? [CONTRIBUTING.md](CONTRIBUTING.md) covers local de
 
 ## Updating
 
-Get the new version (`git pull`) and rerun `node setup.mjs`. It keeps your settings, applies new ones and deploys. Roles you already have are never overwritten: when an update adds a tool or skill, add it to your roles in the Roles sheet; new ready-made roles appear in its library.
+powerhouse updates follow its [releases](https://github.com/frankievalentine/powerhouse/releases) ([CHANGELOG](CHANGELOG.md)). Settings > Status says when a newer one is out.
+
+- **Deployed with the Deploy to Cloudflare button:** your repository has an "Update powerhouse" workflow. Once a week, or when you run it from the repository's Actions tab, it opens a pull request with the new release; merge it and Cloudflare redeploys. Turn on Settings > Actions > General > "Allow GitHub Actions to create and approve pull requests" once, or the update waits on a branch you open as a pull request yourself. Your tool settings live in `wrangler.local.jsonc`, which updates never touch.
+- **Set up with `node setup.mjs`:** run `node setup.mjs --update`. It moves your folder to the latest release, keeps your settings and deploys.
+
+Roles you already have are never overwritten: when an update adds a tool or skill, add it to your roles in the Roles sheet; new ready-made roles appear in its library.
 
 ## Bundled skills
 

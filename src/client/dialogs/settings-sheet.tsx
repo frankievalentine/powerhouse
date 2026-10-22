@@ -4,6 +4,7 @@ import {
   type ConnectionInfo,
   type FeatureFailure,
   type MemberInfo,
+  type UpdateStatus,
   LIVE_PHASES,
   MODELS,
   type OrgSettings,
@@ -378,6 +379,7 @@ export function SettingsSheet({ focus, onClose }: { focus?: "tools"; onClose: ()
               <dt>Version</dt>
               <dd>{__APP_VERSION__}</dd>
             </dl>
+            <UpdateNotice setupKind={state.setupKind} />
           </section>
 
           {message && (
@@ -639,6 +641,36 @@ function AppearanceSection() {
  * For admins: everyone who has signed in, and who is an admin. Access (in
  * Cloudflare) decides who may sign in; this decides who may change things.
  */
+/** A newer powerhouse release, and how to get it on this kind of deployment. */
+function UpdateNotice({ setupKind }: { setupKind: "cli" | "browser" }) {
+  const { updateStatus } = useOrg();
+  const [status, setStatus] = useState<UpdateStatus | null>(null);
+  useEffect(() => {
+    updateStatus().then(setStatus, () => setStatus(null));
+  }, [updateStatus]);
+  if (!status?.latest) {
+    return null;
+  }
+  if (!status.updateAvailable) {
+    return <p className={styles.hint}>Up to date.</p>;
+  }
+  return (
+    <div className={styles.notice}>
+      <p className={styles.hint} style={{ margin: 0 }}>
+        powerhouse {status.latest.version} is available.{" "}
+        <a href={status.latest.url} rel="noreferrer" target="_blank">
+          What changed
+        </a>
+      </p>
+      <p className={styles.hint} style={{ margin: "6px 0 0" }}>
+        {setupKind === "browser"
+          ? "Merge the \u201cUpdate powerhouse\u201d pull request in your powerhouse repository on GitHub, and Cloudflare redeploys. None yet? Run the Update powerhouse workflow from the repository's Actions tab."
+          : "In your powerhouse folder, run node setup.mjs --update."}
+      </p>
+    </div>
+  );
+}
+
 function MembersSection() {
   const { listMembers, me, setAdmin } = useOrg();
   const [members, setMembers] = useState<MemberInfo[] | null>(null);

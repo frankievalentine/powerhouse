@@ -177,6 +177,10 @@ export function FinishSetup() {
           </p>
         )}
         <p className={styles.intro}>
+          To get powerhouse updates as pull requests, turn on one setting in your powerhouse repository on GitHub:
+          Settings &gt; Actions &gt; General &gt; &quot;Allow GitHub Actions to create and approve pull requests&quot;.
+        </p>
+        <p className={styles.intro}>
           Delete the &quot;powerhouse setup&quot; API token now; nothing needs it any more:{" "}
           <a href="https://dash.cloudflare.com/profile/api-tokens" rel="noreferrer" target="_blank">
             API tokens

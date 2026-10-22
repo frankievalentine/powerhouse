@@ -5,8 +5,11 @@ import {
   type ConnectionToolInfo,
   DEFAULT_MODEL,
   type DispatchResult,
+  isNewerVersion,
   type JobInput,
   type MemberInfo,
+  POWERHOUSE_REPO,
+  type UpdateStatus,
   type ModelProvider,
   LIVE_PHASES,
   MODELS,
@@ -141,6 +144,26 @@ const SHORTENED_FAILURES: Record<string, string> = {
   "This account is not allowed to use web search. Check that AI Gateway is enabled.":
     "This account may not use web search; check that AI Gateway is on.",
 };
+
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+/** The latest powerhouse release on GitHub, or null (none yet, or unreachable). */
+async function fetchLatestRelease(): Promise<UpdateStatus["latest"]> {
+  try {
+    const response = await fetch(`https://api.github.com/repos/${POWERHOUSE_REPO}/releases/latest`, {
+      headers: { accept: "application/vnd.github+json", "user-agent": "powerhouse" },
+    });
+    if (!response.ok) {
+      return null;
+    }
+    const release = (await response.json()) as { tag_name?: unknown; html_url?: unknown };
+    return typeof release.tag_name === "string" && typeof release.html_url === "string"
+      ? { url: release.html_url, version: release.tag_name.replace(/^v/, "") }
+      : null;
+  } catch {
+    return null;
+  }
+}
 
 /** A stored schedule without its alarm bookkeeping. */
 function publicSchedule({ alarmId: _alarmId, anchorAt: _anchorAt, ...info }: StoredSchedule): ScheduleInfo {
@@ -835,6 +858,26 @@ export class Org extends Agent<Env, OrgState> {
     const saved = await deployment(this.env).setWebSearch(on === true);
     this.env = applyDeploymentConfig({ ...this.env, WEB_SEARCH: undefined } as Env, saved);
     this.setState({ ...this.state, capabilities: capabilitiesFor(this.env) });
+  }
+
+  /**
+   * Settings > Status: the running version and whether a newer powerhouse
+   * release exists. GitHub is asked at most once a day per org.
+   */
+  @callable()
+  async updateStatus(): Promise<UpdateStatus> {
+    const current = __APP_VERSION__;
+    const [cached] = this.sql<{ value: string }>`SELECT value FROM meta WHERE key = 'latest_release'`;
+    let latest = cached ? (JSON.parse(cached.value) as { at: number; release: UpdateStatus["latest"] }) : null;
+    if (!latest || Date.now() - latest.at > DAY_MS) {
+      latest = { at: Date.now(), release: await fetchLatestRelease() };
+      this.sql`INSERT OR REPLACE INTO meta (key, value) VALUES ('latest_release', ${JSON.stringify(latest)})`;
+    }
+    return {
+      current,
+      latest: latest.release,
+      updateAvailable: latest.release !== null && isNewerVersion(current, latest.release.version),
+    };
   }
 
   // ------------------------------------------------------------ members

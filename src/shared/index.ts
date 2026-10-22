@@ -526,3 +526,26 @@ export function resolveSuggestion(line: string, ctx: SuggestionContext): string 
 export function runnableSuggestions(lines: string[], ctx: SuggestionContext): string[] {
   return lines.map((line) => resolveSuggestion(line, ctx)).filter((s): s is string => s !== null);
 }
+
+/** Where powerhouse releases come from (GitHub owner/repo). */
+export const POWERHOUSE_REPO = "frankievalentine/powerhouse";
+
+/** Whether version b (semver, an optional leading "v") is newer than a. */
+export function isNewerVersion(a: string, b: string) {
+  const parts = (v: string) => v.replace(/^v/, "").split(/[.-]/).slice(0, 3).map((n) => Number.parseInt(n, 10) || 0);
+  const [x, y] = [parts(a), parts(b)];
+  for (let i = 0; i < 3; i++) {
+    if ((y[i] ?? 0) !== (x[i] ?? 0)) {
+      return (y[i] ?? 0) > (x[i] ?? 0);
+    }
+  }
+  return false;
+}
+
+/** The running version and the latest powerhouse release, for Settings > Status. */
+export interface UpdateStatus {
+  current: string;
+  /** Null when GitHub could not be reached or there are no releases yet. */
+  latest: { version: string; url: string } | null;
+  updateAvailable: boolean;
+}

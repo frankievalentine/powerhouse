@@ -1,0 +1,115 @@
+# Keeps a copy of powerhouse made with Deploy to Cloudflare up to date.
+#
+# Once a week, or when you run it from your repository's Actions tab, this
+# checks for a newer powerhouse release and opens a pull request with it.
+# Merging the pull request redeploys powerhouse through Workers Builds.
+#
+# It never touches wrangler.local.jsonc (your tool settings) or the Worker
+# name in wrangler.jsonc, and it removes only files the release removed.
+# GitHub lets a workflow open pull requests only after you turn on, once:
+# Settings > Actions > General > "Allow GitHub Actions to create and approve
+# pull requests". Without it, the update waits on a branch you can open as a
+# pull request yourself.
+name: Update powerhouse
+
+on:
+  schedule:
+    - cron: "17 9 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+env:
+  UPSTREAM: frankievalentine/powerhouse
+
+jobs:
+  update:
+    # Releases come from the original repository; it never updates itself.
+    if: github.repository != 'frankievalentine/powerhouse'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Find the latest release
+        id: latest
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          latest=$(gh release view --repo "$UPSTREAM" --json tagName --jq .tagName)
+          current="v$(node -p 'require("./package.json").version')"
+          echo "latest=$latest" >> "$GITHUB_OUTPUT"
+          echo "current=$current" >> "$GITHUB_OUTPUT"
+          newest=$(printf '%s\n%s\n' "${current#v}" "${latest#v}" | sort -V | tail -1)
+          if [ "$newest" = "${current#v}" ]; then
+            echo "up_to_date=true" >> "$GITHUB_OUTPUT"
+            echo "powerhouse is up to date ($current)." >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Open a pull request with the release
+        if: steps.latest.outputs.up_to_date != 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          LATEST: ${{ steps.latest.outputs.latest }}
+          CURRENT: ${{ steps.latest.outputs.current }}
+          BASE: ${{ github.event.repository.default_branch }}
+        run: |
+          set -euo pipefail
+          branch="powerhouse-update/$LATEST"
+          if git ls-remote --exit-code --heads origin "$branch" > /dev/null; then
+            echo "The update to $LATEST is already waiting on the branch $branch." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+
+          work=$(mktemp -d)
+          git clone --quiet "https://github.com/$UPSTREAM.git" "$work/upstream"
+          git -C "$work/upstream" checkout --quiet "$LATEST"
+          # Files the release removed since the version this copy runs.
+          if git -C "$work/upstream" rev-parse --quiet --verify "refs/tags/$CURRENT" > /dev/null; then
+            git -C "$work/upstream" diff --name-only --diff-filter=D "$CURRENT" "$LATEST" > "$work/removed"
+          else
+            : > "$work/removed"
+          fi
+
+          # The Worker name Deploy to Cloudflare wrote into wrangler.jsonc.
+          name=$(node -e 'const s=require("fs").readFileSync("wrangler.jsonc","utf8");const m=s.match(/"name"\s*:\s*"([^"]+)"/);process.stdout.write(m?m[1]:"")')
+
+          git switch --quiet -c "$branch"
+          rsync -a --exclude .git --exclude .github/workflows --exclude wrangler.local.jsonc "$work/upstream/" ./
+          while IFS= read -r file; do
+            case "$file" in
+              .github/workflows/*|wrangler.local.jsonc) ;;
+              *) rm -f -- "$file" ;;
+            esac
+          done < "$work/removed"
+          if [ -n "$name" ]; then
+            NAME="$name" node -e 'const fs=require("fs");const s=fs.readFileSync("wrangler.jsonc","utf8");fs.writeFileSync("wrangler.jsonc",s.replace(/"name"\s*:\s*"[^"]+"/,JSON.stringify("name")+": "+JSON.stringify(process.env.NAME)))'
+          fi
+
+          git add -A
+          if git diff --cached --quiet; then
+            echo "Nothing changed between this copy and $LATEST." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          git -c user.name="powerhouse updates" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
+            commit --quiet -m "Update powerhouse to $LATEST"
+          git push --quiet origin "$branch"
+
+          notes=$(gh release view "$LATEST" --repo "$UPSTREAM" --json body --jq .body)
+          body=$(printf 'Updates powerhouse from %s to %s. Merging this redeploys powerhouse.\n\nYour tool settings (wrangler.local.jsonc) and Worker name are kept.\n\n## What changed\n\n%s\n' "$CURRENT" "$LATEST" "$notes")
+          if gh pr create --base "$BASE" --head "$branch" --title "Update powerhouse to $LATEST" --body "$body"; then
+            echo "Opened a pull request: update powerhouse to $LATEST." >> "$GITHUB_STEP_SUMMARY"
+          else
+            {
+              echo "The update to $LATEST is on the branch $branch, but GitHub did not let this workflow open the pull request."
+              echo "Open it yourself: https://github.com/${GITHUB_REPOSITORY}/compare/$BASE...$branch"
+              echo "To let the next update open its own: Settings > Actions > General > Allow GitHub Actions to create and approve pull requests."
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+          # A workflow cannot change workflow files, so a changed one is copied by hand.
+          if ! cmp -s "$work/upstream/.github/workflows/update.yml" .github/workflows/update.yml; then
+            echo "This update workflow itself changed in $LATEST. Copy it by hand from https://github.com/$UPSTREAM/blob/$LATEST/.github/workflows/update.yml" >> "$GITHUB_STEP_SUMMARY"
+          fi

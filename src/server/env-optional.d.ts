@@ -2,6 +2,9 @@
 // env.d.ts is generated from, so declare them here as possibly absent and
 // check for them at runtime (see capabilities.ts). env.d.ts declares Env both
 // globally and under Cloudflare, so both are augmented.
+/** The app version from package.json, injected by vite.config.ts (both builds). */
+declare const __APP_VERSION__: string;
+
 interface OptionalBindings {
   /**
    * Cloudflare Access, as setup.mjs writes it: team domain

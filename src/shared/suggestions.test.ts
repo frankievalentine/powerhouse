@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { type Capabilities, resolveSuggestion, runnableSuggestions } from ".";
+import { type Capabilities, isNewerVersion, resolveSuggestion, runnableSuggestions } from ".";
 
 const off: Capabilities = { browser: false, sendEmail: false, webFetch: true, webSearch: false };
 const ctx = { capabilities: off, me: "ana@example.com", website: "" };
@@ -30,5 +30,14 @@ describe("role suggestions", () => {
     const lines = ["[browser] Check {website} at phone size", "Read {website} for broken links"];
     expect(runnableSuggestions(lines, { ...ctx, website: "https://acme.test" })[0]).toBe("Read https://acme.test for broken links");
     expect(runnableSuggestions(lines, ctx)).toEqual([]);
+  });
+});
+
+describe("isNewerVersion", () => {
+  test("compares major, minor and patch, with or without v", () => {
+    expect(isNewerVersion("0.1.0", "1.0.0")).toBe(true);
+    expect(isNewerVersion("v1.2.0", "1.10.0")).toBe(true);
+    expect(isNewerVersion("1.2.3", "v1.2.3")).toBe(false);
+    expect(isNewerVersion("1.3.0", "1.2.9")).toBe(false);
   });
 });

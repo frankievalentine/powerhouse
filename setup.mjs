@@ -29,6 +29,8 @@ Options:
                      e.g. "you@example.com,@example.com". Defaults to the
                      email you signed in to Cloudflare with.
   --account <id>     Cloudflare account id, when you have more than one.
+  --update           Update to the latest powerhouse release first, then set
+                     up and deploy as usual. Your settings are kept.
   --admins <list>    Who are always powerhouse admins (comma-separated
                      emails); admins change settings, roles and connections.
                      Defaults to the email you signed in to Cloudflare with.
@@ -78,8 +80,14 @@ class SetupError extends Error {
 const args = parseArgs(process.argv.slice(2));
 const steps = [];
 
+/** main's result when an updated setup.mjs ran instead and already reported. */
+const HANDED_OFF = Symbol("handed off");
+
 main().finally(closePrompts).then(
   (result) => {
+    if (result === HANDED_OFF) {
+      return;
+    }
     if (args.json) {
       process.stdout.write(`${JSON.stringify({ ok: true, ...result, steps })}\n`);
     }
@@ -110,6 +118,13 @@ async function main() {
     return {};
   }
   checkNode();
+  if (args.update && updateCheckout()) {
+    // The release can change setup itself, so its own setup.mjs finishes the job.
+    const rest = process.argv.slice(2).filter((arg) => arg !== "--update");
+    const child = spawnSync(process.execPath, [join(ROOT, "setup.mjs"), ...rest], { cwd: ROOT, stdio: "inherit" });
+    process.exitCode = child.status ?? 1;
+    return HANDED_OFF;
+  }
   installDependencies();
   const account = await signIn();
   const admins = chooseAdmins(account);
@@ -182,6 +197,50 @@ function checkNode() {
 }
 
 /** Uses the Bun version pinned in package.json through npx, so operators never install Bun. */
+/**
+ * --update: moves this clone to the latest powerhouse release (a v* tag on
+ * GitHub). Settings in wrangler.local.jsonc and .dev.vars are not tracked by
+ * git, so they stay. Returns whether anything changed.
+ */
+function updateCheckout() {
+  const git = (...gitArgs) => spawnSync("git", gitArgs, { cwd: ROOT, encoding: "utf8" });
+  if (git("rev-parse", "--is-inside-work-tree").status !== 0) {
+    throw new SetupError(
+      "update",
+      "This folder is not a git clone of powerhouse, so it cannot update itself.",
+      "Clone it with git clone https://github.com/frankievalentine/powerhouse.git, copy your wrangler.local.jsonc into the new folder, and run setup there.",
+    );
+  }
+  if (git("fetch", "--tags", "--quiet", "origin").status !== 0) {
+    throw new SetupError("update", "Could not reach GitHub to check for a new release.", "Check your internet connection and rerun.");
+  }
+  const [latest] = git("tag", "--list", "v*", "--sort=-v:refname").stdout.split("\n").filter(Boolean);
+  if (!latest) {
+    done("update", "no releases yet");
+    return false;
+  }
+  if (git("merge-base", "--is-ancestor", latest, "HEAD").status === 0) {
+    done("update", `already up to date (${latest} or newer)`);
+    return false;
+  }
+  if (git("status", "--porcelain", "--untracked-files=no").stdout.trim()) {
+    throw new SetupError(
+      "update",
+      "Files git tracks in this folder have changed, so it cannot update cleanly.",
+      "Run git status to see them, then commit or set them aside (git stash) and rerun with --update.",
+    );
+  }
+  if (git("merge", "--ff-only", "--quiet", latest).status !== 0) {
+    throw new SetupError(
+      "update",
+      `This copy has commits of its own, so it cannot move to ${latest} by itself.`,
+      `Merge it yourself (git merge ${latest}), then rerun setup without --update.`,
+    );
+  }
+  done("update", `updated to ${latest}`);
+  return true;
+}
+
 function installDependencies() {
   const { packageManager } = JSON.parse(readFileSync(join(ROOT, "package.json"), "utf8"));
   log(`Installing dependencies with ${packageManager} (first run downloads it)...`);
@@ -1305,6 +1364,7 @@ function log(message) {
 function parseArgs(argv) {
   const parsed = {
     account: null,
+    update: false,
     aiBilling: null,
     aiLogs: false,
     aiProviders: null,
@@ -1337,6 +1397,7 @@ function parseArgs(argv) {
     if (arg === "--allow") parsed.allow = value();
     else if (arg === "--ai-billing") parsed.aiBilling = value();
     else if (arg === "--admins") parsed.admins = value();
+    else if (arg === "--update") parsed.update = true;
     else if (arg === "--ai-logs") parsed.aiLogs = true;
     else if (arg === "--ai-providers") parsed.aiProviders = value();
     else if (arg === "--account") parsed.account = value();

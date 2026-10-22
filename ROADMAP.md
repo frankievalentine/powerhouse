@@ -91,15 +91,16 @@ Spike in a throwaway account (2026-10-22): the button copies the repository, det
 
 Next: the Finish setup page, then decide problem 2.
 
-### Updates (planned 2026-10-22, after Finish setup merges)
+### Updates (built 2026-10-22, branch `feat/updates`; first release not cut yet)
 
 A button deployment is a copy of the repository, not a fork, so GitHub's "Sync fork" does not apply and the copy never changes on its own. Plan:
 
-- [ ] Versioned releases: semver tags, a CHANGELOG and GitHub Releases. Updates follow the latest release, never raw `main`.
-- [ ] `.github/workflows/update.yml`, inherited by every copy: weekly and on demand, opens a pull request "Update powerhouse to vX" with the release notes; merging it redeploys through Workers Builds. Needs "Allow GitHub Actions to create and approve pull requests" turned on once (Finish setup and the README say so); without it, the workflow pushes an `update` branch to open by hand. A workflow cannot update workflow files with the default token, so changes to this file are merged by hand: keep it small.
-- [ ] `node setup.mjs --update` for clone deployments: pull the latest release, install, redeploy.
-- [ ] Settings > Status: the running version and, once a day, whether a newer release exists, with its notes and how to update for this kind of deployment.
-- [ ] Every release works with data saved by older versions; written into AGENTS.md as a rule.
+- [x] Versioned releases: semver tags, a CHANGELOG and GitHub Releases. Updates follow the latest release, never raw `main`.
+- [x] `.github/workflows/update.yml`, inherited by every copy: weekly and on demand, opens a pull request "Update powerhouse to vX" with the release notes; merging it redeploys through Workers Builds. Needs "Allow GitHub Actions to create and approve pull requests" turned on once (Finish setup and the README say so); without it, the workflow pushes an `update` branch to open by hand. A workflow cannot update workflow files with the default token, so changes to this file are merged by hand: keep it small.
+- [x] `node setup.mjs --update` for clone deployments: pull the latest release, install, redeploy.
+- [x] Settings > Status: the running version and, once a day, whether a newer release exists, with its notes and how to update for this kind of deployment.
+- [x] Every release works with data saved by older versions; written into AGENTS.md as a rule.
+- The workflow applies a release's files over the copy instead of merging history (a button copy's history is not known to match), keeps `wrangler.local.jsonc` and the Worker name the Deploy form wrote into `wrangler.jsonc`, and deletes only files the release removed since the copy's version.
 - Done ahead of it: tool settings for button deployments live in `wrangler.local.jsonc`, which updates never touch.
 
 ### Cost guardrails (2026-10-21)
