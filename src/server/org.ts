@@ -38,7 +38,7 @@ import {
 import { generateText } from "ai";
 import { createWorkersAI } from "workers-ai-provider";
 import { MEMBER_EMAIL_HEADER } from "./auth";
-import { withDeploymentConfig } from "./deployment";
+import { applyDeploymentConfig, deployment } from "./deployment";
 import { devEmail } from "./dev";
 import { capabilitiesFor, providersFor, vapidFor } from "./capabilities";
 import { gatewayModel, modelSetupFailure, TEST_MODELS } from "./models";
@@ -50,6 +50,7 @@ import {
   ROLE_LIBRARY,
   type RoleInput,
   roleIdFor,
+  RETIRED_SUGGESTIONS,
   roleInput,
 } from "./roles";
 import { clefRoute, ROUTE_CONFIDENCE, routeRequest } from "./router";
@@ -191,6 +192,7 @@ function firstIssue(error: { issues: { path: PropertyKey[]; message: string }[] 
 export class Org extends Agent<Env, OrgState> {
   initialState: OrgState = {
     admins: [],
+    setupKind: "cli",
     capabilities: { browser: false, sendEmail: false, webFetch: true, webSearch: false },
     connections: [],
     aiBilling: null,
@@ -237,7 +239,8 @@ export class Org extends Agent<Env, OrgState> {
    */
   async onStart() {
     // Settings saved by Finish setup, for deployments set up in the browser.
-    this.env = await withDeploymentConfig(this.env);
+    const saved = await deployment(this.env).config();
+    this.env = applyDeploymentConfig(this.env, saved);
     // The SDK keeps this in memory only, and an OAuth callback can arrive
     // after a restart (seen on the deploy), so it is set on every start.
     this.mcp.configureOAuthCallback({ customHandler: oauthResultPage });
@@ -259,7 +262,12 @@ export class Org extends Agent<Env, OrgState> {
       this.sql`INSERT OR REPLACE INTO meta (key, value) VALUES ('team_pending', '1')`;
     }
     const [pending] = this.sql<{ value: string }>`SELECT value FROM meta WHERE key = 'team_pending'`;
-    const settings = this.settings();
+    let settings = this.settings();
+    // The website entered in Finish setup, until someone sets one in Settings.
+    if (saved?.website && !settings.website) {
+      settings = { ...settings, website: saved.website };
+      this.sql`INSERT OR REPLACE INTO settings (id, config) VALUES (1, ${JSON.stringify(settings)})`;
+    }
     this.maxConcurrentAgentTools = settings.maxConcurrentJobs;
     const capabilities = capabilitiesFor(this.env);
     // A redeploy can turn a feature off; its old failure no longer applies.
@@ -293,6 +301,7 @@ export class Org extends Agent<Env, OrgState> {
       spendLimits: this.env.AI_SPEND_LIMITS === "on" ? true : this.env.AI_SPEND_LIMITS === "off" ? false : null,
       runs,
       settings,
+      setupKind: saved ? "browser" : "cli",
       teamPending: pending?.value === "1",
     });
     this.publishRoles();
@@ -812,6 +821,22 @@ export class Org extends Agent<Env, OrgState> {
     return ((connection as Connection<MemberConnectionState> | undefined)?.state?.email ?? "unknown").toLowerCase();
   }
 
+  /**
+   * Settings > Tools on a deployment set up in the browser: web search has no
+   * binding, so it is switched here (setup.mjs deployments use --enable).
+   * Jobs started afterwards get it.
+   */
+  @callable()
+  async setWebSearch(on: boolean) {
+    this.requireAdmin();
+    if (this.state.setupKind !== "browser") {
+      throw new Error("This deployment was set up with setup.mjs; turn web search on or off with node setup.mjs --enable web-search or --disable web-search.");
+    }
+    const saved = await deployment(this.env).setWebSearch(on === true);
+    this.env = applyDeploymentConfig({ ...this.env, WEB_SEARCH: undefined } as Env, saved);
+    this.setState({ ...this.state, capabilities: capabilitiesFor(this.env) });
+  }
+
   // ------------------------------------------------------------ members
 
   /**
@@ -1143,6 +1168,7 @@ export class Org extends Agent<Env, OrgState> {
           blockedHosts: settings.blockedHosts,
           companyProfile: settings.companyProfile,
           maxSteps: settings.maxSteps,
+          website: settings.website || undefined,
           model: resolveModel(role.model ?? settings.jobModel, this.state.providers),
         },
       };
@@ -1289,7 +1315,8 @@ export class Org extends Agent<Env, OrgState> {
         purpose: stored.purpose ?? "",
         // Roles saved before skills existed have none.
         skills: Array.isArray(stored.skills) ? stored.skills : [],
-        suggestions: stored.suggestions ?? [],
+        suggestions:
+          stored.suggestions?.length === 1 ? (RETIRED_SUGGESTIONS[stored.suggestions[0] ?? ""] ?? stored.suggestions) : (stored.suggestions ?? []),
         systemPrompt: stored.systemPrompt ?? "",
         tools: knownTools(stored.tools ?? []),
       };

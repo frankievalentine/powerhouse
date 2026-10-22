@@ -70,6 +70,8 @@ export function FinishSetup() {
   const [connected, setConnected] = useState<Connected | null>(null);
   const [admin, setAdmin] = useState("");
   const [others, setOthers] = useState("");
+  const [website, setWebsite] = useState("");
+  const [webSearch, setWebSearch] = useState(false);
   const [ai, setAi] = useState<Ai>("keys");
   const [providers, setProviders] = useState<string[]>(["anthropic"]);
   const [busy, setBusy] = useState(false);
@@ -117,7 +119,17 @@ export function FinishSetup() {
     setError(null);
     setPartial([]);
     try {
-      setFinished(await post<Finished>("/api/setup/finish", { admin, ai, allow: allowList, providers, token }));
+      setFinished(
+        await post<Finished>("/api/setup/finish", {
+          admin,
+          ai,
+          allow: allowList,
+          providers,
+          token,
+          webSearch: webSearch && ai !== "skip",
+          website,
+        }),
+      );
       // The token is not needed any more; drop it from memory.
       setToken("");
     } catch (err) {
@@ -186,7 +198,7 @@ export function FinishSetup() {
       <div>
         <h1 className={styles.title}>Finish setup</h1>
         <p className={styles.intro}>
-          powerhouse is deployed. Four steps protect it with Cloudflare Access, so only the people you choose can sign
+          powerhouse is deployed. Five steps protect it with Cloudflare Access, so only the people you choose can sign
           in. Until then this page is all anyone can reach.
         </p>
       </div>
@@ -269,6 +281,18 @@ export function FinishSetup() {
             </span>
             <input className={styles.input} id="setup-others" onChange={(e) => setOthers(e.target.value)} value={others} />
           </label>
+          <label className={styles.field} htmlFor="setup-website">
+            <span className={styles.label}>Your website (optional)</span>
+            <span className={styles.muted}>Roles use it for their first suggestions, such as checking it for broken links.</span>
+            <input
+              className={styles.input}
+              id="setup-website"
+              inputMode="url"
+              onChange={(e) => setWebsite(e.target.value)}
+              placeholder="https://example.com"
+              value={website}
+            />
+          </label>
           <div className={styles.actions}>
             <button className={styles.primary} disabled={!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(admin.trim())} onClick={() => setStep(3)} type="button">
               Continue
@@ -323,7 +347,42 @@ export function FinishSetup() {
           </div>
         </Step>
 
-        <Step number={4} state={step === 4 ? "active" : "todo"} title="Finish">
+        <Step
+          number={4}
+          state={step === 4 ? "active" : step > 4 ? "done" : "todo"}
+          summary={step > 4 ? (webSearch && ai !== "skip" ? "Web search on" : "Reading web pages") : undefined}
+          title="Tools"
+        >
+          <p className={styles.muted}>Every role can read web pages. These tools are optional:</p>
+          <div className={styles.choices}>
+            <label className={styles.choice}>
+              <input
+                checked={webSearch && ai !== "skip"}
+                disabled={ai === "skip"}
+                onChange={(e) => setWebSearch(e.target.checked)}
+                type="checkbox"
+              />
+              <span>
+                Search the web. Billed per search through your AI Gateway, from credits or a search provider key on it.
+                {ai === "skip" && " Needs the AI Gateway: choose a way to pay for models in step 3 first."}
+              </span>
+            </label>
+            <p className={styles.muted}>
+              Send email and the web browser are added later in Settings &gt; Tools: they need a few lines in your GitHub
+              repository, plus a domain on Cloudflare Email Service for email and the Workers Paid plan for the browser.
+            </p>
+          </div>
+          <div className={styles.actions}>
+            <button className={styles.primary} onClick={() => setStep(5)} type="button">
+              Continue
+            </button>
+            <button className={styles.secondary} onClick={() => setStep(3)} type="button">
+              Back
+            </button>
+          </div>
+        </Step>
+
+        <Step number={5} state={step === 5 ? "active" : "todo"} title="Finish">
           <p className={styles.muted}>
             powerhouse creates the Cloudflare Access application for this address, allows the people you listed,
             {ai === "skip" ? "" : " creates the AI Gateway,"} and saves its settings. Then you sign in.
@@ -340,7 +399,7 @@ export function FinishSetup() {
             <button className={styles.primary} disabled={busy} onClick={() => void finish()} type="button">
               {busy ? "Setting up..." : partial.length > 0 ? "Try again" : "Finish setup"}
             </button>
-            <button className={styles.secondary} disabled={busy} onClick={() => setStep(3)} type="button">
+            <button className={styles.secondary} disabled={busy} onClick={() => setStep(4)} type="button">
               Back
             </button>
           </div>

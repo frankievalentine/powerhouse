@@ -130,6 +130,14 @@ async function claim(token: string, url: string): Promise<Claim> {
   );
 }
 
+function isHttps(value: string) {
+  try {
+    return new URL(value).protocol === "https:";
+  } catch {
+    return false;
+  }
+}
+
 const ZERO_TRUST_LINK = { href: "https://one.dash.cloudflare.com", label: "Set up Zero Trust" };
 
 async function notSetUp(env: Env) {
@@ -173,6 +181,8 @@ interface FinishInput {
   allow?: unknown;
   ai?: unknown;
   providers?: unknown;
+  website?: unknown;
+  webSearch?: unknown;
 }
 
 const EMAIL = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
@@ -199,6 +209,15 @@ setupRoutes.post("/finish", async (c) => {
   if (invalid.length > 0) {
     return c.json({ error: `Not an email or @domain: ${invalid.join(", ")}` }, 400);
   }
+  let website = typeof input.website === "string" ? input.website.trim() : "";
+  if (website && !/^https?:\/\//i.test(website)) {
+    website = `https://${website}`;
+  }
+  if (website && !isHttps(website)) {
+    return c.json({ error: "Enter the website as an address such as https://example.com, or leave it empty." }, 400);
+  }
+  // Web search bills through the AI Gateway, so it needs one.
+  const webSearch = input.webSearch === true && ai !== "skip";
   if (ai === "keys" && providers.length === 0) {
     return c.json({ error: "Choose Anthropic, OpenAI or both, or pick another option." }, 400);
   }
@@ -288,10 +307,15 @@ setupRoutes.post("/finish", async (c) => {
       aiProviders: ai === "credits" ? "anthropic,openai" : ai === "keys" ? providers.join(",") : undefined,
       completedAt: Date.now(),
       vapid: { privateKey: jwk.d ?? "", publicKey, subject: `https://${found.host}` },
+      webSearch,
+      website: website || undefined,
     };
     // Takes effect on the next request: auth.ts caches only saved settings.
     await deployment(c.env).save(config);
     steps.push("Saved the settings and created notification keys");
+    if (webSearch) {
+      steps.push("Turned on web search (billed per search through the AI Gateway)");
+    }
 
     return c.json({ ok: true, signInUrl: `https://${found.host}/`, steps });
   } catch (error) {

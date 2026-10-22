@@ -1,4 +1,4 @@
-import { LIVE_PHASES, type RoleSummary, type RunSummary } from "../../shared";
+import { LIVE_PHASES, type RoleSummary, type RunSummary, runnableSuggestions } from "../../shared";
 import { ArrowUp, Clock, CornerDownRight, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { AgentGlyph } from "../components/agent-state";
@@ -48,6 +48,10 @@ function roleLabel(run: RunSummary, role: RoleSummary | undefined) {
 const CORE_LIGHT: [number, number, number] = [0.93, 0.91, 0.88];
 const CORE_DARK: [number, number, number] = [0.42, 0.39, 0.36];
 
+function capitalize(text: string) {
+  return text.charAt(0).toUpperCase() + text.slice(1);
+}
+
 function statusSentence(connected: boolean, live: number, approvals: number) {
   if (!connected) {
     return "Connecting...";
@@ -74,12 +78,16 @@ export function PulsePage() {
   const [pendingRunId, setPendingRunId] = useState<string | null>(null);
   const [hintDismissed, dismissHint] = useSetupHintDismissed();
   // Wait for the Org's state: the placeholder has every optional tool off.
-  const showSetupHint =
-    connected &&
-    !hintDismissed &&
-    !state.capabilities.webSearch &&
-    !state.capabilities.browser &&
-    !state.capabilities.sendEmail;
+  const offTools = [
+    !state.capabilities.webSearch && "Web search",
+    !state.capabilities.browser && "the browser",
+    !state.capabilities.sendEmail && "email",
+  ].filter((t): t is string => Boolean(t));
+  const showSetupHint = connected && !hintDismissed && offTools.length > 0;
+  const offText =
+    offTools.length === 1
+      ? `${capitalize(offTools[0] ?? "")} is off.`
+      : `${capitalize(offTools.slice(0, -1).join(", "))} and ${offTools.at(-1)} are off.`;
 
   const live = state.runs.filter((r) => LIVE_PHASES.has(r.phase));
   const budget = state.settings.dailyBudgetUsd;
@@ -89,10 +97,11 @@ export function PulsePage() {
   const approvals = live.filter(
     (r) => r.phase === "awaiting_approval" && (isAdmin || r.startedBy?.toLowerCase() === me.email.toLowerCase()),
   ).length;
-  const suggestions = useMemo(
-    () => state.roles.flatMap((r) => r.suggestions.slice(0, 1)),
-    [state.roles],
-  );
+  // Each role's first suggestion that can run here (tools on, website set).
+  const suggestions = useMemo(() => {
+    const ctx = { capabilities: state.capabilities, me: me.email, website: state.settings.website };
+    return state.roles.flatMap((r) => runnableSuggestions(r.suggestions, ctx).slice(0, 1));
+  }, [state.roles, state.capabilities, state.settings.website, me.email]);
   const liveKey = live.map((r) => `${r.runId}:${r.phase === "awaiting_approval"}:${r.roleId}`).join();
 
   useEffect(() => {
@@ -180,7 +189,7 @@ export function PulsePage() {
         <button className={`${styles.headerLink} ${styles.headerLinkNext}`} onClick={openSchedules} type="button">
           Schedules
         </button>
-        <button className={`${styles.headerLink} ${styles.headerLinkNext}`} onClick={openSettings} type="button">
+        <button className={`${styles.headerLink} ${styles.headerLinkNext}`} onClick={() => openSettings()} type="button">
           Settings
         </button>
         <a className={styles.signout} href="/cdn-cgi/access/logout">
@@ -308,9 +317,9 @@ export function PulsePage() {
       )}
       {showSetupHint && (
         <p className={styles.setupHint}>
-          Search, browser and email are off.{" "}
-          <button className={styles.setupHintLink} onClick={openSettings} type="button">
-            See Settings
+          {offText}{" "}
+          <button className={styles.setupHintLink} onClick={() => openSettings("tools")} type="button">
+            Set up
           </button>
           <button aria-label="Dismiss" className={styles.setupHintDismiss} onClick={dismissHint} type="button">
             <X size={13} />

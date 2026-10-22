@@ -1,4 +1,4 @@
-import { LIVE_PHASES, type RoleSummary } from "../../shared";
+import { LIVE_PHASES, type RoleSummary, runnableSuggestions } from "../../shared";
 import { CornerDownLeft } from "lucide-react";
 import { useMemo, useState } from "react";
 import { AgentGlyph } from "../components/agent-state";
@@ -17,7 +17,7 @@ export function DispatchPalette({
   onDispatch: (roleId: string, prompt: string) => void;
 }) {
   const { dialogProps } = useModal(onClose);
-  const { state, rolesById } = useOrg();
+  const { state, rolesById, me } = useOrg();
   const [query, setQuery] = useState("");
   const [active, setActive] = useState(0);
   const [role, setRole] = useState<RoleSummary | undefined>(
@@ -75,7 +75,11 @@ export function DispatchPalette({
               value={prompt}
             />
             <div className={styles.suggestions}>
-              {role.suggestions.map((p) => (
+              {runnableSuggestions(role.suggestions, {
+                capabilities: state.capabilities,
+                me: me.email,
+                website: state.settings.website,
+              }).map((p) => (
                 <button className={styles.suggestion} key={p} onClick={() => setPrompt(p)} type="button">
                   {p}
                 </button>

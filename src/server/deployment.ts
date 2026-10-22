@@ -21,6 +21,10 @@ export interface DeploymentConfig {
   aiProviders?: string;
   aiBilling?: "keys" | "credits";
   vapid: { publicKey: string; privateKey: string; subject: string };
+  /** Web search on (it bills through the AI Gateway); changed later in Settings. */
+  webSearch?: boolean;
+  /** Entered in Finish setup; the org's Website setting starts from it. */
+  website?: string;
   completedAt: number;
 }
 
@@ -43,6 +47,17 @@ export class Deployment extends DurableObject<Env> {
   async save(config: DeploymentConfig) {
     await this.ctx.storage.put("config", config);
   }
+
+  /** Settings > Tools: web search on or off. Returns the updated config. */
+  async setWebSearch(on: boolean): Promise<DeploymentConfig | null> {
+    const config = await this.config();
+    if (!config) {
+      return null;
+    }
+    const next = { ...config, webSearch: on };
+    await this.ctx.storage.put("config", next);
+    return next;
+  }
 }
 
 export function deployment(env: Env) {
@@ -56,7 +71,10 @@ export function deployment(env: Env) {
  * deployment. Vars always win. Org and JobAgent apply it when they start.
  */
 export async function withDeploymentConfig(env: Env): Promise<Env> {
-  const config = await deployment(env).config();
+  return applyDeploymentConfig(env, await deployment(env).config());
+}
+
+export function applyDeploymentConfig(env: Env, config: DeploymentConfig | null): Env {
   if (!config) {
     return env;
   }
@@ -70,6 +88,7 @@ export async function withDeploymentConfig(env: Env): Promise<Env> {
     VAPID_PRIVATE_KEY: config.vapid.privateKey,
     VAPID_PUBLIC_KEY: config.vapid.publicKey,
     VAPID_SUBJECT: config.vapid.subject,
+    WEB_SEARCH: config.webSearch ? "on" : undefined,
   };
   const merged: Record<string, unknown> = { ...env };
   for (const [key, value] of Object.entries(saved)) {

@@ -580,7 +580,11 @@ function RoleEditor({
 
       <label className={styles.field}>
         <span className={styles.label}>Suggestions</span>
-        <span className={styles.hint}>Up to {ROLE_LIMITS.suggestions}, one per line. The first shows on pulse.</span>
+        <span className={styles.hint}>
+          Up to {ROLE_LIMITS.suggestions}, one per line; the first that can run shows on the home page. Start a line with
+          [web search], [browser] or [email] to show it only when that tool is on, and use {"{website}"} or {"{me}"} for
+          the website and your email.
+        </span>
         <textarea
           className={styles.textarea}
           onChange={(e) => setSuggestions(e.target.value)}

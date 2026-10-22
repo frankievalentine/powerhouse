@@ -252,6 +252,8 @@ export interface OrgSettings {
   routerModel: ModelId;
   /** IANA time zone schedules run in; empty until someone sets it (schedules then use UTC). */
   timeZone: string;
+  /** The organization's website (https), for jobs and for suggestions that use {website}. Empty when not set. */
+  website: string;
   /**
    * A backstop under the AI Gateway's own spend limits: once the day's
    * estimated spend reaches it, scheduled runs are skipped. 0 turns it off.
@@ -263,6 +265,7 @@ export const SETTINGS_LIMITS = {
   dailyBudgetUsd: { max: 100_000, min: 0 },
   blockedHosts: 100,
   companyProfile: 4000,
+  website: 200,
   historyLimit: { max: 200, min: 10 },
   maxConcurrentJobs: { max: 10, min: 1 },
   maxSteps: { max: 20, min: 2 },
@@ -275,6 +278,8 @@ export interface JobSettings {
   blockedHosts: string[];
   /** Absent for jobs dispatched before the company profile existed. */
   companyProfile?: string;
+  /** Absent when the organization has not set one. */
+  website?: string;
   maxSteps: number;
   model: string;
 }
@@ -292,6 +297,12 @@ export const ROLE_LIMITS = {
 
 /** State the Org agent syncs to every connected pulse client. */
 export interface OrgState {
+  /**
+   * How this deployment was set up: "cli" with setup.mjs (settings in
+   * wrangler.local.jsonc), or "browser" with Finish setup after Deploy to
+   * Cloudflare (tools needing bindings are added to the repo's wrangler.jsonc).
+   */
+  setupKind: "cli" | "browser";
   /**
    * Who may change settings, roles and connections, and act on anyone's jobs
    * and schedules (lowercase emails). Everyone else is a member.
@@ -472,4 +483,46 @@ export interface ApprovalRecord {
   at: number;
   /** The member's email. */
   by: string;
+}
+
+/**
+ * Role suggestions are plain lines a role keeps (one per line in the role
+ * editor). A line may start with tags naming tools it needs, such as
+ * "[web search]", and may use {website} and {me}; it shows only when those
+ * are available, so a role offers a first run that works on this deployment.
+ */
+const SUGGESTION_TAGS: Record<string, ToolId> = {
+  browser: "browser",
+  email: "sendEmail",
+  "web search": "webSearch",
+};
+
+export interface SuggestionContext {
+  capabilities: Capabilities;
+  /** The signed-in member's email, for {me}. */
+  me: string;
+  /** The org's website, for {website}; empty when not set. */
+  website: string;
+}
+
+/** A suggestion line as it reads on screen, or null when it cannot run here. */
+export function resolveSuggestion(line: string, ctx: SuggestionContext): string | null {
+  let text = line.trim();
+  for (let tag = /^\[([a-z ]+)\]\s*/i.exec(text); tag; tag = /^\[([a-z ]+)\]\s*/i.exec(text)) {
+    const tool = SUGGESTION_TAGS[(tag[1] ?? "").toLowerCase()];
+    if (!tool || !ctx.capabilities[tool]) {
+      return null;
+    }
+    text = text.slice(tag[0].length);
+  }
+  if (text.includes("{website}") && !ctx.website) {
+    return null;
+  }
+  text = text.replaceAll("{website}", ctx.website).replaceAll("{me}", ctx.me);
+  return text || null;
+}
+
+/** The lines of a role that can run here, ready to show. */
+export function runnableSuggestions(lines: string[], ctx: SuggestionContext): string[] {
+  return lines.map((line) => resolveSuggestion(line, ctx)).filter((s): s is string => s !== null);
 }

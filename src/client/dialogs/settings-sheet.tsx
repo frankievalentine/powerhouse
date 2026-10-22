@@ -12,7 +12,7 @@ import {
   type ToolId,
 } from "../../shared";
 import { X } from "lucide-react";
-import { type FormEvent, useCallback, useEffect, useState } from "react";
+import { type FormEvent, useCallback, useEffect, useRef, useState } from "react";
 import { setThemeChoice, type ThemeChoice, useThemeChoice } from "../lib/theme";
 import { autoModelLabel, ModelOptions } from "../components/model-options";
 import { currentSubscription, pushSupported, subscribe } from "../lib/push";
@@ -33,10 +33,18 @@ const lines = (value: string) =>
  * the server validates them. Running jobs keep the settings they were
  * dispatched with.
  */
-export function SettingsSheet({ onClose }: { onClose: () => void }) {
+export function SettingsSheet({ focus, onClose }: { focus?: "tools"; onClose: () => void }) {
   const { dialogProps, close } = useModal(onClose);
   const { state, me, saveSettings, clearHistory, isAdmin } = useOrg();
   const saved = state.settings;
+  // Opened from "... are off. Set up": scroll to Tools with the first off tool open.
+  const toolsRef = useRef<HTMLElement>(null);
+  const firstOffTool = focus === "tools" ? CHECKLIST_ORDER.find((id) => !state.capabilities[id]) : undefined;
+  useEffect(() => {
+    if (focus === "tools") {
+      toolsRef.current?.scrollIntoView({ block: "start" });
+    }
+  }, [focus]);
   const [draft, setDraft] = useState<OrgSettings>(saved);
   const [blocked, setBlocked] = useState(saved.blockedHosts.join("\n"));
   const [busy, setBusy] = useState(false);
@@ -127,6 +135,18 @@ export function SettingsSheet({ onClose }: { onClose: () => void }) {
                 placeholder={"Acme makes scheduling software for dental clinics in the US.\nCustomers: clinic owners and front-desk staff.\nDifferent because: setup takes a day, not a month.\nVoice: plain, warm, no jargon."}
                 rows={5}
                 value={draft.companyProfile}
+              />
+            </label>
+            <label className={styles.field}>
+              <span className={styles.label}>Website</span>
+              <span className={styles.hint}>Jobs know it, and role suggestions can use it (Site QA, SEO, pricing).</span>
+              <input
+                className={styles.input}
+                maxLength={SETTINGS_LIMITS.website}
+                onChange={(e) => set("website", e.target.value)}
+                placeholder="https://example.com"
+                type="url"
+                value={draft.website}
               />
             </label>
             <label className={styles.field}>
@@ -319,7 +339,7 @@ export function SettingsSheet({ onClose }: { onClose: () => void }) {
             </div>
           </section>
 
-          <section className={styles.section}>
+          <section className={styles.section} id="settings-tools" ref={toolsRef}>
             <h3 className={styles.sectionTitle}>Tools</h3>
             <ul className={styles.checklist}>
               {CHECKLIST_ORDER.map((id) => (
@@ -328,6 +348,8 @@ export function SettingsSheet({ onClose }: { onClose: () => void }) {
                   failure={state.featureHealth[id]}
                   id={id}
                   key={id}
+                  open={id === firstOffTool}
+                  setupKind={state.setupKind}
                 />
               ))}
             </ul>
@@ -905,9 +927,69 @@ function ConnectionItem({
 /** Optional tools first, in the order an operator would usually turn them on. */
 const CHECKLIST_ORDER: readonly ToolId[] = ["webSearch", "browser", "sendEmail", "webFetch"];
 
-function ChecklistItem({ configured, failure, id }: { configured: boolean; failure?: FeatureFailure; id: ToolId }) {
+/**
+ * What to add to wrangler.jsonc in the deployment's GitHub repository to turn
+ * a tool on, for deployments made with Deploy to Cloudflare: bindings come
+ * from the repository, and a commit redeploys through Workers Builds.
+ */
+const REPO_SNIPPETS: Partial<Record<ToolId, { steps: string; snippet: string }>> = {
+  browser: {
+    snippet: `"browser": { "binding": "BROWSER" },\n"worker_loaders": [{ "binding": "LOADER" }],`,
+    steps:
+      "Needs the Workers Paid plan. In your powerhouse repository on GitHub, add these lines to wrangler.jsonc, inside its outer braces, and commit. Cloudflare redeploys, and this shows On.",
+  },
+  sendEmail: {
+    snippet: `"send_email": [{ "name": "EMAIL" }],\n"vars": { "EMAIL_FROM": "powerhouse@your-domain.com" },`,
+    steps:
+      "First add a domain you own to Cloudflare Email Service (its DNS must be on Cloudflare). Then add these lines to wrangler.jsonc in your powerhouse repository on GitHub, with your sender address, and commit. Sending to anyone but your verified addresses needs Workers Paid.",
+  },
+};
+
+function ChecklistItem({
+  configured,
+  failure,
+  id,
+  open,
+  setupKind,
+}: {
+  configured: boolean;
+  failure?: FeatureFailure;
+  id: ToolId;
+  open: boolean;
+  setupKind: "cli" | "browser";
+}) {
+  const { isAdmin, setWebSearch } = useOrg();
   const info = TOOL_INFO[id];
   const status = !configured ? "off" : failure ? "failing" : "on";
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
+  const repo = REPO_SNIPPETS[id];
+  // Web search has no binding: on browser-set-up deployments it is a switch here.
+  const switchable = id === "webSearch" && setupKind === "browser" && isAdmin;
+
+  const toggle = async () => {
+    setBusy(true);
+    setError(null);
+    try {
+      await setWebSearch(!configured);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const copy = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    } catch {
+      setCopied(false);
+    }
+  };
+
   return (
     <li className={styles.checkItem} data-status={status}>
       <div className={styles.checkHead}>
@@ -927,7 +1009,38 @@ function ChecklistItem({ configured, failure, id }: { configured: boolean; failu
           {failure.message} · {formatAgo(failure.at, Date.now())}
         </p>
       )}
-      {status === "off" && info.setup && <p className={styles.hint}>{info.setup}</p>}
+      {switchable && (
+        <div className={styles.actions}>
+          <button className={styles.secondary} disabled={busy} onClick={() => void toggle()} type="button">
+            {configured ? "Turn off web search" : "Turn on web search"}
+          </button>
+        </div>
+      )}
+      {status === "off" && !switchable && (
+        <details className={styles.guide} open={open}>
+          <summary>How to turn it on</summary>
+          {setupKind === "browser" && repo ? (
+            <>
+              <p className={styles.hint}>{repo.steps}</p>
+              <pre className={styles.snippet}>{repo.snippet}</pre>
+              <div className={styles.actions}>
+                <button className={styles.secondary} onClick={() => void copy(repo.snippet)} type="button">
+                  {copied ? "Copied" : "Copy lines"}
+                </button>
+              </div>
+            </>
+          ) : setupKind === "browser" && id === "webSearch" ? (
+            <p className={styles.hint}>An admin can turn it on here. Each search bills through your AI Gateway.</p>
+          ) : (
+            info.setup && <p className={styles.hint}>{info.setup}</p>
+          )}
+        </details>
+      )}
+      {error && (
+        <p className={styles.error} role="alert">
+          {error}
+        </p>
+      )}
       {status !== "on" && info.link && (
         <a className={styles.checkLink} href={info.link.href} rel="noreferrer" target="_blank">
           {info.link.label}

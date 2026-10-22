@@ -590,3 +590,27 @@ select.input {
   background: color-mix(in oklab, var(--lab-fg) 5%, transparent);
   border-radius: var(--lab-radius);
 }
+
+.guide summary {
+  font-size: 13px;
+  color: var(--lab-fg);
+  cursor: pointer;
+}
+
+.guide[open] {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.snippet {
+  margin: 0;
+  padding: 10px 12px;
+  overflow-x: auto;
+  font-family: var(--lab-mono);
+  font-size: 12px;
+  line-height: 1.5;
+  background: var(--lab-bg);
+  border: 1px solid var(--lab-line);
+  border-radius: 10px;
+}

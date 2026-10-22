@@ -188,6 +188,10 @@ export class JobAgent extends Think<Env> {
     if (profile) {
       parts.push(`Company profile, written by the organization you work for:\n${profile}`);
     }
+    const website = this.jobSettings().website;
+    if (website) {
+      parts.push(`The organization's website: ${website}`);
+    }
     return parts.join("\n\n");
   }
 

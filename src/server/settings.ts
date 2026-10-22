@@ -3,6 +3,14 @@ import { z } from "zod";
 import { DEFAULT_ROLE_ID, hostList, modelId } from "./roles";
 import { isTimeZone } from "./schedule-rules";
 
+function isHttpsUrl(value: string) {
+  try {
+    return new URL(value).protocol === "https:";
+  } catch {
+    return false;
+  }
+}
+
 export function defaultSettings(orgId: string): OrgSettings {
   return {
     approveBrowserActions: false,
@@ -18,6 +26,7 @@ export function defaultSettings(orgId: string): OrgSettings {
     orgName: orgId,
     routerModel: DEFAULT_MODEL,
     timeZone: "",
+    website: "",
   };
 }
 
@@ -40,6 +49,12 @@ export const settingsInput = z
     // The backup router calls Workers AI directly, without the gateway.
     routerModel: modelId.refine((id) => modelInfo(id)?.provider === "workers-ai", "Pick a Workers AI model"),
     timeZone: z.string().refine((value) => value === "" || isTimeZone(value), "Not a known time zone"),
+    website: z
+      .string()
+      .trim()
+      .max(SETTINGS_LIMITS.website)
+      .transform((value) => (value && !/^https?:\/\//i.test(value) ? `https://${value}` : value))
+      .refine((value) => value === "" || isHttpsUrl(value), "Enter a web address such as https://example.com"),
   })
   .partial();
 
@@ -58,6 +73,7 @@ export const SETTINGS_LABELS: Record<string, string> = {
   maxConcurrentJobs: "Concurrent jobs",
   maxSteps: "Steps per turn",
   orgName: "Organization name",
+  website: "Website",
   routerModel: "Backup router model",
   timeZone: "Time zone",
 };

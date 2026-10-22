@@ -48,6 +48,8 @@ interface OrgContextValue {
   /** For admins: everyone who has signed in. */
   listMembers: () => Promise<MemberInfo[]>;
   setAdmin: (email: string, admin: boolean) => Promise<void>;
+  /** Deployments set up in the browser switch web search here (it has no binding). */
+  setWebSearch: (on: boolean) => Promise<void>;
   chooseTeam: (choice: TeamChoice) => Promise<RoleConfig[]>;
   listSkills: () => Promise<SkillInfo[]>;
   /** Skill names that suit a role, from the Clef decision model; empty when it cannot say. */
@@ -99,6 +101,7 @@ export function OrgProvider({ me, children }: { me: Me; children: ReactNode }) {
   const { orgId } = me;
   const [state, setState] = useState<OrgState>({
     admins: [],
+    setupKind: "cli",
     capabilities: { browser: false, sendEmail: false, webFetch: true, webSearch: false },
     connections: [],
     aiBilling: null,
@@ -128,6 +131,7 @@ export function OrgProvider({ me, children }: { me: Me; children: ReactNode }) {
       orgName: me.orgId,
       routerModel: "@cf/moonshotai/kimi-k2.7-code",
       timeZone: "",
+    website: "",
     },
   });
   const [connected, setConnected] = useState(false);
@@ -148,6 +152,7 @@ export function OrgProvider({ me, children }: { me: Me; children: ReactNode }) {
       isAdmin: state.admins.includes(me.email.toLowerCase()),
       listMembers: () => org.call<MemberInfo[]>("listMembers", []),
       setAdmin: (email, admin) => org.call<void>("setAdmin", [email, admin]),
+      setWebSearch: (on) => org.call<void>("setWebSearch", [on]),
       chooseTeam: (choice) => org.call<RoleConfig[]>("chooseTeam", [choice]),
       listSkills: () => org.call<SkillInfo[]>("listSkills", []),
       suggestSkills: (role) => org.call<string[]>("suggestSkills", [role]),

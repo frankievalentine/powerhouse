@@ -32,7 +32,8 @@ interface ShellContextValue {
   /** Opens a run's window at its pill once Org's state has listed it. */
   openRun: (runId: string) => void;
   openSchedules: () => void;
-  openSettings: () => void;
+  /** Opens Settings; "tools" scrolls to the Tools section with the first tool that is off open. */
+  openSettings: (section?: "tools") => void;
   /** Open the live job window next to `anchor`. Re-opening focuses it. */
   openJob: (runId: string, anchor: JobAnchor) => void;
 }
@@ -63,7 +64,7 @@ export function PulseShell({ children, className }: { children: ReactNode; class
   const [dispatchError, setDispatchError] = useState<string | null>(null);
   const [rolesOpen, setRolesOpen] = useState(false);
   const [schedulesOpen, setSchedulesOpen] = useState(false);
-  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState<false | { section?: "tools" }>(false);
   const [wide, setWide] = useState(() => window.innerWidth >= DOCK_MIN_WIDTH);
   const keyRef = useRef(0);
   const zRef = useRef(BASE_Z);
@@ -156,7 +157,7 @@ export function PulseShell({ children, className }: { children: ReactNode; class
       openRoles: () => setRolesOpen(true),
       openRun,
       openSchedules: () => setSchedulesOpen(true),
-      openSettings: () => setSettingsOpen(true),
+      openSettings: (section) => setSettingsOpen({ section: section === "tools" ? "tools" : undefined }),
     }),
     [dispatchAndOpen, dispatchError, openJob, openRun],
   );
@@ -199,7 +200,7 @@ export function PulseShell({ children, className }: { children: ReactNode; class
         <Suspense fallback={null}>
           {rolesOpen && <RolesSheet onClose={() => setRolesOpen(false)} />}
           {schedulesOpen && <SchedulesSheet onClose={() => setSchedulesOpen(false)} />}
-          {settingsOpen && <SettingsSheet onClose={() => setSettingsOpen(false)} />}
+          {settingsOpen && <SettingsSheet focus={settingsOpen.section} onClose={() => setSettingsOpen(false)} />}
         </Suspense>
         {palette && (
           <DispatchPalette
