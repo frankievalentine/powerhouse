@@ -4,9 +4,11 @@ What changed in each powerhouse release. Updates follow these releases: Deploy t
 
 ## Unreleased
 
+## 1.1.0 (2026-10-22)
+
 ### Added
 
-- Team memory: notes every job can look up (decisions, contacts, product facts, preferences). Jobs search them and start with the ones that match; when you tell a job something worth keeping, it proposes a note, and an admin approves, edits or rejects it in Settings > Team memory. The header shows how many wait for review.
+- Team memory: notes every job can look up (decisions, contacts, product facts, preferences). Jobs search them and start with the ones that match; when you tell a job something worth keeping, it proposes a note, and an admin approves, edits or rejects it in Settings > Organization > Team memory. The header shows how many wait for review.
 - Concise answers, on by default (Settings > Jobs): answers lead with the result in a few short lines. Adapted from the MIT-licensed i-have-adhd output style.
 - Documents show as cards in the job window: rendered, with Open (a wide reader), Copy and Download .md. Code blocks get a header with Copy, long answers collapse, and tables render.
 - Long jobs summarize their older steps instead of running out of context, with the cost counted in the job. The transcript marks where.
@@ -15,16 +17,19 @@ What changed in each powerhouse release. Updates follow these releases: Deploy t
 - Attach files to a job: PDFs, Word and Excel documents, CSVs and text files, up to 5 of 5 MB each, from the composer's paperclip or by dropping them. They become text through Workers AI Markdown Conversion; only the text is kept, and it is deleted with the job's history.
 - MCP server: members start jobs and read their results from Claude, ChatGPT or Cursor at `https://<your powerhouse>/mcp`, after allowing the app in powerhouse. Off until an admin turns it on in Settings; setup adds the Access bypass it needs. Deployments set up before it add it once: rerun setup, or, for Deploy to Cloudflare copies, paste a one-time token in Settings > MCP. Jobs show which app started them, members remove their apps in Settings, and admins can disconnect a member's apps.
 - Per-member budgets: jobs tell the AI Gateway who started them (`member`), plus the role and run, so a spend limit split by `member` gives each member their own budget. A member who reaches theirs gets a clear message, and it no longer marks the model as needing attention for everyone.
-- GitHub connection: Settings > Connections creates a private GitHub App for your org in one click (GitHub's manifest flow), limited to the repositories you choose and to contents, issues and pull requests. Other servers without automatic registration take an OAuth app's client ID and secret.
+- GitHub connection: Settings > MCP creates a private GitHub App for your org in one click (GitHub's manifest flow), limited to the repositories you choose and to contents, issues and pull requests. Other servers without automatic registration take an OAuth app's client ID and secret.
 
 ### Fixed
 
 - A role's suggestion on the home page goes to that role instead of through routing.
 - After a deploy or restart, a job that was being routed is routed again, an approved email or connection write is never repeated, and the job says it resumed.
+- Deployed copies: Create the GitHub App did nothing and left the Connect buttons disabled, because the page's security policy blocked the form to GitHub. Read aloud and the voice microphone would have been blocked the same way.
 
 ### Changed
 
-- The Worker is about 300 KB smaller (gzipped), leaving more room under the Workers Free limit.
+- Settings opens to a list of pages (Organization, Jobs, Safety, MCP, Members, Status), each saving on its own, with the theme switch on the list. Team memory sits under the company profile; the job model, routing and history are under Jobs; tools and notifications are under Status; using powerhouse from Claude, ChatGPT or Cursor and the servers it connects to are under MCP.
+- The org's time zone is set from the first admin's browser instead of staying unset.
+- The Worker is about 300 KB smaller (gzipped) than it would otherwise be, despite the new features, by leaving out an unused shell library.
 - Built on Agents SDK 0.30 and Think 0.21: a job turn that keeps hitting the memory limit stops after five attempts instead of retrying forever.
 
 ## 1.0.1 (2026-10-22)
