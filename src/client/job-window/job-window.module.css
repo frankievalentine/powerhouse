@@ -1,0 +1,211 @@
+.window {
+  position: fixed;
+  display: flex;
+  visibility: hidden;
+  flex-direction: column;
+  overflow: hidden;
+  font-family: var(--lab-font);
+  color: var(--lab-fg);
+  background: var(--lab-surface);
+  border: 1px solid var(--lab-line);
+  border-radius: var(--lab-radius);
+  box-shadow: var(--lab-shadow);
+}
+
+.window[data-side="sheet"] {
+  border-bottom: 0;
+  border-radius: var(--lab-radius) var(--lab-radius) 0 0;
+}
+
+.tether {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.tether path {
+  opacity: 0.7;
+  fill: none;
+  stroke: var(--lab-tether, var(--lab-accent));
+  stroke-width: 1;
+}
+
+.progress {
+  height: 2px;
+  background: oklch(0.72 0.15 var(--dept-hue));
+  transform-origin: left;
+  transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.progress[data-live] {
+  background: linear-gradient(
+    90deg,
+    oklch(0.72 0.15 var(--dept-hue)),
+    oklch(0.85 0.1 var(--dept-hue)),
+    oklch(0.72 0.15 var(--dept-hue))
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.6s linear infinite;
+}
+
+.header {
+  padding: 10px 12px 10px 14px;
+  touch-action: none;
+  cursor: grab;
+  user-select: none;
+  border-bottom: 1px solid var(--lab-line);
+}
+
+.header:active {
+  cursor: grabbing;
+}
+
+.titleRow {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.deptDot {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  background: oklch(0.72 0.15 var(--dept-hue));
+  border-radius: 2px;
+}
+
+.role {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.dept {
+  font-size: 12px;
+  color: var(--lab-muted);
+}
+
+.spacer {
+  flex: 1;
+}
+
+.iconButton {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  color: var(--lab-muted);
+  cursor: pointer;
+  background: transparent;
+  border: 0;
+  border-radius: 6px;
+}
+
+.iconButton:hover {
+  color: var(--lab-fg);
+  background: color-mix(in oklab, var(--lab-fg) 8%, transparent);
+}
+
+.iconButton:focus-visible {
+  outline: 2px solid var(--lab-accent);
+  outline-offset: 1px;
+}
+
+.metaRow {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-top: 6px;
+  font-size: 13px;
+}
+
+.activity {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 12px;
+  color: var(--lab-muted);
+  white-space: nowrap;
+}
+
+.elapsed {
+  font-family: var(--lab-mono);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  color: var(--lab-muted);
+}
+
+.machine {
+  margin-top: 4px;
+  font-family: var(--lab-mono);
+  font-size: 10.5px;
+  color: var(--lab-muted);
+  opacity: 0.75;
+}
+
+.body {
+  flex: 1;
+  min-height: 0;
+}
+
+@keyframes shimmer {
+  to {
+    background-position: -200% 0;
+  }
+}
+
+/* No role yet: neutral until routing picks one. */
+.window[data-routing] .progress,
+.window[data-routing] .deptDot {
+  background: var(--lab-line);
+}
+
+.pending {
+  padding: 14px 16px 8px;
+  font-size: 13px;
+}
+
+/* Matches the transcript's user message, so nothing moves when it takes over. */
+.pendingPrompt {
+  width: fit-content;
+  max-width: 88%;
+  padding: 8px 11px;
+  margin: 0 0 12px auto;
+  line-height: 1.45;
+  white-space: pre-wrap;
+  background: color-mix(in oklab, var(--lab-fg) 7%, transparent);
+  border-radius: calc(var(--lab-radius) * 0.75);
+}
+
+.pendingStop {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+  padding: 5px 10px;
+  font: inherit;
+  font-size: 12.5px;
+  color: var(--lab-muted);
+  cursor: pointer;
+  background: transparent;
+  border: 1px solid var(--lab-line);
+  border-radius: calc(var(--lab-radius) * 0.5);
+}
+
+.pendingStop:hover {
+  color: var(--lab-danger);
+}
+
+.pendingStop:focus-visible {
+  outline: 2px solid var(--lab-accent);
+  outline-offset: 2px;
+}
+
+.loading {
+  padding: 14px 16px;
+  margin: 0;
+  font-size: 13px;
+  color: var(--lab-muted);
+}

@@ -1,0 +1,92 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+  padding: 0;
+  margin: 0;
+}
+
+/* Background on the root, so the page is the right color before the app loads. */
+html {
+  color: var(--lab-fg);
+  background: var(--lab-bg);
+}
+
+body {
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+button {
+  font: inherit;
+}
+
+canvas {
+  display: block;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  white-space: nowrap;
+  border: 0;
+  clip: rect(0, 0, 0, 0);
+}
+
+:root {
+  --font-sans: "Hanken Grotesk";
+  --font-mono: "Fragment Mono";
+}
+
+/*
+ * Theme. Every color is light-dark(light, dark): the page follows the
+ * system unless data-theme on <html> picks one (lib/theme.ts, and the
+ * script in index.html that applies it before the first paint).
+ * color-scheme also switches native controls and scrollbars.
+ */
+:root {
+  color-scheme: light dark;
+
+  --lab-bg: light-dark(#f4f1ec, #171513);
+  --lab-surface: light-dark(#fbfaf7, #221f1c);
+  --lab-fg: light-dark(#1e1c1a, #ece7e0);
+  --lab-muted: light-dark(#807a72, #9d968c);
+  --lab-line: light-dark(rgb(30 28 26 / 0.1), rgb(236 231 224 / 0.1));
+  --lab-line-strong: light-dark(rgb(30 28 26 / 0.25), rgb(236 231 224 / 0.25));
+  --lab-accent: light-dark(#5b54e8, #8f89ff);
+  --lab-warn: light-dark(#e8930c, #f0a43a);
+  --lab-on-warn: #1e1c1a;
+  --lab-danger: light-dark(#d4442e, #f06b55);
+  --lab-ok: light-dark(#2e8a5a, #5cc48e);
+  --lab-backdrop: light-dark(#1e1c1a, #000);
+  /* Behind side sheets: a lighter dim than dialogs. */
+  --lab-scrim: light-dark(rgb(30 28 26 / 0.28), rgb(0 0 0 / 0.5));
+  --lab-tether: light-dark(rgb(30 28 26 / 0.35), rgb(236 231 224 / 0.3));
+  --lab-shadow:
+    0 1px 2px light-dark(rgb(30 28 26 / 0.06), rgb(0 0 0 / 0.4)),
+    0 30px 70px -20px light-dark(rgb(30 28 26 / 0.25), rgb(0 0 0 / 0.7));
+  --lab-shadow-sm: 0 1px 2px light-dark(rgb(30 28 26 / 0.06), rgb(0 0 0 / 0.35));
+  --lab-shadow-hover: 0 8px 24px -10px light-dark(rgb(30 28 26 / 0.25), rgb(0 0 0 / 0.6));
+
+  --lab-radius: 18px;
+  --lab-font: var(--font-sans), system-ui, sans-serif;
+  --lab-display: var(--font-sans), system-ui, sans-serif;
+  --lab-mono: var(--font-mono), ui-monospace, monospace;
+}
+
+:root[data-theme="light"] {
+  color-scheme: light;
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+}

@@ -1,0 +1,206 @@
+{
+  "skills": [
+    {
+      "name": "accessibility",
+      "repo": "addyosmani/web-quality-skills",
+      "path": "skills/accessibility",
+      "commit": "afa8da942115f2961fdbfa80807ea0b232ff6c00",
+      "license": "MIT"
+    },
+    {
+      "name": "account-research",
+      "repo": "anthropics/knowledge-work-plugins",
+      "path": "sales/skills/account-research",
+      "commit": "bc8f6922cfeea215a202cdcc9f0d299a990889a8",
+      "license": "Apache-2.0"
+    },
+    {
+      "name": "cold-email",
+      "repo": "coreyhaines31/marketingskills",
+      "path": "skills/cold-email",
+      "commit": "e85f3cbc2e4a79bf33b2a12e9bdd9087d414735b",
+      "license": "MIT",
+      "stripSections": [
+        "Tool Integrations"
+      ]
+    },
+    {
+      "name": "competitive-battlecard",
+      "repo": "phuryn/pm-skills",
+      "path": "pm-go-to-market/skills/competitive-battlecard",
+      "commit": "07b34f64ee828df08953f505b7f747aef85ae7c6",
+      "license": "MIT"
+    },
+    {
+      "name": "competitive-brief",
+      "repo": "anthropics/knowledge-work-plugins",
+      "path": "marketing/skills/competitive-brief",
+      "commit": "bc8f6922cfeea215a202cdcc9f0d299a990889a8",
+      "license": "Apache-2.0"
+    },
+    {
+      "name": "competitor-profiling",
+      "repo": "coreyhaines31/marketingskills",
+      "path": "skills/competitor-profiling",
+      "commit": "e85f3cbc2e4a79bf33b2a12e9bdd9087d414735b",
+      "license": "MIT"
+    },
+    {
+      "name": "content-strategy",
+      "repo": "coreyhaines31/marketingskills",
+      "path": "skills/content-strategy",
+      "commit": "e85f3cbc2e4a79bf33b2a12e9bdd9087d414735b",
+      "license": "MIT"
+    },
+    {
+      "name": "copy-editing",
+      "repo": "coreyhaines31/marketingskills",
+      "path": "skills/copy-editing",
+      "commit": "e85f3cbc2e4a79bf33b2a12e9bdd9087d414735b",
+      "license": "MIT"
+    },
+    {
+      "name": "copywriting",
+      "repo": "coreyhaines31/marketingskills",
+      "path": "skills/copywriting",
+      "commit": "e85f3cbc2e4a79bf33b2a12e9bdd9087d414735b",
+      "license": "MIT"
+    },
+    {
+      "name": "create-prd",
+      "repo": "phuryn/pm-skills",
+      "path": "pm-execution/skills/create-prd",
+      "commit": "07b34f64ee828df08953f505b7f747aef85ae7c6",
+      "license": "MIT"
+    },
+    {
+      "name": "customer-research",
+      "repo": "coreyhaines31/marketingskills",
+      "path": "skills/customer-research",
+      "commit": "e85f3cbc2e4a79bf33b2a12e9bdd9087d414735b",
+      "license": "MIT"
+    },
+    {
+      "name": "draft-response",
+      "repo": "anthropics/knowledge-work-plugins",
+      "path": "customer-support/skills/draft-response",
+      "commit": "bc8f6922cfeea215a202cdcc9f0d299a990889a8",
+      "license": "Apache-2.0"
+    },
+    {
+      "name": "exploratory-testing",
+      "repo": "petrkindlmann/qa-skills",
+      "path": "skills/exploratory-testing",
+      "commit": "462126bcc4d3bfe94a7c064b848c690c1366f343",
+      "license": "MIT"
+    },
+    {
+      "name": "internal-comms",
+      "repo": "anthropics/skills",
+      "path": "skills/internal-comms",
+      "commit": "dbd4588f9e1033efb41dad4bef2f7947c8993d44",
+      "license": "Apache-2.0"
+    },
+    {
+      "name": "kb-article",
+      "repo": "anthropics/knowledge-work-plugins",
+      "path": "customer-support/skills/kb-article",
+      "commit": "bc8f6922cfeea215a202cdcc9f0d299a990889a8",
+      "license": "Apache-2.0"
+    },
+    {
+      "name": "launch",
+      "repo": "coreyhaines31/marketingskills",
+      "path": "skills/launch",
+      "commit": "e85f3cbc2e4a79bf33b2a12e9bdd9087d414735b",
+      "license": "MIT"
+    },
+    {
+      "name": "legal-risk-assessment",
+      "repo": "anthropics/knowledge-work-plugins",
+      "path": "legal/skills/legal-risk-assessment",
+      "commit": "bc8f6922cfeea215a202cdcc9f0d299a990889a8",
+      "license": "Apache-2.0"
+    },
+    {
+      "name": "pre-mortem",
+      "repo": "phuryn/pm-skills",
+      "path": "pm-execution/skills/pre-mortem",
+      "commit": "07b34f64ee828df08953f505b7f747aef85ae7c6",
+      "license": "MIT"
+    },
+    {
+      "name": "product-marketing",
+      "repo": "coreyhaines31/marketingskills",
+      "path": "skills/product-marketing",
+      "commit": "e85f3cbc2e4a79bf33b2a12e9bdd9087d414735b",
+      "license": "MIT"
+    },
+    {
+      "name": "prospecting",
+      "repo": "coreyhaines31/marketingskills",
+      "path": "skills/prospecting",
+      "commit": "e85f3cbc2e4a79bf33b2a12e9bdd9087d414735b",
+      "license": "MIT",
+      "stripSections": [
+        "Tool Integrations"
+      ]
+    },
+    {
+      "name": "release-notes",
+      "repo": "phuryn/pm-skills",
+      "path": "pm-execution/skills/release-notes",
+      "commit": "07b34f64ee828df08953f505b7f747aef85ae7c6",
+      "license": "MIT"
+    },
+    {
+      "name": "review-contract",
+      "repo": "anthropics/knowledge-work-plugins",
+      "path": "legal/skills/review-contract",
+      "commit": "bc8f6922cfeea215a202cdcc9f0d299a990889a8",
+      "license": "Apache-2.0"
+    },
+    {
+      "name": "sales-discovery-questions",
+      "repo": "mbfinotti/sales-skills",
+      "path": "skills/sales-discovery-questions",
+      "commit": "1ef68881b2ed853fb1f02272b57dc71dd375677f",
+      "license": "MIT"
+    },
+    {
+      "name": "seo-audit",
+      "repo": "coreyhaines31/marketingskills",
+      "path": "skills/seo-audit",
+      "commit": "e85f3cbc2e4a79bf33b2a12e9bdd9087d414735b",
+      "license": "MIT"
+    },
+    {
+      "name": "stakeholder-update",
+      "repo": "anthropics/knowledge-work-plugins",
+      "path": "product-management/skills/stakeholder-update",
+      "commit": "bc8f6922cfeea215a202cdcc9f0d299a990889a8",
+      "license": "Apache-2.0"
+    },
+    {
+      "name": "synthesize-research",
+      "repo": "anthropics/knowledge-work-plugins",
+      "path": "product-management/skills/synthesize-research",
+      "commit": "bc8f6922cfeea215a202cdcc9f0d299a990889a8",
+      "license": "Apache-2.0"
+    },
+    {
+      "name": "ticket-triage",
+      "repo": "anthropics/knowledge-work-plugins",
+      "path": "customer-support/skills/ticket-triage",
+      "commit": "bc8f6922cfeea215a202cdcc9f0d299a990889a8",
+      "license": "Apache-2.0"
+    },
+    {
+      "name": "triage-nda",
+      "repo": "anthropics/knowledge-work-plugins",
+      "path": "legal/skills/triage-nda",
+      "commit": "bc8f6922cfeea215a202cdcc9f0d299a990889a8",
+      "license": "Apache-2.0"
+    }
+  ]
+}

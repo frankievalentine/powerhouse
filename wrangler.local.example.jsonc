@@ -1,0 +1,66 @@
+// Your deployment's settings. `node setup.mjs` writes and maintains this file
+// (gitignored) for you; edit it by hand only for what setup does not cover.
+// To start by hand: cp wrangler.local.example.jsonc wrangler.local.jsonc
+//
+// Top-level keys here replace the base config's (wrangler.jsonc), except
+// "vars", which merge key by key. Optional features stay off until their
+// settings are present, and Settings in the app shows what is configured.
+{
+  "vars": {
+    // Required. Cloudflare Access: your team domain and the Access
+    // application's AUD tag (setup creates the application).
+    "ACCESS_TEAM_DOMAIN": "https://your-team.cloudflareaccess.com",
+    "ACCESS_AUD": "your-access-application-aud-tag",
+
+    // Who are always admins (comma-separated emails): they change settings,
+    // roles and connections. Setup writes your Cloudflare sign-in email; more
+    // admins are added in Settings > Members.
+    "ADMIN_EMAILS": "you@example.com",
+
+    // Claude and GPT through your AI Gateway (setup creates it). Provider keys
+    // live on the gateway, never here.
+    // AI_GATEWAY_ID: the gateway's name. AI_PROVIDERS: the vendors it can
+    // reach, "anthropic", "openai" or both. AI_BILLING: "keys" (your own keys
+    // on the gateway) or "credits" (Unified Billing). AI_SPEND_LIMITS: "on" or
+    // "off", whether the gateway had a spend limit when setup last checked.
+    "AI_GATEWAY_ID": "powerhouse",
+    "AI_PROVIDERS": "anthropic",
+    "AI_BILLING": "keys",
+    "AI_SPEND_LIMITS": "off",
+
+    // Push notifications: the public VAPID key. Setup creates the key pair and
+    // stores VAPID_PRIVATE_KEY and VAPID_SUBJECT as Worker secrets, not here.
+    "VAPID_PUBLIC_KEY": "setup-writes-this",
+
+    // Email: sender address on a domain onboarded to Cloudflare Email Service.
+    "EMAIL_FROM": "powerhouse@example.com",
+
+    // Web search (Cloudflare Web Search API through AI Gateway). Each search is
+    // billed to AI Gateway credits or a search provider key stored on the
+    // gateway; with neither, searches fail with web_search_payment_required.
+    "WEB_SEARCH": "on",
+    // Optional: the gateway and search provider searches use. The gateway can
+    // be the same one as above.
+    // "WEB_SEARCH_GATEWAY": "powerhouse",
+    // "WEB_SEARCH_PROVIDER": "exa",
+
+    // Tracing: "on" also stores message and tool contents on traces. They can
+    // contain personal data, so leave it off unless you need it.
+    "TRACE_PAYLOADS": "off"
+  },
+
+  // Tracing in the dashboard's Agents view (session replay, per-turn
+  // waterfalls). Billed under Cloudflare Observability pricing.
+  "observability": { "traces": { "enabled": true } },
+
+  // Web browser tool (Workers Paid; Browser Run, billed by browser hours and
+  // concurrent browsers). Needs both bindings: BROWSER runs the browser,
+  // LOADER runs the model's browser code in a sandbox. Browser Run only runs
+  // remotely, so local dev uses and bills your account too.
+  "browser": { "binding": "BROWSER", "remote": true },
+  "worker_loaders": [{ "binding": "LOADER" }],
+
+  // Email tool (Cloudflare Email Service). Without "remote": true, local dev
+  // writes messages under .wrangler/tmp/email instead of sending them.
+  "send_email": [{ "name": "EMAIL" }]
+}

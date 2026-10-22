@@ -1,0 +1,592 @@
+.dialog {
+  --backdrop: 1;
+
+  width: min(460px, 100vw);
+  max-width: none;
+  height: 100vh;
+  max-height: none;
+  padding: 0;
+  margin: 0 0 0 auto;
+  color: var(--lab-fg);
+  background: transparent;
+  border: 0;
+}
+
+.dialog::backdrop {
+  background: color-mix(in oklab, var(--lab-scrim) calc(var(--backdrop) * 100%), transparent);
+}
+
+.sheet {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  font-family: var(--lab-font);
+  background: var(--lab-surface);
+  box-shadow: var(--lab-shadow);
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 16px 12px 20px;
+  border-bottom: 1px solid var(--lab-line);
+}
+
+.title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 16px;
+  padding: 16px 20px 28px;
+  overflow-y: auto;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.row {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  width: 100%;
+  padding: 12px 12px 12px 14px;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  background: var(--lab-bg);
+  border: 0;
+  border-radius: 12px;
+}
+
+.row:hover {
+  box-shadow: 0 0 0 1px var(--lab-line);
+}
+
+.rowText {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.rowName {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.rowPurpose {
+  font-size: 13px;
+  color: var(--lab-muted);
+}
+
+.rowTools {
+  margin-top: 4px;
+  font-family: var(--lab-mono);
+  font-size: 11px;
+  color: var(--lab-muted);
+}
+
+.chevron {
+  flex: none;
+  margin-top: 2px;
+  color: var(--lab-muted);
+}
+
+.swatch {
+  display: inline-block;
+  flex: none;
+  width: 10px;
+  height: 10px;
+  margin-top: 4px;
+  vertical-align: middle;
+  background: oklch(0.65 0.15 var(--dept-hue));
+  border-radius: 50%;
+}
+
+.label .swatch {
+  margin: 0 0 0 6px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 0;
+  margin: 0;
+  border: 0;
+}
+
+.label {
+  padding: 0;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.hint,
+.muted {
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.4;
+  color: var(--lab-muted);
+}
+
+.muted {
+  margin: 0;
+}
+
+.input,
+.textarea {
+  width: 100%;
+  padding: 9px 11px;
+  font: inherit;
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--lab-fg);
+  background: var(--lab-bg);
+  border: 1px solid var(--lab-line);
+  border-radius: 10px;
+  outline: none;
+}
+
+.textarea {
+  resize: vertical;
+}
+
+.input:focus,
+.textarea:focus {
+  border-color: light-dark(oklch(0.6 0.15 var(--dept-hue)), oklch(0.72 0.13 var(--dept-hue)));
+}
+
+.colors {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.colorSwatch {
+  width: 16px;
+  height: 16px;
+  padding: 0;
+  cursor: pointer;
+  background: oklch(0.65 0.15 var(--dept-hue));
+  border: 0;
+  border-radius: 50%;
+  box-shadow: 0 0 0 1px var(--lab-line);
+  transition: transform 0.12s ease;
+}
+
+.colorSwatch:hover {
+  transform: scale(1.1);
+}
+
+.colorSwatch[aria-checked="true"] {
+  box-shadow:
+    0 0 0 2px var(--lab-bg),
+    0 0 0 4px light-dark(oklch(0.55 0.15 var(--dept-hue)), oklch(0.78 0.12 var(--dept-hue)));
+}
+
+.colorSwatch:focus-visible {
+  outline: 2px solid var(--lab-accent);
+  outline-offset: 3px;
+}
+
+.tool {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 8px 0;
+  cursor: pointer;
+}
+
+.tool input {
+  margin-top: 3px;
+  accent-color: light-dark(oklch(0.55 0.15 var(--dept-hue)), oklch(0.72 0.13 var(--dept-hue)));
+}
+
+.tool > span {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.toolName {
+  font-size: 14px;
+}
+
+.actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 4px;
+}
+
+.primary,
+.danger {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+  justify-content: center;
+  padding: 9px 16px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--lab-surface);
+  cursor: pointer;
+  background: var(--lab-fg);
+  border: 0;
+  border-radius: 999px;
+}
+
+.danger {
+  background: var(--lab-danger);
+}
+
+.primary:disabled,
+.danger:disabled {
+  cursor: default;
+  opacity: 0.5;
+}
+
+.body > .primary {
+  align-self: flex-start;
+}
+
+.textButton,
+.iconButton {
+  padding: 4px;
+  font: inherit;
+  font-size: 13px;
+  color: var(--lab-muted);
+  cursor: pointer;
+  background: none;
+  border: 0;
+  border-radius: 6px;
+}
+
+.textButton:hover,
+.iconButton:hover {
+  color: var(--lab-fg);
+}
+
+.iconButton {
+  display: grid;
+  place-items: center;
+}
+
+.error {
+  margin: 0;
+  font-size: 13px;
+  color: var(--lab-danger);
+}
+
+.row:focus-visible,
+.primary:focus-visible,
+.danger:focus-visible,
+.textButton:focus-visible,
+.iconButton:focus-visible {
+  outline: 2px solid var(--lab-accent);
+  outline-offset: 2px;
+}
+
+.tool[data-unavailable] .toolName {
+  color: var(--lab-muted);
+}
+
+.badge {
+  display: inline-block;
+  padding: 1px 7px;
+  margin-left: 8px;
+  font-size: 11px;
+  font-weight: 500;
+  vertical-align: 1px;
+  color: var(--lab-muted);
+  border: 1px solid var(--lab-line);
+  border-radius: 999px;
+}
+
+.tabs {
+  display: flex;
+  gap: 4px;
+  padding: 3px;
+  background: var(--lab-bg);
+  border-radius: 10px;
+}
+
+.tab {
+  flex: 1;
+  padding: 7px 10px;
+  font: inherit;
+  font-size: 13px;
+  color: var(--lab-muted);
+  cursor: pointer;
+  background: none;
+  border: 0;
+  border-radius: 8px;
+}
+
+.tab[aria-selected="true"],
+.tab[aria-checked="true"] {
+  color: var(--lab-fg);
+  background: var(--lab-surface);
+  box-shadow: var(--lab-shadow-sm);
+}
+
+.row[data-static] {
+  align-items: center;
+  cursor: default;
+}
+
+.row[data-static]:hover {
+  box-shadow: none;
+}
+
+.secondary {
+  flex: none;
+  padding: 7px 14px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--lab-fg);
+  cursor: pointer;
+  background: var(--lab-surface);
+  border: 1px solid var(--lab-line);
+  border-radius: 999px;
+}
+
+.secondary:disabled {
+  cursor: default;
+  opacity: 0.5;
+}
+
+select.input {
+  appearance: auto;
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid var(--lab-line);
+}
+
+.section:last-of-type {
+  border-bottom: 0;
+}
+
+.sectionTitle {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--lab-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.check {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  cursor: pointer;
+}
+
+.check input {
+  margin-top: 3px;
+}
+
+.check > span {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.status {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 6px 14px;
+  margin: 0;
+  font-size: 13px;
+}
+
+.status dt {
+  color: var(--lab-muted);
+}
+
+.status dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.checklist {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.checkItem {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px 12px;
+  border: 1px solid var(--lab-line);
+  border-radius: var(--lab-radius);
+}
+
+.checkItem[data-status="failing"] {
+  border-color: var(--lab-warn);
+}
+
+.checkItem p {
+  margin: 0;
+}
+
+.checkHead {
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.checkLabel {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.checkStatus {
+  font-size: 12px;
+  color: var(--lab-muted);
+  white-space: nowrap;
+}
+
+.checkItem[data-status="on"] .checkStatus {
+  color: var(--lab-ok);
+}
+
+.checkItem[data-status="failing"] .checkStatus {
+  font-weight: 600;
+  color: var(--lab-warn);
+}
+
+.checkFailure {
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.checkLink {
+  align-self: flex-start;
+  font-size: 12px;
+  color: var(--lab-accent);
+}
+
+.disclosure summary {
+  font-size: 13px;
+  color: var(--lab-muted);
+  cursor: pointer;
+}
+
+.disclosure[open] summary {
+  margin-bottom: 10px;
+}
+
+
+
+.tab:focus-visible,
+.secondary:focus-visible {
+  outline: 2px solid var(--lab-accent);
+  outline-offset: 2px;
+}
+
+/* A schedule: the row that opens its editor, then its Run now button. */
+.scheduleRow {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.scheduleRow > .row {
+  flex: 1;
+  min-width: 0;
+}
+
+.dayPicker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+}
+
+/* A heading inside a fieldset, such as "Recommended for this role". */
+.subLabel {
+  margin-top: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--lab-muted);
+}
+
+.testRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+
+.testOk {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--lab-ok);
+}
+
+.testFailed {
+  flex: 1;
+  min-width: 200px;
+  font-size: 13px;
+  color: var(--lab-danger);
+}
+
+
+
+/* Skill descriptions are long; two lines are enough to tell skills apart. */
+.clamp {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+/* A fieldset that only groups controls (to disable them together). */
+.plainFieldset {
+  display: contents;
+  padding: 0;
+  margin: 0;
+  border: 0;
+  min-width: 0;
+}
+
+.notice {
+  padding: 8px 12px;
+  margin: 0;
+  font-size: 13px;
+  color: var(--lab-muted);
+  background: color-mix(in oklab, var(--lab-fg) 5%, transparent);
+  border-radius: var(--lab-radius);
+}

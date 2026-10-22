@@ -1,0 +1,421 @@
+.root {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  font-size: 13px;
+  color: var(--lab-fg);
+}
+
+.viewport {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 14px 16px 8px;
+  scroll-behavior: smooth;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: var(--lab-line) transparent;
+}
+
+.user {
+  width: fit-content;
+  max-width: 88%;
+  padding: 8px 11px;
+  margin: 0 0 12px auto;
+  line-height: 1.45;
+  background: color-mix(in oklab, var(--lab-fg) 7%, transparent);
+  border-radius: calc(var(--lab-radius) * 0.75);
+}
+
+.user p {
+  margin: 0;
+}
+
+.assistant {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.text {
+  line-height: 1.55;
+  text-wrap: pretty;
+}
+
+.text > :first-child {
+  margin-top: 0;
+}
+
+.text > :last-child {
+  margin-bottom: 0;
+}
+
+.text p,
+.text ul,
+.text ol {
+  margin: 0 0 0.6em;
+}
+
+.text ul,
+.text ol {
+  padding-left: 1.2em;
+}
+
+.text li + li {
+  margin-top: 0.2em;
+}
+
+.text h1,
+.text h2,
+.text h3,
+.text h4 {
+  margin: 0.8em 0 0.4em;
+  font-size: 1em;
+  font-weight: 600;
+}
+
+.text a {
+  color: inherit;
+  text-underline-offset: 2px;
+}
+
+.text pre {
+  padding: 8px 10px;
+  margin: 0 0 0.6em;
+  overflow: auto;
+  font-family: var(--lab-mono);
+  font-size: 11.5px;
+  background: var(--lab-bg);
+  border-radius: 8px;
+}
+
+.reasoning summary {
+  display: inline-flex;
+  gap: 2px;
+  align-items: center;
+  font-size: 12.5px;
+  color: var(--lab-muted);
+  cursor: pointer;
+  list-style: none;
+}
+
+.reasoning summary::-webkit-details-marker {
+  display: none;
+}
+
+.reasoningChevron {
+  transition: transform 0.15s ease;
+}
+
+.reasoning[open] .reasoningChevron {
+  transform: rotate(90deg);
+}
+
+/* A highlight sweeping across the muted label while the model reasons. */
+.shimmer {
+  color: transparent;
+  background: linear-gradient(
+      100deg,
+      var(--lab-muted) 40%,
+      var(--lab-fg) 50%,
+      var(--lab-muted) 60%
+    )
+    0 0 / 250% 100%;
+  background-clip: text;
+  animation: shimmer 1.8s linear infinite;
+}
+
+@keyframes shimmer {
+  from {
+    background-position: 100% 0;
+  }
+
+  to {
+    background-position: 0% 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .shimmer {
+    color: var(--lab-muted);
+    background: none;
+    animation: none;
+  }
+}
+
+.reasoning p {
+  padding-left: 10px;
+  margin: 6px 0 0;
+  font-style: italic;
+  line-height: 1.5;
+  color: var(--lab-muted);
+  white-space: pre-wrap;
+  border-left: 1px solid var(--lab-line);
+}
+
+.tool {
+  overflow: hidden;
+  border: 1px solid var(--lab-line);
+  border-radius: calc(var(--lab-radius) * 0.6);
+}
+
+.toolError {
+  border-color: color-mix(in oklab, var(--lab-danger) 50%, var(--lab-line));
+}
+
+.toolHead {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  padding: 7px 10px;
+  font-size: 12px;
+}
+
+.toolIcon {
+  display: inline-flex;
+  color: var(--lab-muted);
+}
+
+.toolTitle {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.toolTitle code,
+.text code {
+  font-family: var(--lab-mono);
+  font-size: 0.95em;
+}
+
+.dim {
+  color: var(--lab-muted);
+}
+
+.pre {
+  max-height: 180px;
+  padding: 8px 10px 10px;
+  margin: 0;
+  overflow: auto;
+  font-family: var(--lab-mono);
+  font-size: 11.5px;
+  line-height: 1.55;
+  color: var(--lab-muted);
+  white-space: pre-wrap;
+  border-top: 1px solid var(--lab-line);
+}
+
+.add {
+  color: var(--lab-ok);
+}
+
+.del {
+  color: var(--lab-danger);
+}
+
+.rows {
+  padding: 6px 10px 9px 26px;
+  margin: 0;
+  font-family: var(--lab-mono);
+  font-size: 11.5px;
+  line-height: 1.6;
+  color: var(--lab-muted);
+  border-top: 1px solid var(--lab-line);
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 0 10px 9px;
+}
+
+.chip {
+  padding: 2px 7px;
+  font-family: var(--lab-mono);
+  font-size: 10.5px;
+  color: var(--lab-fg);
+  background: color-mix(in oklab, var(--lab-accent) 14%, transparent);
+  border-radius: 999px;
+}
+
+.chipMuted {
+  color: var(--lab-muted);
+  background: transparent;
+  border: 1px solid var(--lab-line);
+}
+
+.approval {
+  background: color-mix(in oklab, var(--lab-warn) 8%, transparent);
+  border: 1px solid var(--lab-warn);
+  border-radius: calc(var(--lab-radius) * 0.6);
+}
+
+.approval[data-state="yes"] {
+  background: transparent;
+  border-color: color-mix(in oklab, var(--lab-ok) 60%, var(--lab-line));
+}
+
+.approval[data-state="no"] {
+  background: transparent;
+  border-color: var(--lab-line);
+}
+
+.approvalDetail {
+  padding: 0 10px 8px 31px;
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--lab-muted);
+}
+
+/* Approval details are shown whole: line breaks kept, long URLs and words wrapped. */
+.wrap {
+  display: block;
+  margin-top: 4px;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+.approvalActions {
+  display: flex;
+  gap: 6px;
+  padding: 0 10px 10px 31px;
+}
+
+.approvalResult {
+  padding: 0 10px 9px 31px;
+  margin: 0;
+  font-size: 12px;
+  color: var(--lab-muted);
+}
+
+.approve,
+.decline {
+  padding: 5px 10px;
+  font: inherit;
+  font-size: 12px;
+  color: var(--lab-fg);
+  appearance: none;
+  cursor: pointer;
+  background: transparent;
+  border: 1px solid var(--lab-line);
+  border-radius: calc(var(--lab-radius) * 0.5);
+  transition:
+    background 0.15s,
+    border-color 0.15s;
+}
+
+.approve {
+  color: var(--lab-on-warn);
+  background: var(--lab-warn);
+  border-color: var(--lab-warn);
+}
+
+.approve:hover {
+  filter: brightness(1.08);
+}
+
+.decline:hover {
+  border-color: var(--lab-muted);
+}
+
+.composer {
+  display: flex;
+  gap: 8px;
+  align-items: flex-end;
+  padding: 6px 6px 6px 12px;
+  margin: 0 10px 10px;
+  background: color-mix(in oklab, var(--lab-fg) 3%, transparent);
+  border: 1px solid var(--lab-line);
+  border-radius: calc(var(--lab-radius) * 0.7);
+}
+
+.composer:focus-within {
+  border-color: color-mix(in oklab, var(--lab-accent) 60%, var(--lab-line));
+}
+
+.input {
+  flex: 1;
+  min-height: 24px;
+  max-height: 96px;
+  padding: 3px 0;
+  font: inherit;
+  line-height: 1.4;
+  color: var(--lab-fg);
+  resize: none;
+  outline: none;
+  background: transparent;
+  border: 0;
+}
+
+.input::placeholder {
+  color: var(--lab-muted);
+}
+
+.send {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  color: var(--lab-bg);
+  cursor: pointer;
+  background: var(--lab-fg);
+  border: 0;
+  border-radius: calc(var(--lab-radius) * 0.5);
+}
+
+.send:disabled {
+  cursor: default;
+  opacity: 0.3;
+}
+
+.approve:focus-visible,
+.decline:focus-visible,
+.send:focus-visible {
+  outline: 2px solid var(--lab-accent);
+  outline-offset: 2px;
+}
+
+.stop {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  color: var(--lab-muted);
+  cursor: pointer;
+  background: transparent;
+  border: 1px solid var(--lab-line);
+  border-radius: calc(var(--lab-radius) * 0.5);
+}
+
+.stop:hover {
+  color: var(--lab-danger);
+  border-color: var(--lab-danger);
+}
+
+.stop:focus-visible {
+  outline: 2px solid var(--lab-accent);
+  outline-offset: 2px;
+}
+
+.screenshot {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-top: 1px solid var(--lab-line);
+}
+
+.watchOnly {
+  margin: 0;
+  padding: 10px 14px;
+  font-size: 12px;
+  color: var(--lab-muted);
+  border-top: 1px solid var(--lab-line);
+}

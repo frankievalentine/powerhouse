@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- The pulse orb (pulse/blob.ts): a pearl sphere lit from the upper left, with thin-film iridescence on its rim. -->
+  <defs>
+    <radialGradient id="body" cx="0.36" cy="0.3" r="0.78">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="0.2" stop-color="#efebe4"/>
+      <stop offset="0.6" stop-color="#c4bcb1"/>
+      <stop offset="1" stop-color="#6f675e"/>
+    </radialGradient>
+    <linearGradient id="film" x1="0.1" y1="0" x2="0.9" y2="1">
+      <stop offset="0" stop-color="#e45fc4"/>
+      <stop offset="0.3" stop-color="#3fcfae"/>
+      <stop offset="0.65" stop-color="#6578ff"/>
+      <stop offset="1" stop-color="#f08f3a"/>
+    </linearGradient>
+    <radialGradient id="fresnel" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0.68" stop-color="#fff" stop-opacity="0"/>
+      <stop offset="0.9" stop-color="#fff" stop-opacity="0.9"/>
+      <stop offset="1" stop-color="#fff" stop-opacity="1"/>
+    </radialGradient>
+    <mask id="rim">
+      <circle cx="32" cy="32" r="30" fill="url(#fresnel)"/>
+    </mask>
+    <radialGradient id="glint" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#fff" stop-opacity="0.95"/>
+      <stop offset="1" stop-color="#fff" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <circle cx="32" cy="32" r="30" fill="url(#body)"/>
+  <circle cx="32" cy="32" r="30" fill="url(#film)" mask="url(#rim)"/>
+  <circle cx="32" cy="32" r="29.6" fill="none" stroke="url(#film)" stroke-width="1.2"/>
+  <ellipse cx="22" cy="19" rx="9" ry="7" fill="url(#glint)"/>
+</svg>
