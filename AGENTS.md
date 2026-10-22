@@ -34,7 +34,11 @@ When asked to set up, install or deploy powerhouse, run the setup script. Do not
 
 To turn tools on or off later, rerun with `--enable` or `--disable`. Settings in the app shows which tools are on, what they cost, and which need attention.
 
-Rerunning setup is safe: it skips finished steps. Rerun it after `git pull` to update a deployment. `node setup.mjs --help` lists every flag.
+Rerunning setup is safe: it skips finished steps. To update a deployment to the latest release, run `node setup.mjs --update` (a Deploy to Cloudflare copy updates through the pull requests its Update powerhouse workflow opens). `node setup.mjs --help` lists every flag.
+
+## Removing powerhouse
+
+Only when the person asks. Removal deletes all of powerhouse's data for good, so first say exactly that, and what is kept (Zero Trust, login methods, domains, their GitHub repository), and get an explicit yes that names the Worker. Then run `node setup.mjs --remove --yes --json`, with a token read from their clipboard into `POWERHOUSE_SETUP_TOKEN` as in setup (the result's `next` links the pre-filled token page). Afterwards, tell them to delete the "powerhouse remove" token. The README's "Remove powerhouse" section has the dashboard steps.
 
 ## Working on the code
 

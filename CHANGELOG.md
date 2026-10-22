@@ -4,6 +4,14 @@ What changed in each powerhouse release. Updates follow these releases: Deploy t
 
 ## Unreleased
 
+### Added
+
+- Remove powerhouse: `node setup.mjs --remove`, and a guide in the README for removing it by hand.
+
+### Changed
+
+- The README lays out Finish setup's steps.
+
 ## 1.0.0 (2026-10-22)
 
 ### Added

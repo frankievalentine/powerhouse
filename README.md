@@ -143,6 +143,27 @@ powerhouse updates follow its [releases](https://github.com/frankievalentine/pow
 
 Roles you already have are never overwritten: when an update adds a tool or skill, add it to your roles in the Roles sheet; new ready-made roles appear in its library.
 
+## Remove powerhouse
+
+Removing powerhouse deletes everything it stored (roles, jobs, settings, members, schedules and the sign-ins of its connections) for good. Export anything you want to keep first.
+
+**With the command** (needs a copy on your computer; Deploy to Cloudflare users can clone their own repository): run `node setup.mjs --remove`. It lists exactly what it found, asks you to type the Worker's name, and then deletes, in this order, the Access application, the "powerhouse members" policy (unless another application uses it), the Worker with all its data, and the AI Gateway. It asks once for an API token through a pre-filled link; delete that token afterwards.
+
+**By hand in the Cloudflare dashboard,** in this order so nobody can reach a half-removed app:
+
+1. **Access application:** Zero Trust > Access controls > Applications > the "powerhouse" application for your powerhouse address > Delete. Then Access controls > Policies > "powerhouse members" > Delete, unless another application uses it.
+2. **Worker and its data:** Workers & Pages > your powerhouse Worker > Settings > Delete. This also stops Workers Builds for a Deploy to Cloudflare repository.
+3. **AI Gateway:** AI > AI Gateway > "powerhouse" > Settings > Delete gateway. Its stored provider keys and logs go with it.
+4. **API tokens:** My Profile > API Tokens: delete any "powerhouse setup" or "powerhouse remove" token left.
+
+**Keep or remove yourself:**
+
+- Cloudflare Zero Trust and its login methods (One-time PIN): your account's, and other applications may use them.
+- A Secrets Store named "powerhouse", if setup stored provider keys there: delete it only if it holds nothing else.
+- Email Service domains: yours.
+- Connected services such as Linear or Notion: revoke powerhouse's access in each service's settings.
+- Your GitHub repository, if you used Deploy to Cloudflare, and your local folder with `wrangler.local.jsonc`.
+
 ## Bundled skills
 
 Roles can use these [Agent Skills](https://agentskills.io). Each job loads only its role's skills, as instructions; skill scripts never run. Vendored skills are pinned to an upstream commit in `skills.lock.json`. Their license files, and a `CHANGES.md` listing what powerhouse changed, are in [`skills-licenses/`](skills-licenses). Settings in the app shows the same list, with the roles that use each skill.

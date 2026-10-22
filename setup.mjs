@@ -31,6 +31,12 @@ Options:
   --account <id>     Cloudflare account id, when you have more than one.
   --update           Update to the latest powerhouse release first, then set
                      up and deploy as usual. Your settings are kept.
+  --remove           Remove this powerhouse from Cloudflare: its Access
+                     application, its Worker with all its data (roles, jobs,
+                     settings) and its AI Gateway. Lists everything first and
+                     asks you to type the Worker's name; --yes skips that.
+                     Shared things (Zero Trust, login methods, your domains)
+                     are never touched.
   --admins <list>    Who are always powerhouse admins (comma-separated
                      emails); admins change settings, roles and connections.
                      Defaults to the email you signed in to Cloudflare with.
@@ -118,6 +124,10 @@ async function main() {
     return {};
   }
   checkNode();
+  if (args.remove) {
+    installDependencies();
+    return removePowerhouse(await signIn());
+  }
   if (args.update && updateCheckout()) {
     // The release can change setup itself, so its own setup.mjs finishes the job.
     const rest = process.argv.slice(2).filter((arg) => arg !== "--update");
@@ -196,7 +206,6 @@ function checkNode() {
   done("node", `Node ${process.versions.node}`);
 }
 
-/** Uses the Bun version pinned in package.json through npx, so operators never install Bun. */
 /**
  * --update: moves this clone to the latest powerhouse release (a v* tag on
  * GitHub). Settings in wrangler.local.jsonc and .dev.vars are not tracked by
@@ -241,6 +250,7 @@ function updateCheckout() {
   return true;
 }
 
+/** Uses the Bun version pinned in package.json through npx, so operators never install Bun. */
 function installDependencies() {
   const { packageManager } = JSON.parse(readFileSync(join(ROOT, "package.json"), "utf8"));
   log(`Installing dependencies with ${packageManager} (first run downloads it)...`);
@@ -329,10 +339,7 @@ async function setupToken(account, aiMethod) {
   // Secrets Store's key is unknown, so when setup stores provider keys that
   // permission is added by hand. Both are checked once the token is pasted.
   const manual = aiMethod === "keys" ? "Account > Secrets Store > Edit" : null;
-  const templateUrl =
-    "https://dash.cloudflare.com/profile/api-tokens" +
-    `?permissionGroupKeys=${encodeURIComponent(JSON.stringify(permissions))}` +
-    `&accountId=${encodeURIComponent(account.id)}&zoneId=all&name=${encodeURIComponent("powerhouse setup")}`;
+  const templateUrl = tokenUrl(account, permissions, "powerhouse setup");
   let token = provided;
   if (!token) {
     if (args.yes) {
@@ -379,6 +386,15 @@ async function setupToken(account, aiMethod) {
   }
   done("access-token", "verified");
   return token;
+}
+
+/** The Cloudflare token page with these permissions filled in. */
+function tokenUrl(account, permissions, name) {
+  return (
+    "https://dash.cloudflare.com/profile/api-tokens" +
+    `?permissionGroupKeys=${encodeURIComponent(JSON.stringify(permissions))}` +
+    `&accountId=${encodeURIComponent(account.id)}&zoneId=all&name=${encodeURIComponent(name)}`
+  );
 }
 
 async function workersSubdomain(cf) {
@@ -684,6 +700,127 @@ function secretNames(worker) {
     "Could not check the Worker's secrets (see the output above).",
     "Rerun setup; if it keeps failing, check your connection to Cloudflare.",
   );
+}
+
+// Remove
+
+const REMOVE_PERMISSIONS = [
+  { key: "access", type: "edit" },
+  { key: "workers_scripts", type: "edit" },
+  { key: "aig", type: "edit" },
+];
+
+/**
+ * --remove: deletes what powerhouse created for this deployment, in an order
+ * that never leaves a half-removed app reachable: the Access application
+ * first, then the members policy (unless another application uses it), the
+ * Worker with its Durable Objects (all roles, jobs, settings and connection
+ * tokens) and the AI Gateway (its stored provider keys and logs). Shared
+ * things stay: Zero Trust, login methods, Email Service domains.
+ */
+async function removePowerhouse(account) {
+  const worker = workerName();
+  const gatewayId = readLocalVars().AI_GATEWAY_ID || "powerhouse";
+  const token = await removeToken(account);
+  const cf = cloudflare(token, account.id);
+  const missing = (error) => {
+    if (error instanceof SetupError && error.status === 404) {
+      return null;
+    }
+    throw error;
+  };
+
+  const subdomain = (await cf.get("/workers/subdomain", "remove").catch(missing))?.subdomain;
+  const hostname = subdomain ? `${worker}.${subdomain}.workers.dev` : null;
+  const script = await cf.get(`/workers/scripts/${worker}/settings`, "remove").catch(missing);
+  const apps = await cf.get("/access/apps", "remove");
+  const app = hostname ? apps.find((a) => a.domain === hostname || a.self_hosted_domains?.includes(hostname)) : null;
+  const policies = await cf.get("/access/policies", "remove");
+  const policy = policies.find((p) => p.name === POLICY_NAME);
+  const policyShared = Boolean(policy && apps.some((a) => a.id !== app?.id && (a.policies ?? []).some((p) => p.id === policy.id)));
+  const gateway = await cf.get(`/ai-gateway/gateways/${gatewayId}`, "remove").catch(missing);
+
+  const plan = [
+    app && `Access application "${app.name}" for ${hostname}`,
+    policy && !policyShared && `Access policy "${POLICY_NAME}"`,
+    script && `Worker "${worker}" and all its data: roles, jobs, settings, members, schedules, connections`,
+    gateway && `AI Gateway "${gatewayId}", with any provider keys and logs stored on it`,
+  ].filter(Boolean);
+  const kept = [
+    "Cloudflare Zero Trust and its login methods",
+    policyShared && `Access policy "${POLICY_NAME}" (another application uses it)`,
+    "Email Service domains, and any Secrets Store",
+    "Your GitHub repository, if you deployed with the button (delete it on GitHub)",
+    "Grants to connected services such as Linear or Notion (revoke them there)",
+  ].filter(Boolean);
+  if (plan.length === 0) {
+    done("remove", `nothing to remove: no Worker "${worker}", Access application or AI Gateway "${gatewayId}" found`);
+    return { removed: [], kept };
+  }
+
+  log(`\nThis removes, for good:\n${plan.map((p) => `  - ${p}`).join("\n")}\nKept:\n${kept.map((k) => `  - ${k}`).join("\n")}\n`);
+  if (!args.yes) {
+    const answer = (await ask(`Type the Worker's name (${worker}) to remove it all, or anything else to stop: `)).trim();
+    if (answer !== worker) {
+      throw new SetupError("remove", "Nothing was removed.", "Rerun with --remove when you are sure.");
+    }
+  }
+
+  const removed = [];
+  if (app) {
+    await cf.delete(`/access/apps/${app.id}`, "remove");
+    removed.push(`Access application "${app.name}"`);
+    done("remove", `deleted the Access application for ${hostname}`);
+  }
+  if (policy && !policyShared) {
+    await cf.delete(`/access/policies/${policy.id}`, "remove");
+    removed.push(`Access policy "${POLICY_NAME}"`);
+    done("remove", `deleted the Access policy "${POLICY_NAME}"`);
+  }
+  if (script) {
+    // force: also deletes the Durable Object namespaces the Worker implements.
+    await cf.delete(`/workers/scripts/${worker}?force=true`, "remove");
+    removed.push(`Worker "${worker}" and its data`);
+    done("remove", `deleted the Worker "${worker}" and its data`);
+  }
+  if (gateway) {
+    await cf.delete(`/ai-gateway/gateways/${gatewayId}`, "remove");
+    removed.push(`AI Gateway "${gatewayId}"`);
+    done("remove", `deleted the AI Gateway "${gatewayId}"`);
+  }
+  log(
+    "\npowerhouse is removed. Delete the \"powerhouse remove\" API token now: https://dash.cloudflare.com/profile/api-tokens" +
+      "\nThis folder still has your settings (wrangler.local.jsonc); delete the folder if you are done with it.",
+  );
+  return { deleteRemoveToken: true, kept, removed };
+}
+
+async function removeToken(account) {
+  const url = tokenUrl(account, REMOVE_PERMISSIONS, "powerhouse remove");
+  let token = args.token ?? process.env.POWERHOUSE_SETUP_TOKEN;
+  if (!token) {
+    if (args.yes) {
+      throw new SetupError(
+        "remove-token",
+        "Removing powerhouse needs a one-time API token that can delete its Access application, Worker and AI Gateway.",
+        `Open ${url}, click "Continue to summary" and "Create token", copy the token, then rerun with it in the POWERHOUSE_SETUP_TOKEN environment variable (not on the command line).`,
+      );
+    }
+    log(
+      "\nRemoving powerhouse needs a one-time API token. Your browser will open the token page with the permissions filled in." +
+        '\nClick "Continue to summary", then "Create token", and paste the token here. It is not saved.\n',
+    );
+    openUrl(url);
+    token = await askHidden("API token: ");
+  }
+  const verify = await fetch(`${API}/user/tokens/verify`, { headers: { authorization: `Bearer ${token}` } })
+    .then((r) => r.json())
+    .catch(() => null);
+  if (!verify?.success || verify.result?.status !== "active") {
+    throw new SetupError("remove-token", "Cloudflare did not accept that API token.", `Create a new one at ${url} and paste the whole token.`);
+  }
+  done("remove-token", "verified");
+  return token;
 }
 
 // Admins
@@ -1365,6 +1502,7 @@ function parseArgs(argv) {
   const parsed = {
     account: null,
     update: false,
+    remove: false,
     aiBilling: null,
     aiLogs: false,
     aiProviders: null,
@@ -1398,6 +1536,7 @@ function parseArgs(argv) {
     else if (arg === "--ai-billing") parsed.aiBilling = value();
     else if (arg === "--admins") parsed.admins = value();
     else if (arg === "--update") parsed.update = true;
+    else if (arg === "--remove") parsed.remove = true;
     else if (arg === "--ai-logs") parsed.aiLogs = true;
     else if (arg === "--ai-providers") parsed.aiProviders = value();
     else if (arg === "--account") parsed.account = value();
