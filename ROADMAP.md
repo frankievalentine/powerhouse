@@ -80,7 +80,16 @@ Open problems before the button can ship:
 3. **Local-only settings in `.dev.vars.example`.** Confirmed in the spike: the button turns every entry in `.dev.vars.example` into a deploy secret, so it pre-filled `DEV_AUTH_EMAIL`, the local sign-in bypass. Harmless deployed (the bypass only applies to `localhost`), but confusing. Fix: build the bypass only into local dev behind `import.meta.env.DEV`, so production builds contain no bypass at all; default the dev email to `dev@localhost` (`.dev.vars` can still override it, and `DEV_AS_MEMBER`), and leave `.dev.vars.example` holding only the secrets a button deploy should ask for. Check the production bundle for the bypass after the change.
 4. **Building on Workers Builds.** The repository is a single package at its root since 2026-10-21 (it was a Bun workspace), which removes the workspace question; the build command and the Vite plugin on Workers Builds are still unverified.
 
-Next steps, once the repository is public: a spike in a throwaway account (does a button deploy build the project, does it prompt for `.dev.vars.example` secrets (yes, see problem 3), what does the page show before Access), then the Finish setup page, then decide problem 2.
+Spike in a throwaway account (2026-10-22): the button copies the repository, detects Bun 1.4.3 from `packageManager` (no `BUN_VERSION` needed), builds with `bun run build` and deploys with `bun run deploy`, renaming the Worker to the name chosen on the form. The deployed page shell loads and every agent and API route answers "Access is not configured", as designed. Findings:
+
+- The form makes every var in `wrangler.jsonc` a required field, so the empty `ACCESS_TEAM_DOMAIN` and `ACCESS_AUD` had to be filled with placeholders. Access settings should leave the base config (problem 1) so the form does not ask for values nobody has yet.
+- It pre-fills secrets from `.dev.vars.example` (problem 3).
+- The project is built twice: the deploy command `bun run deploy` runs `vite build` again. Make `deploy` only `wrangler deploy` and have setup run build then deploy, or point the button at `bunx wrangler deploy`.
+- Preview URLs are on by default (no `preview_urls` in the config). Each version gets a public `*.workers.dev` hostname that Access does not cover at the edge; the Worker's own Access check still refuses requests, but set `"preview_urls": false` in the base config, for existing deployments too.
+- A first build started before the copy was pushed and failed with "Script not found: build"; the next one succeeded. A Cloudflare-side race, nothing to fix here.
+- Minor: `vite.config.ts` imports `./config/merge-wrangler` without an extension, which Vite's future native config loader will reject.
+
+Next: the Finish setup page, then decide problem 2.
 
 ### Cost guardrails (2026-10-21)
 
