@@ -15,7 +15,7 @@ import {
   type ToolId,
 } from "../../shared";
 import { ChevronLeft, ChevronRight, X } from "lucide-react";
-import { type FormEvent, useCallback, useEffect, useState } from "react";
+import { type FormEvent, useCallback, useEffect, useRef, useState } from "react";
 import { setThemeChoice, type ThemeChoice, useThemeChoice } from "../lib/theme";
 import { autoModelLabel, ModelOptions } from "../components/model-options";
 import { currentSubscription, pushSupported, subscribe } from "../lib/push";
@@ -33,18 +33,17 @@ const lines = (value: string) =>
     .map((l) => l.trim())
     .filter(Boolean);
 
-type PageId = "you" | "organization" | "jobs" | "safety" | "tools" | "mcp" | "members" | "status";
+type PageId = "organization" | "jobs" | "safety" | "mcp" | "members" | "status" | "appearance";
 
 /** The pages Settings opens to, in order; Members only for admins. */
 const PAGES: { id: PageId; title: string; summary: string; adminOnly?: boolean }[] = [
-  { id: "you", summary: "Appearance and notifications on this device", title: "You" },
   { id: "organization", summary: "Name, website, time zone, company profile and team memory", title: "Organization" },
   { id: "jobs", summary: "Model, answers, voice, limits, routing and history", title: "Jobs" },
   { id: "safety", summary: "Approvals for browser actions, blocked sites", title: "Safety" },
-  { id: "tools", summary: "Web search, browser and email", title: "Tools" },
   { id: "mcp", summary: "Servers powerhouse connects to, and powerhouse's own MCP server", title: "MCP" },
   { adminOnly: true, id: "members", summary: "Who is an admin", title: "Members" },
-  { id: "status", summary: "Models, spend limit, version and updates", title: "Status" },
+  { id: "status", summary: "Models, tools, notifications, version and updates", title: "Status" },
+  { id: "appearance", summary: "Light, dark or your device's setting", title: "Appearance" },
 ];
 
 /** Org settings each page edits and saves; a page saves only its own. */
@@ -74,8 +73,8 @@ const PAGE_FIELDS: Partial<Record<PageId, (keyof OrgSettings)[]>> = {
 export function SettingsSheet({ focus, onClose }: { focus?: "tools"; onClose: () => void }) {
   const { dialogProps, close } = useModal(onClose);
   const { isAdmin } = useOrg();
-  // Opened from "... are off. Set up": straight to Tools.
-  const [page, setPage] = useState<PageId | null>(focus === "tools" ? "tools" : null);
+  // Opened from "... are off. Set up": straight to Status, at Tools.
+  const [page, setPage] = useState<PageId | null>(focus === "tools" ? "status" : null);
   const current = PAGES.find((p) => p.id === page);
 
   return (
@@ -119,13 +118,6 @@ export function SettingsSheet({ focus, onClose }: { focus?: "tools"; onClose: ()
 function SettingsPage({ page, focus }: { page: PageId; focus?: "tools" }) {
   const { isAdmin } = useOrg();
   switch (page) {
-    case "you":
-      return (
-        <>
-          <AppearanceSection />
-          <NotificationsSection />
-        </>
-      );
     case "organization":
       return (
         <>
@@ -137,8 +129,6 @@ function SettingsPage({ page, focus }: { page: PageId; focus?: "tools" }) {
       return <OrgSettingsForm page="jobs">{(form) => <JobsFields {...form} />}</OrgSettingsForm>;
     case "safety":
       return <OrgSettingsForm page="safety">{(form) => <SafetyFields {...form} />}</OrgSettingsForm>;
-    case "tools":
-      return <ToolsPage focus={focus} />;
     case "mcp":
       return (
         <>
@@ -152,7 +142,9 @@ function SettingsPage({ page, focus }: { page: PageId; focus?: "tools" }) {
     case "members":
       return <MembersSection />;
     case "status":
-      return <StatusPage />;
+      return <StatusPage focus={focus} />;
+    case "appearance":
+      return <AppearanceSection />;
   }
 }
 
@@ -518,12 +510,19 @@ function SafetyFields({ draft, set, blocked, setBlocked }: OrgForm) {
   );
 }
 
-function ToolsPage({ focus }: { focus?: "tools" }) {
+function ToolsSection({ focus }: { focus?: "tools" }) {
   const { state } = useOrg();
-  // Opened from "... are off. Set up": the first tool that is off starts open.
+  const ref = useRef<HTMLElement>(null);
+  // Opened from "... are off. Set up": scrolled here, the first tool that is off open.
   const firstOffTool = focus === "tools" ? CHECKLIST_ORDER.find((id) => !state.capabilities[id]) : undefined;
+  useEffect(() => {
+    if (focus === "tools") {
+      ref.current?.scrollIntoView({ block: "start" });
+    }
+  }, [focus]);
   return (
-    <section className={styles.section}>
+    <section className={styles.section} ref={ref}>
+      <h3 className={styles.sectionTitle}>Tools</h3>
       <ul className={styles.checklist}>
         {CHECKLIST_ORDER.map((id) => (
           <ChecklistItem
@@ -540,7 +539,7 @@ function ToolsPage({ focus }: { focus?: "tools" }) {
   );
 }
 
-function StatusPage() {
+function StatusPage({ focus }: { focus?: "tools" }) {
   const { state, me } = useOrg();
   return (
     <>
@@ -548,6 +547,8 @@ function StatusPage() {
         <h3 className={styles.sectionTitle}>Models</h3>
         <AiModelsStatus />
       </section>
+      <ToolsSection focus={focus} />
+      <NotificationsSection />
       <section className={styles.section}>
         <h3 className={styles.sectionTitle}>This deployment</h3>
         <dl className={styles.status}>
@@ -957,6 +958,8 @@ function ConnectionsSection() {
   const { addConnection, mcp, orgId, removeConnection, retryConnection, startGitHubApp, state } = useOrg();
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  /** Errors from adding a server by URL show under that form. */
+  const [customError, setCustomError] = useState<string | null>(null);
   const [name, setName] = useState("");
   const [url, setUrl] = useState("");
   const [ownApp, setOwnApp] = useState(false);
@@ -968,8 +971,9 @@ function ConnectionsSection() {
   const now = Date.now();
 
   const run = async (key: string, signIn: boolean, action: () => Promise<{ authUrl: string | null }>) => {
+    const fail = key === "custom" ? setCustomError : setError;
     setBusy(key);
-    setError(null);
+    fail(null);
     const popup = signIn ? window.open("about:blank", "powerhouse-sign-in", "popup,width=520,height=720") : null;
     try {
       const { authUrl } = await action();
@@ -984,7 +988,7 @@ function ConnectionsSection() {
       return true;
     } catch (err) {
       popup?.close();
-      setError(err instanceof Error ? err.message : String(err));
+      fail(err instanceof Error ? err.message : String(err));
       return false;
     } finally {
       setBusy(null);
@@ -1046,132 +1050,141 @@ function ConnectionsSection() {
   const available = CONNECTION_CATALOG.filter((entry) => !state.connections.some((c) => c.catalogId === entry.id));
 
   return (
-    <section className={styles.section}>
-      <h3 className={styles.sectionTitle}>Servers powerhouse connects to</h3>
-      <p className={styles.hint}>
-        MCP servers for your team's accounts, connected once; roles use only the ones they are allowed in the Roles
-        sheet. Tools that change anything wait for your approval.
-      </p>
-      {state.connections.length > 0 && (
-        <ul className={styles.checklist}>
-          {state.connections.map((connection) => (
-            <ConnectionItem
-              busy={busy === connection.id}
-              confirmRemove={confirmRemove === connection.id}
-              connection={connection}
-              key={connection.id}
-              now={now}
-              onCancelRemove={() => setConfirmRemove(null)}
-              onRemove={() => (confirmRemove === connection.id ? void remove(connection.id) : setConfirmRemove(connection.id))}
-              onRetry={() => void run(connection.id, true, () => retryConnection(connection.id))}
-              server={mcp.servers[connection.id]}
-              tools={mcp.tools.filter((t) => t.serverId === connection.id).length}
-            />
-          ))}
-        </ul>
-      )}
-      {available.length > 0 && (
-        <ul className={styles.checklist}>
-          {available.map((entry) =>
-            entry.setup === "github-app" ? (
+    <>
+      <section className={styles.section}>
+        <h3 className={styles.sectionTitle}>Connected servers</h3>
+        <p className={styles.hint}>
+          MCP servers for your team's accounts, connected once; roles use only the ones they are allowed in the Roles
+          sheet. Tools that change anything wait for your approval.
+        </p>
+        {state.connections.length > 0 && (
+          <ul className={styles.checklist}>
+            {state.connections.map((connection) => (
+              <ConnectionItem
+                busy={busy === connection.id}
+                confirmRemove={confirmRemove === connection.id}
+                connection={connection}
+                key={connection.id}
+                now={now}
+                onCancelRemove={() => setConfirmRemove(null)}
+                onRemove={() => (confirmRemove === connection.id ? void remove(connection.id) : setConfirmRemove(connection.id))}
+                onRetry={() => void run(connection.id, true, () => retryConnection(connection.id))}
+                server={mcp.servers[connection.id]}
+                tools={mcp.tools.filter((t) => t.serverId === connection.id).length}
+              />
+            ))}
+          </ul>
+        )}
+        {available.length > 0 && (
+          <ul className={styles.checklist}>
+            {available.map((entry) =>
+              entry.setup === "github-app" ? (
+                <li className={styles.checkItem} data-status="off" key={entry.id}>
+                  <div className={styles.checkHead}>
+                    <span className={styles.checkLabel}>{entry.name}</span>
+                    <button className={styles.secondary} disabled={busy !== null} onClick={() => void createGitHubApp()} type="button">
+                      {busy === "github" ? "Opening GitHub..." : "Create the GitHub App"}
+                    </button>
+                  </div>
+                  <p className={styles.hint}>
+                    {entry.description} GitHub opens with the app filled in: click Create GitHub App, choose the repositories
+                    it may reach, then sign in here.
+                  </p>
+                  <input
+                    aria-label="GitHub organization"
+                    className={styles.input}
+                    onChange={(e) => setGithubOwner(e.target.value)}
+                    placeholder="GitHub organization (empty for your own account)"
+                    value={githubOwner}
+                  />
+                </li>
+              ) : (
               <li className={styles.checkItem} data-status="off" key={entry.id}>
                 <div className={styles.checkHead}>
                   <span className={styles.checkLabel}>{entry.name}</span>
-                  <button className={styles.secondary} disabled={busy !== null} onClick={() => void createGitHubApp()} type="button">
-                    {busy === "github" ? "Opening GitHub..." : "Create the GitHub App"}
+                  <button
+                    className={styles.secondary}
+                    disabled={busy !== null}
+                    onClick={() => void add(entry.id, { catalogId: entry.id }, entry.signIn)}
+                    type="button"
+                  >
+                    {busy === entry.id ? "Connecting..." : "Connect"}
                   </button>
                 </div>
-                <p className={styles.hint}>
-                  {entry.description} GitHub opens with the app filled in: click Create GitHub App, choose the repositories
-                  it may reach, then sign in here.
-                </p>
-                <input
-                  aria-label="GitHub organization"
-                  className={styles.input}
-                  onChange={(e) => setGithubOwner(e.target.value)}
-                  placeholder="GitHub organization (empty for your own account)"
-                  value={githubOwner}
-                />
+                <p className={styles.hint}>{entry.description}</p>
               </li>
-            ) : (
-            <li className={styles.checkItem} data-status="off" key={entry.id}>
-              <div className={styles.checkHead}>
-                <span className={styles.checkLabel}>{entry.name}</span>
-                <button
-                  className={styles.secondary}
-                  disabled={busy !== null}
-                  onClick={() => void add(entry.id, { catalogId: entry.id }, entry.signIn)}
-                  type="button"
-                >
-                  {busy === entry.id ? "Connecting..." : "Connect"}
-                </button>
-              </div>
-              <p className={styles.hint}>{entry.description}</p>
-            </li>
-            ),
-          )}
-        </ul>
-      )}
-      <div className={styles.field}>
-        <span className={styles.label}>Add a server</span>
-        <span className={styles.hint}>Any remote MCP server reachable over https. It may ask you to sign in.</span>
-        <input className={styles.input} onChange={(e) => setName(e.target.value)} placeholder="Name" value={name} />
-        <input
-          className={styles.input}
-          inputMode="url"
-          onChange={(e) => setUrl(e.target.value)}
-          placeholder="https://example.com/mcp"
-          value={url}
-        />
-        <label className={styles.check}>
-          <input checked={ownApp} onChange={(e) => setOwnApp(e.target.checked)} type="checkbox" />
-          <span>
-            <span className={styles.toolName}>Uses its own OAuth app</span>
-            <span className={styles.hint}>
-              For servers that cannot register powerhouse themselves. Create an OAuth app at the provider with this
-              callback URL, then enter its client ID and secret.
-            </span>
-          </span>
-        </label>
-        {ownApp && (
-          <>
-            <code className={styles.snippet}>{`${location.origin}/agents/org/${orgId}/callback`}</code>
-            <input
-              aria-label="Client ID"
-              autoComplete="off"
-              className={styles.input}
-              onChange={(e) => setClientId(e.target.value)}
-              placeholder="Client ID"
-              value={clientId}
-            />
-            <input
-              aria-label="Client secret"
-              autoComplete="off"
-              className={styles.input}
-              onChange={(e) => setClientSecret(e.target.value)}
-              placeholder="Client secret"
-              type="password"
-              value={clientSecret}
-            />
-          </>
+              ),
+            )}
+          </ul>
         )}
-      </div>
-      <div className={styles.actions}>
-        <button
-          className={styles.secondary}
-          disabled={!url.trim() || busy !== null || (ownApp && !(clientId.trim() && clientSecret.trim()))}
-          onClick={() => void add("custom", ownApp ? { clientId, clientSecret, name, url } : { name, url }, true)}
-          type="button"
-        >
-          {busy === "custom" ? "Connecting..." : "Connect server"}
-        </button>
-      </div>
-      {error && (
-        <p className={styles.error} role="alert">
-          {error}
-        </p>
-      )}
-    </section>
+        {error && (
+          <p className={styles.error} role="alert">
+            {error}
+          </p>
+        )}
+      </section>
+      <section className={styles.section}>
+        <h3 className={styles.sectionTitle}>Add a server</h3>
+        <p className={styles.hint}>Any remote MCP server reachable over https. It may ask you to sign in.</p>
+        <div className={styles.field}>
+          <input className={styles.input} onChange={(e) => setName(e.target.value)} placeholder="Name" value={name} />
+          <input
+            className={styles.input}
+            inputMode="url"
+            onChange={(e) => setUrl(e.target.value)}
+            placeholder="https://example.com/mcp"
+            value={url}
+          />
+          <label className={styles.check}>
+            <input checked={ownApp} onChange={(e) => setOwnApp(e.target.checked)} type="checkbox" />
+            <span>
+              <span className={styles.toolName}>Uses its own OAuth app</span>
+              <span className={styles.hint}>
+                For servers that cannot register powerhouse themselves. Create an OAuth app at the provider with this
+                callback URL, then enter its client ID and secret.
+              </span>
+            </span>
+          </label>
+          {ownApp && (
+            <>
+              <code className={styles.snippet}>{`${location.origin}/agents/org/${orgId}/callback`}</code>
+              <input
+                aria-label="Client ID"
+                autoComplete="off"
+                className={styles.input}
+                onChange={(e) => setClientId(e.target.value)}
+                placeholder="Client ID"
+                value={clientId}
+              />
+              <input
+                aria-label="Client secret"
+                autoComplete="off"
+                className={styles.input}
+                onChange={(e) => setClientSecret(e.target.value)}
+                placeholder="Client secret"
+                type="password"
+                value={clientSecret}
+              />
+            </>
+          )}
+        </div>
+        <div className={styles.actions}>
+          <button
+            className={styles.secondary}
+            disabled={!url.trim() || busy !== null || (ownApp && !(clientId.trim() && clientSecret.trim()))}
+            onClick={() => void add("custom", ownApp ? { clientId, clientSecret, name, url } : { name, url }, true)}
+            type="button"
+          >
+            {busy === "custom" ? "Connecting..." : "Connect server"}
+          </button>
+        </div>
+        {customError && (
+          <p className={styles.error} role="alert">
+            {customError}
+          </p>
+        )}
+      </section>
+    </>
   );
 }
 

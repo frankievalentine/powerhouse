@@ -693,3 +693,21 @@ select.input {
   font-size: 13px;
   line-height: 1.5;
 }
+
+/* A description is part of the heading or field above it, not a new block. */
+p.hint {
+  margin: 0;
+}
+
+.sectionTitle + .hint {
+  margin-top: -8px;
+}
+
+/* On a settings page, Save sits close to the last field. */
+.pageForm {
+  gap: 12px;
+}
+
+.pageForm .section:last-of-type {
+  padding-bottom: 0;
+}
