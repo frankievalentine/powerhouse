@@ -33,7 +33,7 @@ const lines = (value: string) =>
     .map((l) => l.trim())
     .filter(Boolean);
 
-type PageId = "organization" | "jobs" | "safety" | "mcp" | "members" | "status" | "appearance";
+type PageId = "organization" | "jobs" | "safety" | "mcp" | "members" | "status";
 
 /** The pages Settings opens to, in order; Members only for admins. */
 const PAGES: { id: PageId; title: string; summary: string; adminOnly?: boolean }[] = [
@@ -43,7 +43,6 @@ const PAGES: { id: PageId; title: string; summary: string; adminOnly?: boolean }
   { id: "mcp", summary: "Use powerhouse in Claude, ChatGPT or Cursor, and the servers it connects to", title: "MCP" },
   { adminOnly: true, id: "members", summary: "Who is an admin", title: "Members" },
   { id: "status", summary: "Models, tools, notifications, version and updates", title: "Status" },
-  { id: "appearance", summary: "Light, dark or your device's setting", title: "Appearance" },
 ];
 
 /** Org settings each page edits and saves; a page saves only its own. */
@@ -97,17 +96,21 @@ export function SettingsSheet({ focus, onClose }: { focus?: "tools"; onClose: ()
           {current ? (
             <SettingsPage focus={focus} page={current.id} />
           ) : (
-            <nav aria-label="Settings pages" className={styles.pageList}>
-              {PAGES.filter((p) => !p.adminOnly || isAdmin).map((p) => (
-                <button className={styles.pageLink} key={p.id} onClick={() => setPage(p.id)} type="button">
-                  <span>
-                    <span className={styles.pageTitle}>{p.title}</span>
-                    <span className={styles.hint}>{p.summary}</span>
-                  </span>
-                  <ChevronRight aria-hidden="true" size={15} />
-                </button>
-              ))}
-            </nav>
+            <>
+              <nav aria-label="Settings pages" className={styles.pageList}>
+                {PAGES.filter((p) => !p.adminOnly || isAdmin).map((p) => (
+                  <button className={styles.pageLink} key={p.id} onClick={() => setPage(p.id)} type="button">
+                    <span>
+                      <span className={styles.pageTitle}>{p.title}</span>
+                      <span className={styles.hint}>{p.summary}</span>
+                    </span>
+                    <ChevronRight aria-hidden="true" size={15} />
+                  </button>
+                ))}
+              </nav>
+              {/* Per device, and quick to change: right on the list, not behind a page. */}
+              <AppearanceSection />
+            </>
           )}
         </div>
       </div>
@@ -143,8 +146,6 @@ function SettingsPage({ page, focus }: { page: PageId; focus?: "tools" }) {
       return <MembersSection />;
     case "status":
       return <StatusPage focus={focus} />;
-    case "appearance":
-      return <AppearanceSection />;
   }
 }
 
