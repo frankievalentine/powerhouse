@@ -10,7 +10,7 @@ What changed in each powerhouse release. Updates follow these releases: Deploy t
 
 ### Changed
 
-- The README lays out Finish setup's steps.
+- The README lays out Finish setup's steps, and Finish setup ends with a short checklist of what is left, each with its own button.
 
 ## 1.0.0 (2026-10-22)
 

@@ -10,6 +10,8 @@ import styles from "./finish-setup.module.css";
  */
 
 type Ai = "keys" | "credits" | "skip";
+
+const AI_GATEWAY_URL = "https://dash.cloudflare.com/?to=/:account/ai/ai-gateway";
 type Link = { href: string; label: string } | null;
 
 interface Connected {
@@ -76,7 +78,12 @@ export function FinishSetup() {
   const [providers, setProviders] = useState<string[]>(["anthropic"]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<{ text: string; link: Link } | null>(null);
-  const [finished, setFinished] = useState<Finished | null>(null);
+  // Local dev only: /?setup=done previews this screen.
+  const [finished, setFinished] = useState<Finished | null>(() =>
+    import.meta.env.DEV && new URLSearchParams(window.location.search).get("setup") === "done"
+      ? { signInUrl: "/", steps: ["Protected this address with Cloudflare Access", "Created the AI Gateway \"powerhouse\""] }
+      : null,
+  );
   const [partial, setPartial] = useState<string[]>([]);
 
   useEffect(() => {
@@ -154,39 +161,64 @@ export function FinishSetup() {
   );
 
   if (finished) {
+    // What is left to do, in order; each has one button.
+    const next = [
+      ai === "keys" && {
+        action: { href: AI_GATEWAY_URL, label: "Open AI Gateway" },
+        text: "In the Cloudflare dashboard: AI > AI Gateway > powerhouse > Provider Keys. Until it is there, jobs run on open models. Then check it in powerhouse under Settings > Models > Test.",
+        title: `Add your ${providers.map((p) => (p === "anthropic" ? "Anthropic" : "OpenAI")).join(" and ")} API key`,
+      },
+      ai === "credits" && {
+        action: { href: AI_GATEWAY_URL, label: "Open AI Gateway" },
+        text: "In the Cloudflare dashboard: AI > AI Gateway > Credits. Until you have some, jobs run on open models.",
+        title: "Buy AI Gateway credits",
+      },
+      {
+        action: { href: "https://github.com", label: "Open GitHub" },
+        text: 'In your powerhouse repository: Settings > Actions > General > "Allow GitHub Actions to create and approve pull requests". New releases then arrive as pull requests you merge.',
+        title: "Turn on updates",
+      },
+      {
+        action: { href: "https://dash.cloudflare.com/profile/api-tokens", label: "Open API tokens" },
+        text: 'Delete the "powerhouse setup" token. Nothing needs it any more.',
+        title: "Delete the setup token",
+      },
+    ].filter((item): item is { action: { href: string; label: string }; text: string; title: string } => Boolean(item));
+
     return (
       <main className={styles.page}>
         <span className={styles.wordmark}>powerhouse</span>
-        <h1 className={styles.title}>powerhouse is ready</h1>
-        <ul className={styles.log}>
-          {finished.steps.map((line) => (
-            <li key={line}>{line}</li>
-          ))}
-        </ul>
-        {ai === "keys" && (
-          <p className={styles.intro}>
-            Add your {providers.map((p) => (p === "anthropic" ? "Anthropic" : "OpenAI")).join(" and ")} API key to the AI
-            Gateway: in the Cloudflare dashboard, open AI &gt; AI Gateway &gt; powerhouse &gt; Provider Keys. Until then,
-            jobs run on open models. Settings &gt; Models &gt; Test checks it.
-          </p>
-        )}
-        {ai === "credits" && (
-          <p className={styles.intro}>
-            Buy AI Gateway credits in the Cloudflare dashboard (AI &gt; AI Gateway &gt; Credits). Until then, jobs run on
-            open models.
-          </p>
-        )}
-        <p className={styles.intro}>
-          To get powerhouse updates as pull requests, turn on one setting in your powerhouse repository on GitHub:
-          Settings &gt; Actions &gt; General &gt; &quot;Allow GitHub Actions to create and approve pull requests&quot;.
-        </p>
-        <p className={styles.intro}>
-          Delete the &quot;powerhouse setup&quot; API token now; nothing needs it any more:{" "}
-          <a href="https://dash.cloudflare.com/profile/api-tokens" rel="noreferrer" target="_blank">
-            API tokens
-          </a>
-          .
-        </p>
+        <div>
+          <h1 className={styles.title}>powerhouse is ready</h1>
+          <ul className={styles.log}>
+            {finished.steps.map((line) => (
+              <li key={line}>{line}</li>
+            ))}
+          </ul>
+        </div>
+        <section aria-labelledby="next-title">
+          <h2 className={styles.subtitle} id="next-title">
+            {next.length === 1 ? "One thing left" : `${next.length === 2 ? "Two" : "Three"} things left`}
+          </h2>
+          <ol className={styles.steps}>
+            {next.map((item, i) => (
+              <li className={styles.step} data-state="active" key={item.title}>
+                <div className={styles.stepHead}>
+                  <span aria-hidden="true" className={styles.stepNumber}>
+                    {i + 1}
+                  </span>
+                  <span>{item.title}</span>
+                </div>
+                <p className={styles.muted}>{item.text}</p>
+                <div className={styles.actions}>
+                  <a className={styles.secondary} href={item.action.href} rel="noreferrer" target="_blank">
+                    {item.action.label}
+                  </a>
+                </div>
+              </li>
+            ))}
+          </ol>
+        </section>
         <div className={styles.actions}>
           <a className={styles.primary} href={finished.signInUrl}>
             Sign in
