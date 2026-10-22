@@ -24,7 +24,8 @@ You need:
    3. **AI models.** Your own Anthropic or OpenAI key on your AI Gateway, Cloudflare credits, or open models on Workers AI for now.
    4. **Tools.** Turn on web search if you like. Email and the web browser come later, from Settings.
    5. **Finish.** powerhouse protects itself with Cloudflare Access, creates your AI Gateway and saves its settings.
-3. Sign in, then delete the setup token as the last screen reminds you. To get updates, turn on one setting in your new GitHub repository: Settings > Actions > General > "Allow GitHub Actions to create and approve pull requests" (see [Updating](#updating)).
+3. Sign in, then delete the setup token as the last screen reminds you.
+4. To get updates, turn on one setting in your new GitHub repository: Settings > Actions > General > "Allow GitHub Actions to create and approve pull requests" (see [Updating](#updating)).
 
 Email and the web browser are added afterwards from Settings > Tools, which shows the few lines to commit to your repository.
 
