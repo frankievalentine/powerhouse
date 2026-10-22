@@ -928,20 +928,22 @@ function ConnectionItem({
 const CHECKLIST_ORDER: readonly ToolId[] = ["webSearch", "browser", "sendEmail", "webFetch"];
 
 /**
- * What to add to wrangler.jsonc in the deployment's GitHub repository to turn
- * a tool on, for deployments made with Deploy to Cloudflare: bindings come
- * from the repository, and a commit redeploys through Workers Builds.
+ * What to put in wrangler.local.jsonc in the deployment's GitHub repository
+ * to turn a tool on, for deployments made with Deploy to Cloudflare: bindings
+ * come from the repository, and a commit redeploys through Workers Builds.
+ * The build merges that file over wrangler.jsonc, and powerhouse updates
+ * never touch it, so the person's settings never conflict with an update.
  */
 const REPO_SNIPPETS: Partial<Record<ToolId, { steps: string; snippet: string }>> = {
   browser: {
-    snippet: `"browser": { "binding": "BROWSER" },\n"worker_loaders": [{ "binding": "LOADER" }],`,
+    snippet: `{\n  "browser": { "binding": "BROWSER" },\n  "worker_loaders": [{ "binding": "LOADER" }]\n}`,
     steps:
-      "Needs the Workers Paid plan. In your powerhouse repository on GitHub, add these lines to wrangler.jsonc, inside its outer braces, and commit. Cloudflare redeploys, and this shows On.",
+      "Needs the Workers Paid plan. In your powerhouse repository on GitHub, create a file named wrangler.local.jsonc with these lines (if it already exists, add the two entries inside its braces) and commit. Cloudflare redeploys, and this shows On.",
   },
   sendEmail: {
-    snippet: `"send_email": [{ "name": "EMAIL" }],\n"vars": { "EMAIL_FROM": "powerhouse@your-domain.com" },`,
+    snippet: `{\n  "send_email": [{ "name": "EMAIL" }],\n  "vars": { "EMAIL_FROM": "powerhouse@your-domain.com" }\n}`,
     steps:
-      "First add a domain you own to Cloudflare Email Service (its DNS must be on Cloudflare). Then add these lines to wrangler.jsonc in your powerhouse repository on GitHub, with your sender address, and commit. Sending to anyone but your verified addresses needs Workers Paid.",
+      "First add a domain you own to Cloudflare Email Service (its DNS must be on Cloudflare). Then, in your powerhouse repository on GitHub, create a file named wrangler.local.jsonc with these lines and your sender address (if it already exists, add the two entries inside its braces) and commit. Sending to anyone but your verified addresses needs Workers Paid.",
   },
 };
 

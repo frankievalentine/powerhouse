@@ -368,7 +368,7 @@ export function FinishSetup() {
               </span>
             </label>
             <p className={styles.muted}>
-              Send email and the web browser are added later in Settings &gt; Tools: they need a few lines in your GitHub
+              Send email and the web browser are added later in Settings &gt; Tools: they need a small file in your GitHub
               repository, plus a domain on Cloudflare Email Service for email and the Workers Paid plan for the browser.
             </p>
           </div>

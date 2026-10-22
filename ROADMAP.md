@@ -76,7 +76,7 @@ Two paths. Both start with the one step nothing can automate: turning on Zero Tr
 Open problems before the button can ship:
 
 1. **Access setup in the app.** Built 2026-10-22 (branch `feat/finish-setup`, tested end to end with a button deploy): a deployment with no Access settings shows a Finish setup wizard. The owner pastes a pre-filled one-time API token, which proves the deployment is theirs (its account has this workers.dev subdomain and Worker), so no setup code is needed and the token is never stored. The wizard makes setup.mjs's API calls (One-time PIN, the members policy, the Access application, the AI Gateway), generates push keys, and saves everything in a `Deployment` Durable Object; the sign-in check reads it when `wrangler.local.jsonc` has no Access vars, so pushes to the repository no longer undo setup. Setup.mjs and the wizard still duplicate those API calls; sharing one module is a follow-up.
-2. **Optional tools without `wrangler.local.jsonc`.** Decided 2026-10-22: web search is a switch (the wizard's Tools step, then Settings > Tools); email and the browser need bindings, so Settings > Tools shows the lines to add to `wrangler.jsonc` in the deployment's repository, which redeploys on commit. The Worker Loader keeps the browser out of the base config (Workers Paid only). The "... is off. Set up" line opens Settings at Tools.
+2. **Optional tools without `wrangler.local.jsonc`.** Decided 2026-10-22: web search is a switch (the wizard's Tools step, then Settings > Tools); email and the browser need bindings, so Settings > Tools shows the lines for a `wrangler.local.jsonc` in the deployment's repository (merged over `wrangler.jsonc` at build, never touched by updates), which redeploys on commit. The Worker Loader keeps the browser out of the base config (Workers Paid only). The "... is off. Set up" line opens Settings at Tools.
 3. **Local-only settings in `.dev.vars.example`.** Confirmed in the spike: the button turns every entry in `.dev.vars.example` into a deploy secret, so it pre-filled `DEV_AUTH_EMAIL`, the local sign-in bypass. Harmless deployed (the bypass only applies to `localhost`), but confusing. Fixed 2026-10-22: the bypass is built only into local dev, behind `import.meta.env.DEV`, and the production bundle was checked to contain none of it. The dev email defaults to `dev@localhost` (`.dev.vars` can override it, and `DEV_AS_MEMBER`), and `.dev.vars.example` holds only comments, so the button asks for no secrets. Local development moved to CONTRIBUTING.md.
 4. **Building on Workers Builds.** The repository is a single package at its root since 2026-10-21 (it was a Bun workspace), which removes the workspace question; the build command and the Vite plugin on Workers Builds are still unverified.
 
@@ -90,6 +90,17 @@ Spike in a throwaway account (2026-10-22): the button copies the repository, det
 - Minor, fixed: `vite.config.ts` imported `./config/merge-wrangler` without an extension, which Vite's future native config loader will reject.
 
 Next: the Finish setup page, then decide problem 2.
+
+### Updates (planned 2026-10-22, after Finish setup merges)
+
+A button deployment is a copy of the repository, not a fork, so GitHub's "Sync fork" does not apply and the copy never changes on its own. Plan:
+
+- [ ] Versioned releases: semver tags, a CHANGELOG and GitHub Releases. Updates follow the latest release, never raw `main`.
+- [ ] `.github/workflows/update.yml`, inherited by every copy: weekly and on demand, opens a pull request "Update powerhouse to vX" with the release notes; merging it redeploys through Workers Builds. Needs "Allow GitHub Actions to create and approve pull requests" turned on once (Finish setup and the README say so); without it, the workflow pushes an `update` branch to open by hand. A workflow cannot update workflow files with the default token, so changes to this file are merged by hand: keep it small.
+- [ ] `node setup.mjs --update` for clone deployments: pull the latest release, install, redeploy.
+- [ ] Settings > Status: the running version and, once a day, whether a newer release exists, with its notes and how to update for this kind of deployment.
+- [ ] Every release works with data saved by older versions; written into AGENTS.md as a rule.
+- Done ahead of it: tool settings for button deployments live in `wrangler.local.jsonc`, which updates never touch.
 
 ### Cost guardrails (2026-10-21)
 
