@@ -118,25 +118,9 @@ Setup does all of this; these steps are for people who want to see or control ea
 
 Push notifications need a VAPID key pair: the public key in `VAPID_PUBLIC_KEY`, and the private key and a contact URL as the Worker secrets `VAPID_PRIVATE_KEY` and `VAPID_SUBJECT` (`bunx wrangler secret put`). Setup does this for you. If you serve powerhouse on a custom domain, protect that domain in step 4 and consider `"workers_dev": false`.
 
-## Local development
+## Contributing
 
-```sh
-bun install
-cp .dev.vars.example .dev.vars
-bun run push:keys   # optional: push notifications locally
-bunx wrangler login
-bun run dev
-```
-
-Open the URL Vite prints. On localhost, sign-in is bypassed (`DEV_AUTH_EMAIL` in `.dev.vars`) and your org is called `local`. Local dev uses your `wrangler.local.jsonc` too, so with an AI Gateway set up, local jobs run on Claude through it. Workers AI and the browser run remotely and bill your account; local dev names the Worker `powerhouse-dev`, so it never touches your deployed hostname.
-
-```sh
-bun run typecheck   # TypeScript
-bun run test        # unit tests
-bun run deploy      # build and deploy with your wrangler.local.jsonc
-```
-
-The repository is one Bun package: `src/server` is the Worker, `src/client` the UI, and `src/shared` holds what both use. [AGENTS.md](AGENTS.md) has a map of the code for people and coding agents.
+Working on powerhouse's code? [CONTRIBUTING.md](CONTRIBUTING.md) covers local development, tests and the code layout.
 
 ## Updating
 

@@ -1,18 +1,19 @@
-# Local development only. Copy to .dev.vars (gitignored):
+# Local development only (see CONTRIBUTING.md). Optional: copy to .dev.vars
+# (gitignored) to change the defaults below.
 #   cp .dev.vars.example .dev.vars
-# Deployments never read this file; setup.mjs configures them.
-
-# Bypasses Cloudflare Access for requests to localhost and names your local
-# org "local". Only works on localhost, so a stray deployed value is harmless.
-DEV_AUTH_EMAIL=dev@localhost
-
-# That user is an admin locally. To try powerhouse as a member instead:
-# DEV_AS_MEMBER=on
-
+#
+# Deploy to Cloudflare reads this file for the secrets a deployment needs.
+# It needs none, so everything here stays commented out.
+#
+# On localhost you are signed in as dev@localhost, an admin, in the org
+# "local". Production builds leave this sign-in bypass out entirely.
+# DEV_AUTH_EMAIL=someone@localhost   # sign in as someone else
+# DEV_AS_MEMBER=on                   # try powerhouse as a member
+#
 # Push notifications: run `bun run push:keys` to add VAPID_PUBLIC_KEY,
 # VAPID_PRIVATE_KEY and VAPID_SUBJECT here. Without them, the Notifications
 # switch in Settings says push is not set up.
-
+#
 # Everything else comes from wrangler.local.jsonc, which local dev merges in
 # like a deploy does: with an AI Gateway set up there, local jobs use Claude
 # or GPT through it, and with "remote": true bindings, local dev uses (and

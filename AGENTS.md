@@ -38,11 +38,11 @@ Rerunning setup is safe: it skips finished steps. Rerun it after `git pull` to u
 
 ## Working on the code
 
-One Bun package at the repository root. Use `bun`/`bunx`, never npm or npx.
+One Bun package at the repository root. Use `bun`/`bunx`, never npm or npx. [CONTRIBUTING.md](CONTRIBUTING.md) has the same setup for people.
 
 ```sh
 bun install
-cp .dev.vars.example .dev.vars   # local sign-in bypass
+# local dev signs you in as dev@localhost (admin); optional overrides in .dev.vars, see .dev.vars.example
 bun run push:keys                # optional: push notification keys for local dev
 bun run dev                      # Vite + the Worker; Workers AI and the browser run remotely and bill the account
 bun run typecheck                # tsc for the app and the Vite config
@@ -53,7 +53,7 @@ bun run route:eval               # compare router models on accuracy and latency
 
 Where things are:
 
-- `src/server/index.ts`: the Worker (Hono). Access auth, the org guard and header stripping are in `auth.ts`.
+- `src/server/index.ts`: the Worker (Hono). Access auth, the org guard and header stripping are in `auth.ts`; the local-dev sign-in in `dev.ts`, used only behind `import.meta.env.DEV` so production builds drop it.
 - `src/server/org.ts`: the Org agent, one per Access team: roles, settings, routing, dispatch, connections (MCP), schedules, push notifications, spend. Its `@callable` methods are what clients can call; every other method is internal.
 - `src/server/job-agent.ts`: one Think agent per job (an Org sub-agent): tools, skills, connection tools and model per turn.
 - `src/server/tools.ts`, `connections.ts`, `skills.ts`: the tools a role is given; connection tools call back into Org, which holds the OAuth tokens.

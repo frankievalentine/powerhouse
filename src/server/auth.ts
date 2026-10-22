@@ -1,5 +1,6 @@
 import { createMiddleware } from "hono/factory";
 import { createRemoteJWKSet, jwtVerify } from "jose";
+import { devEmail } from "./dev";
 
 export interface AuthVariables {
   email: string;
@@ -42,15 +43,15 @@ function getJwks(teamDomain: string) {
  * Access already gates the hostname at the edge; verifying here stops requests
  * that bypass it (for example via the workers.dev route).
  *
- * The local bypass only applies to localhost requests with DEV_AUTH_EMAIL set
- * in .dev.vars, so a stray deployed var cannot disable verification.
+ * Local dev signs requests to localhost in as the dev user (see dev.ts).
+ * That branch exists only in `bun run dev`: production builds drop it.
  */
 export const accessAuth = createMiddleware<AppEnv>(async (c, next) => {
-  const env = c.env as Env & { DEV_AUTH_EMAIL?: string };
+  const env = c.env;
   const host = new URL(c.req.url).hostname;
 
-  if (env.DEV_AUTH_EMAIL && LOCAL_HOSTS.has(host)) {
-    c.set("email", env.DEV_AUTH_EMAIL);
+  if (import.meta.env.DEV && LOCAL_HOSTS.has(host)) {
+    c.set("email", devEmail(env));
     c.set("orgId", LOCAL_ORG_ID);
     return next();
   }

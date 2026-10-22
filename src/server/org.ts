@@ -38,6 +38,7 @@ import {
 import { generateText } from "ai";
 import { createWorkersAI } from "workers-ai-provider";
 import { MEMBER_EMAIL_HEADER } from "./auth";
+import { devEmail } from "./dev";
 import { capabilitiesFor, providersFor, vapidFor } from "./capabilities";
 import { gatewayModel, modelSetupFailure, TEST_MODELS } from "./models";
 import { JobAgent } from "./job-agent";
@@ -869,15 +870,15 @@ export class Org extends Agent<Env, OrgState> {
   }
 
   /**
-   * Emails from setup's ADMIN_EMAILS. Locally, the DEV_AUTH_EMAIL user is an
-   * admin too (DEV_AUTH_EMAIL only works on localhost), unless .dev.vars sets
-   * DEV_AS_MEMBER=on to try powerhouse as a member.
+   * Emails from setup's ADMIN_EMAILS. In local dev the dev user is an admin
+   * too, unless .dev.vars sets DEV_AS_MEMBER=on to try powerhouse as a member.
    */
   private setupAdmins() {
-    const env = this.env as Env & { DEV_AUTH_EMAIL?: string; DEV_AS_MEMBER?: string };
-    const listed = (env.ADMIN_EMAILS ?? "").split(",").map((e) => e.trim().toLowerCase()).filter(Boolean);
-    const dev = env.DEV_AUTH_EMAIL && env.DEV_AS_MEMBER !== "on" ? [env.DEV_AUTH_EMAIL.toLowerCase()] : [];
-    return new Set([...listed, ...dev]);
+    const listed = (this.env.ADMIN_EMAILS ?? "").split(",").map((e) => e.trim().toLowerCase()).filter(Boolean);
+    if (import.meta.env.DEV && (this.env as Env & { DEV_AS_MEMBER?: string }).DEV_AS_MEMBER !== "on") {
+      listed.push(devEmail(this.env));
+    }
+    return new Set(listed);
   }
 
   private adminEmails() {
