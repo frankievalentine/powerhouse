@@ -18,8 +18,13 @@ You need:
 ### Option 1: Deploy to Cloudflare (no terminal)
 
 1. Click **Deploy to Cloudflare** above. Cloudflare copies powerhouse into your GitHub account and deploys it.
-2. Open the new `workers.dev` address. It shows **Finish setup**: create one API token from a pre-filled link, choose who can sign in, how to pay for AI models, and which tools to turn on. powerhouse protects itself with Cloudflare Access and saves its settings.
-3. Sign in. To get updates, turn on one setting in your new GitHub repository: Settings > Actions > General > "Allow GitHub Actions to create and approve pull requests" (see [Updating](#updating)).
+2. Open the new `workers.dev` address. It shows **Finish setup**, five short steps:
+   1. **Connect your Cloudflare account.** Create a one-time API token from the pre-filled link and paste it. It proves the deployment is yours, is used only during setup, and is never saved.
+   2. **Who can sign in.** Your email (you become the admin), anyone else's email or whole `@domains`, and optionally your website.
+   3. **AI models.** Your own Anthropic or OpenAI key on your AI Gateway, Cloudflare credits, or open models on Workers AI for now.
+   4. **Tools.** Turn on web search if you like. Email and the web browser come later, from Settings.
+   5. **Finish.** powerhouse protects itself with Cloudflare Access, creates your AI Gateway and saves its settings.
+3. Sign in, then delete the setup token as the last screen reminds you. To get updates, turn on one setting in your new GitHub repository: Settings > Actions > General > "Allow GitHub Actions to create and approve pull requests" (see [Updating](#updating)).
 
 Email and the web browser are added afterwards from Settings > Tools, which shows the few lines to commit to your repository.
 
