@@ -142,7 +142,7 @@ async function claim(token: string, url: string): Promise<Claim> {
  * /.well-known/* without an Access session: a second, more specific Access
  * application bypasses Access on those paths only, as setup.mjs's
  * mcpAccessApplication does (same names, so either can update it). The
- * Worker answers them only when Settings > Use from other apps is on.
+ * Worker answers them only when Settings > MCP is on.
  */
 async function mcpAccessBypass(cf: ReturnType<typeof api>, acct: string, host: string) {
   const policies = await cf.must<{ id: string; name: string }[]>("GET", `${acct}/access/policies`, "list Access policies");
@@ -178,7 +178,7 @@ const MCP_TOKEN_URL =
   `&zoneId=all&name=${encodeURIComponent("powerhouse access step")}`;
 
 /**
- * Settings > Use from other apps, for deployments made before the MCP
+ * Settings > MCP, for deployments made before the MCP
  * bypass existed: an admin pastes a one-time token, which adds the Access
  * application and is then dropped. Mounted under /api (behind Access); the
  * admin check is passed in by the caller, which can reach Org.

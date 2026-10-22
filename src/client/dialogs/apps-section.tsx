@@ -36,7 +36,7 @@ const CLIENT_STEPS = [
 ];
 
 /**
- * Settings > Use from other apps: members start and read their jobs from
+ * Settings > MCP: members start and read their jobs from
  * Claude, ChatGPT or Cursor over MCP. Admins turn it on; each member
  * connects their apps and can remove them here.
  */
@@ -153,10 +153,10 @@ export function AppsSection() {
 
   return (
     <section className={styles.section}>
-      <h3 className={styles.sectionTitle}>Use from other apps</h3>
+      <h3 className={styles.sectionTitle}>powerhouse's MCP server</h3>
       <p className={styles.hint}>
-        Members start jobs and read their results from Claude, ChatGPT or Cursor, signed in as themselves. Approvals
-        still happen here.
+        The other direction: members connect Claude, ChatGPT or Cursor to powerhouse, then start jobs and read their
+        results from there, signed in as themselves. Approvals still happen here.
       </p>
       <label className={styles.check}>
         <input
@@ -166,7 +166,7 @@ export function AppsSection() {
           type="checkbox"
         />
         <span>
-          <span className={styles.toolName}>Allow other apps</span>
+          <span className={styles.toolName}>Turn on the MCP server</span>
           <span className={styles.hint}>
             {isAdmin ? "Turning it off stops every connected app at once." : "Only admins can turn this on or off."}
           </span>

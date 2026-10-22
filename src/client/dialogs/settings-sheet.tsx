@@ -14,8 +14,8 @@ import {
   TOOL_INFO,
   type ToolId,
 } from "../../shared";
-import { X } from "lucide-react";
-import { type FormEvent, useCallback, useEffect, useRef, useState } from "react";
+import { ChevronLeft, ChevronRight, X } from "lucide-react";
+import { type FormEvent, useCallback, useEffect, useState } from "react";
 import { setThemeChoice, type ThemeChoice, useThemeChoice } from "../lib/theme";
 import { autoModelLabel, ModelOptions } from "../components/model-options";
 import { currentSubscription, pushSupported, subscribe } from "../lib/push";
@@ -33,36 +33,154 @@ const lines = (value: string) =>
     .map((l) => l.trim())
     .filter(Boolean);
 
+type PageId = "you" | "organization" | "jobs" | "safety" | "tools" | "mcp" | "members" | "status";
+
+/** The pages Settings opens to, in order; Members only for admins. */
+const PAGES: { id: PageId; title: string; summary: string; adminOnly?: boolean }[] = [
+  { id: "you", summary: "Appearance and notifications on this device", title: "You" },
+  { id: "organization", summary: "Name, website, time zone, company profile and team memory", title: "Organization" },
+  { id: "jobs", summary: "Model, answers, voice, limits, routing and history", title: "Jobs" },
+  { id: "safety", summary: "Approvals for browser actions, blocked sites", title: "Safety" },
+  { id: "tools", summary: "Web search, browser and email", title: "Tools" },
+  { id: "mcp", summary: "Servers powerhouse connects to, and powerhouse's own MCP server", title: "MCP" },
+  { adminOnly: true, id: "members", summary: "Who is an admin", title: "Members" },
+  { id: "status", summary: "Models, spend limit, version and updates", title: "Status" },
+];
+
+/** Org settings each page edits and saves; a page saves only its own. */
+const PAGE_FIELDS: Partial<Record<PageId, (keyof OrgSettings)[]>> = {
+  jobs: [
+    "jobModel",
+    "conciseAnswers",
+    "voice",
+    "maxSteps",
+    "maxConcurrentJobs",
+    "dailyBudgetUsd",
+    "autoRoute",
+    "fallbackRoleId",
+    "routerModel",
+    "historyLimit",
+  ],
+  organization: ["orgName", "website", "timeZone", "companyProfile", "repository"],
+  safety: ["approveBrowserActions", "blockedHosts"],
+};
+
 /**
- * Org-wide settings. One form, one save: only changed fields are sent, and
- * the server validates them. Running jobs keep the settings they were
- * dispatched with.
+ * Settings: a list of pages, each opened in place with a Back button. Org
+ * settings are edited on their page and saved there (only the fields that
+ * changed are sent; the server validates them). Running jobs keep the
+ * settings they were dispatched with.
  */
 export function SettingsSheet({ focus, onClose }: { focus?: "tools"; onClose: () => void }) {
   const { dialogProps, close } = useModal(onClose);
-  const { state, me, saveSettings, clearHistory, isAdmin } = useOrg();
+  const { isAdmin } = useOrg();
+  // Opened from "... are off. Set up": straight to Tools.
+  const [page, setPage] = useState<PageId | null>(focus === "tools" ? "tools" : null);
+  const current = PAGES.find((p) => p.id === page);
+
+  return (
+    <dialog {...dialogProps} aria-label="Settings" className={styles.dialog}>
+      <div className={styles.sheet}>
+        <header className={styles.head}>
+          {current ? (
+            <button aria-label="Back to Settings" className={styles.back} onClick={() => setPage(null)} type="button">
+              <ChevronLeft size={16} />
+              <h2 className={styles.title}>{current.title}</h2>
+            </button>
+          ) : (
+            <h2 className={styles.title}>Settings</h2>
+          )}
+          <button aria-label="Close" className={styles.iconButton} onClick={close} type="button">
+            <X size={15} />
+          </button>
+        </header>
+        <div className={styles.body}>
+          {current ? (
+            <SettingsPage focus={focus} page={current.id} />
+          ) : (
+            <nav aria-label="Settings pages" className={styles.pageList}>
+              {PAGES.filter((p) => !p.adminOnly || isAdmin).map((p) => (
+                <button className={styles.pageLink} key={p.id} onClick={() => setPage(p.id)} type="button">
+                  <span>
+                    <span className={styles.pageTitle}>{p.title}</span>
+                    <span className={styles.hint}>{p.summary}</span>
+                  </span>
+                  <ChevronRight aria-hidden="true" size={15} />
+                </button>
+              ))}
+            </nav>
+          )}
+        </div>
+      </div>
+    </dialog>
+  );
+}
+
+function SettingsPage({ page, focus }: { page: PageId; focus?: "tools" }) {
+  const { isAdmin } = useOrg();
+  switch (page) {
+    case "you":
+      return (
+        <>
+          <AppearanceSection />
+          <NotificationsSection />
+        </>
+      );
+    case "organization":
+      return (
+        <>
+          <OrgSettingsForm page="organization">{(form) => <OrganizationFields {...form} />}</OrgSettingsForm>
+          <MemorySection />
+        </>
+      );
+    case "jobs":
+      return <OrgSettingsForm page="jobs">{(form) => <JobsFields {...form} />}</OrgSettingsForm>;
+    case "safety":
+      return <OrgSettingsForm page="safety">{(form) => <SafetyFields {...form} />}</OrgSettingsForm>;
+    case "tools":
+      return <ToolsPage focus={focus} />;
+    case "mcp":
+      return (
+        <>
+          {/* Members see the connections; only admins change them. */}
+          <fieldset className={styles.plainFieldset} disabled={!isAdmin}>
+            <ConnectionsSection />
+          </fieldset>
+          <AppsSection />
+        </>
+      );
+    case "members":
+      return <MembersSection />;
+    case "status":
+      return <StatusPage />;
+  }
+}
+
+interface OrgForm {
+  draft: OrgSettings;
+  set: <K extends keyof OrgSettings>(key: K, value: OrgSettings[K]) => void;
+  /** Blocked sites, one per line, as typed. */
+  blocked: string;
+  setBlocked: (value: string) => void;
+}
+
+/**
+ * One page's org settings: members see them, only admins change them, and
+ * Save sends just this page's fields that changed.
+ */
+function OrgSettingsForm({ page, children }: { page: PageId; children: (form: OrgForm) => React.ReactNode }) {
+  const { state, saveSettings, isAdmin } = useOrg();
   const saved = state.settings;
-  // Opened from "... are off. Set up": scroll to Tools with the first off tool open.
-  const toolsRef = useRef<HTMLElement>(null);
-  const firstOffTool = focus === "tools" ? CHECKLIST_ORDER.find((id) => !state.capabilities[id]) : undefined;
-  useEffect(() => {
-    if (focus === "tools") {
-      toolsRef.current?.scrollIntoView({ block: "start" });
-    }
-  }, [focus]);
+  const fields = PAGE_FIELDS[page] ?? [];
   const [draft, setDraft] = useState<OrgSettings>(saved);
   const [blocked, setBlocked] = useState(saved.blockedHosts.join("\n"));
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<{ kind: "ok" | "error"; text: string } | null>(null);
-  const [confirmClear, setConfirmClear] = useState(false);
 
   const set = <K extends keyof OrgSettings>(key: K, value: OrgSettings[K]) =>
     setDraft((current) => ({ ...current, [key]: value }));
-
   const next: OrgSettings = { ...draft, blockedHosts: lines(blocked) };
-  const changed = (Object.keys(next) as (keyof OrgSettings)[]).filter(
-    (key) => JSON.stringify(next[key]) !== JSON.stringify(saved[key]),
-  );
+  const changed = fields.filter((key) => JSON.stringify(next[key]) !== JSON.stringify(saved[key]));
 
   const submit = async (e: FormEvent) => {
     e.preventDefault();
@@ -72,25 +190,10 @@ export function SettingsSheet({ focus, onClose }: { focus?: "tools"; onClose: ()
     setBusy(true);
     setMessage(null);
     try {
-      const patch = Object.fromEntries(changed.map((key) => [key, next[key]]));
-      const result = await saveSettings(patch);
+      const result = await saveSettings(Object.fromEntries(changed.map((key) => [key, next[key]])));
       setDraft(result);
       setBlocked(result.blockedHosts.join("\n"));
-      setMessage({ kind: "ok", text: "Settings saved." });
-    } catch (err) {
-      setMessage({ kind: "error", text: err instanceof Error ? err.message : String(err) });
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  const finished = state.runs.filter((r) => !LIVE_PHASES.has(r.phase)).length;
-  const clear = async () => {
-    setBusy(true);
-    try {
-      await clearHistory();
-      setConfirmClear(false);
-      setMessage({ kind: "ok", text: "History cleared." });
+      setMessage({ kind: "ok", text: "Saved." });
     } catch (err) {
       setMessage({ kind: "error", text: err instanceof Error ? err.message : String(err) });
     } finally {
@@ -99,358 +202,365 @@ export function SettingsSheet({ focus, onClose }: { focus?: "tools"; onClose: ()
   };
 
   return (
-    <dialog {...dialogProps} aria-label="Settings" className={styles.dialog}>
-      <div className={styles.sheet}>
-        <header className={styles.head}>
-          <h2 className={styles.title}>Settings</h2>
-          <button aria-label="Close" className={styles.iconButton} onClick={close} type="button">
-            <X size={15} />
+    <form className={styles.pageForm} onSubmit={submit}>
+      {!isAdmin && <p className={styles.notice}>You can see these settings; only admins can change them.</p>}
+      <fieldset className={styles.plainFieldset} disabled={!isAdmin}>
+        {children({ blocked, draft, set, setBlocked })}
+      </fieldset>
+      {message && (
+        <p className={message.kind === "error" ? styles.error : styles.muted} role={message.kind === "error" ? "alert" : "status"}>
+          {message.text}
+        </p>
+      )}
+      {isAdmin && (
+        <div className={styles.actions}>
+          <button className={styles.primary} disabled={busy || changed.length === 0} type="submit">
+            {changed.length === 0 ? "Saved" : "Save changes"}
           </button>
-        </header>
+        </div>
+      )}
+    </form>
+  );
+}
 
-        <form className={styles.body} onSubmit={submit}>
-          {!isAdmin && (
-            <p className={styles.notice}>You can see these settings; only admins can change them.</p>
-          )}
-          {/* Everything an admin changes; for members, view only. */}
-          <fieldset className={styles.plainFieldset} disabled={!isAdmin}>
-          <section className={styles.section}>
-            <h3 className={styles.sectionTitle}>Organization</h3>
-            <label className={styles.field}>
-              <span className={styles.label}>Name</span>
-              <span className={styles.hint}>Shown in the header. Your org id stays {me.orgId}.</span>
-              <input
-                className={styles.input}
-                maxLength={SETTINGS_LIMITS.orgName}
-                onChange={(e) => set("orgName", e.target.value)}
-                required
-                value={draft.orgName}
-              />
-            </label>
-            <label className={styles.field}>
-              <span className={styles.label}>Company profile</span>
-              <span className={styles.hint}>
-                What you do, for whom, how you are different, and how you sound. Every job reads it, so roles write and
-                research with your context instead of guessing. Up to {SETTINGS_LIMITS.companyProfile} characters.
-              </span>
-              <textarea
-                className={styles.textarea}
-                maxLength={SETTINGS_LIMITS.companyProfile}
-                onChange={(e) => set("companyProfile", e.target.value)}
-                placeholder={"Acme makes scheduling software for dental clinics in the US.\nCustomers: clinic owners and front-desk staff.\nDifferent because: setup takes a day, not a month.\nVoice: plain, warm, no jargon."}
-                rows={5}
-                value={draft.companyProfile}
-              />
-            </label>
-            <label className={styles.field}>
-              <span className={styles.label}>Website</span>
-              <span className={styles.hint}>Jobs know it, and role suggestions can use it (Site QA, SEO, pricing).</span>
-              <input
-                className={styles.input}
-                maxLength={SETTINGS_LIMITS.website}
-                onChange={(e) => set("website", e.target.value)}
-                placeholder="https://example.com"
-                type="url"
-                value={draft.website}
-              />
-            </label>
-            {state.setupKind === "browser" && (
-              <label className={styles.field}>
-                <span className={styles.label}>GitHub repository</span>
-                <span className={styles.hint}>
-                  Your copy of powerhouse, as owner/name, for update links.{" "}
-                  {saved.repository && (
-                    <a href={addUpdateWorkflowUrl(saved.repository)} rel="noreferrer" target="_blank">
-                      Add the update workflow
-                    </a>
-                  )}
-                </span>
-                <input
-                  className={styles.input}
-                  onChange={(e) => set("repository", e.target.value)}
-                  placeholder="your-github-name/powerhouse"
-                  spellCheck={false}
-                  value={draft.repository}
-                />
-              </label>
+function OrganizationFields({ draft, set }: OrgForm) {
+  const { state, me } = useOrg();
+  const saved = state.settings;
+  return (
+    <section className={styles.section}>
+      <label className={styles.field}>
+        <span className={styles.label}>Name</span>
+        <span className={styles.hint}>Shown in the header. Your org id stays {me.orgId}.</span>
+        <input
+          className={styles.input}
+          maxLength={SETTINGS_LIMITS.orgName}
+          onChange={(e) => set("orgName", e.target.value)}
+          required
+          value={draft.orgName}
+        />
+      </label>
+      <label className={styles.field}>
+        <span className={styles.label}>Website</span>
+        <span className={styles.hint}>Jobs know it, and role suggestions can use it (Site QA, SEO, pricing).</span>
+        <input
+          className={styles.input}
+          maxLength={SETTINGS_LIMITS.website}
+          onChange={(e) => set("website", e.target.value)}
+          placeholder="https://example.com"
+          type="url"
+          value={draft.website}
+        />
+      </label>
+      <label className={styles.field}>
+        <span className={styles.label}>Time zone</span>
+        <span className={styles.hint}>
+          Schedules run in this zone, including its daylight-saving changes. Set from an admin's browser the first time;
+          change it here.
+        </span>
+        <select className={styles.input} onChange={(e) => set("timeZone", e.target.value)} value={draft.timeZone}>
+          {!draft.timeZone && <option value="">Not set (UTC)</option>}
+          {Intl.supportedValuesOf("timeZone").map((zone) => (
+            <option key={zone} value={zone}>
+              {zone}
+            </option>
+          ))}
+        </select>
+      </label>
+      {state.setupKind === "browser" && (
+        <label className={styles.field}>
+          <span className={styles.label}>GitHub repository</span>
+          <span className={styles.hint}>
+            Your copy of powerhouse, as owner/name, for update links.{" "}
+            {saved.repository && (
+              <a href={addUpdateWorkflowUrl(saved.repository)} rel="noreferrer" target="_blank">
+                Add the update workflow
+              </a>
             )}
-            <label className={styles.field}>
-              <span className={styles.label}>Time zone</span>
-              <span className={styles.hint}>
-                Schedules run in this zone, including its daylight-saving changes. Your browser is in{" "}
-                {Intl.DateTimeFormat().resolvedOptions().timeZone}.
-              </span>
-              <select className={styles.input} onChange={(e) => set("timeZone", e.target.value)} value={draft.timeZone}>
-                <option value="">Not set (UTC)</option>
-                {Intl.supportedValuesOf("timeZone").map((zone) => (
-                  <option key={zone} value={zone}>
-                    {zone}
-                  </option>
-                ))}
-              </select>
-            </label>
-          </section>
+          </span>
+          <input
+            className={styles.input}
+            onChange={(e) => set("repository", e.target.value)}
+            placeholder="your-github-name/powerhouse"
+            spellCheck={false}
+            value={draft.repository}
+          />
+        </label>
+      )}
+      <label className={styles.field}>
+        <span className={styles.label}>Company profile</span>
+        <span className={styles.hint}>
+          What you do, for whom, how you are different, and how you sound. Every job reads it, so roles write and research
+          with your context instead of guessing. Up to {SETTINGS_LIMITS.companyProfile} characters.
+        </span>
+        <textarea
+          className={styles.textarea}
+          maxLength={SETTINGS_LIMITS.companyProfile}
+          onChange={(e) => set("companyProfile", e.target.value)}
+          placeholder={"Acme makes scheduling software for dental clinics in the US.\nCustomers: clinic owners and front-desk staff.\nDifferent because: setup takes a day, not a month.\nVoice: plain, warm, no jargon."}
+          rows={5}
+          value={draft.companyProfile}
+        />
+      </label>
+    </section>
+  );
+}
 
-          <section className={styles.section}>
-            <h3 className={styles.sectionTitle}>Models</h3>
-            <AiModelsStatus />
-            <label className={styles.field}>
-              <span className={styles.label}>Job model</span>
-              <span className={styles.hint}>
-                Used by every role that does not choose its own. Automatic picks Claude, then GPT, then an open model,
-                depending on what is set up.
-              </span>
-              <select
-                className={styles.input}
-                onChange={(e) => set("jobModel", e.target.value as OrgSettings["jobModel"])}
-                value={draft.jobModel}
-              >
-                <option value={AUTO_MODEL}>Automatic ({autoModelLabel(state.providers)})</option>
-                <ModelOptions providers={state.providers} />
-              </select>
-            </label>
-            <label className={styles.field}>
-              <span className={styles.label}>Backup router model</span>
-              <span className={styles.hint}>Picks the role only when Clef-Flash is unavailable.</span>
-              <select
-                className={styles.input}
-                onChange={(e) => set("routerModel", e.target.value as OrgSettings["routerModel"])}
-                value={draft.routerModel}
-              >
-                <ModelOptions only="workers-ai" providers={state.providers} />
-              </select>
-            </label>
-          </section>
+function JobsFields({ draft, set }: OrgForm) {
+  const { state, clearHistory } = useOrg();
+  const [confirmClear, setConfirmClear] = useState(false);
+  const [clearing, setClearing] = useState(false);
+  const [cleared, setCleared] = useState<string | null>(null);
+  const finished = state.runs.filter((r) => !LIVE_PHASES.has(r.phase)).length;
+  const clear = async () => {
+    setClearing(true);
+    try {
+      await clearHistory();
+      setConfirmClear(false);
+      setCleared("History cleared.");
+    } catch (err) {
+      setCleared(err instanceof Error ? err.message : String(err));
+    } finally {
+      setClearing(false);
+    }
+  };
+  return (
+    <>
+      <section className={styles.section}>
+        <label className={styles.field}>
+          <span className={styles.label}>Job model</span>
+          <span className={styles.hint}>
+            Used by every role that does not choose its own. Automatic picks Claude, then GPT, then an open model,
+            depending on what is set up.
+          </span>
+          <select
+            className={styles.input}
+            onChange={(e) => set("jobModel", e.target.value as OrgSettings["jobModel"])}
+            value={draft.jobModel}
+          >
+            <option value={AUTO_MODEL}>Automatic ({autoModelLabel(state.providers)})</option>
+            <ModelOptions providers={state.providers} />
+          </select>
+        </label>
+        <label className={styles.check}>
+          <input checked={draft.conciseAnswers} onChange={(e) => set("conciseAnswers", e.target.checked)} type="checkbox" />
+          <span>
+            <span className={styles.toolName}>Concise answers</span>
+            <span className={styles.hint}>
+              Answers lead with the result in a few short lines, and offer details instead of including them. Documents
+              stay full length. Applies to jobs started after the change.
+            </span>
+          </span>
+        </label>
+        <label className={styles.check}>
+          <input checked={draft.voice} onChange={(e) => set("voice", e.target.checked)} type="checkbox" />
+          <span>
+            <span className={styles.toolName}>Voice</span>
+            <span className={styles.hint}>
+              A microphone in the composer (Workers AI Nova 3, about $0.01 per minute of speech) and Read aloud on answers
+              (Aura 1, $0.015 per 1,000 characters). Billed only when used. On the Workers Free plan this shares the
+              10,000 free daily Workers AI units with routing, so heavy use can pause routing until the next day.
+            </span>
+          </span>
+        </label>
+        <label className={styles.field}>
+          <span className={styles.label}>Steps per turn</span>
+          <span className={styles.hint}>
+            Model calls a job may make before it has to answer ({SETTINGS_LIMITS.maxSteps.min} to{" "}
+            {SETTINGS_LIMITS.maxSteps.max}). Higher allows longer research, at more cost.
+          </span>
+          <input
+            className={styles.input}
+            max={SETTINGS_LIMITS.maxSteps.max}
+            min={SETTINGS_LIMITS.maxSteps.min}
+            onChange={(e) => set("maxSteps", Number(e.target.value))}
+            type="number"
+            value={draft.maxSteps}
+          />
+        </label>
+        <label className={styles.field}>
+          <span className={styles.label}>Concurrent jobs</span>
+          <span className={styles.hint}>
+            Jobs that can run at once ({SETTINGS_LIMITS.maxConcurrentJobs.min} to {SETTINGS_LIMITS.maxConcurrentJobs.max}).
+            Jobs waiting for you do not count.
+          </span>
+          <input
+            className={styles.input}
+            max={SETTINGS_LIMITS.maxConcurrentJobs.max}
+            min={SETTINGS_LIMITS.maxConcurrentJobs.min}
+            onChange={(e) => set("maxConcurrentJobs", Number(e.target.value))}
+            type="number"
+            value={draft.maxConcurrentJobs}
+          />
+        </label>
+        <label className={styles.field}>
+          <span className={styles.label}>Daily budget (USD)</span>
+          <span className={styles.hint}>
+            A backstop to the spend limits on your AI Gateway, which are where budgets belong. Once today's estimated
+            model spend reaches it, scheduled jobs are skipped; jobs you send still run. 0 turns it off. Today so far:{" "}
+            {formatUsd(spentToday(state.spend, state.settings.timeZone))}.
+          </span>
+          <input
+            className={styles.input}
+            max={SETTINGS_LIMITS.dailyBudgetUsd.max}
+            min={SETTINGS_LIMITS.dailyBudgetUsd.min}
+            onChange={(e) => set("dailyBudgetUsd", Number(e.target.value))}
+            step="any"
+            type="number"
+            value={draft.dailyBudgetUsd}
+          />
+        </label>
+      </section>
 
-          <section className={styles.section}>
-            <h3 className={styles.sectionTitle}>Jobs</h3>
-            <label className={styles.field}>
-              <span className={styles.label}>Daily budget (USD)</span>
-              <span className={styles.hint}>
-                A backstop to the spend limits on your AI Gateway, which are where budgets belong. Once today's estimated
-                model spend reaches it, scheduled jobs are skipped; jobs you send still run. 0 turns it off. Today so far:{" "}
-                {formatUsd(spentToday(state.spend, state.settings.timeZone))}.
-              </span>
-              <input
-                className={styles.input}
-                max={SETTINGS_LIMITS.dailyBudgetUsd.max}
-                min={SETTINGS_LIMITS.dailyBudgetUsd.min}
-                onChange={(e) => set("dailyBudgetUsd", Number(e.target.value))}
-                step="any"
-                type="number"
-                value={draft.dailyBudgetUsd}
-              />
-            </label>
-            <label className={styles.field}>
-              <span className={styles.label}>Concurrent jobs</span>
-              <span className={styles.hint}>
-                Jobs that can run at once ({SETTINGS_LIMITS.maxConcurrentJobs.min} to{" "}
-                {SETTINGS_LIMITS.maxConcurrentJobs.max}). Jobs waiting for you do not count.
-              </span>
-              <input
-                className={styles.input}
-                max={SETTINGS_LIMITS.maxConcurrentJobs.max}
-                min={SETTINGS_LIMITS.maxConcurrentJobs.min}
-                onChange={(e) => set("maxConcurrentJobs", Number(e.target.value))}
-                type="number"
-                value={draft.maxConcurrentJobs}
-              />
-            </label>
-            <label className={styles.field}>
-              <span className={styles.label}>Steps per turn</span>
-              <span className={styles.hint}>
-                Model calls a job may make before it has to answer ({SETTINGS_LIMITS.maxSteps.min} to{" "}
-                {SETTINGS_LIMITS.maxSteps.max}). Higher allows longer research, at more cost.
-              </span>
-              <input
-                className={styles.input}
-                max={SETTINGS_LIMITS.maxSteps.max}
-                min={SETTINGS_LIMITS.maxSteps.min}
-                onChange={(e) => set("maxSteps", Number(e.target.value))}
-                type="number"
-                value={draft.maxSteps}
-              />
-            </label>
-            <label className={styles.check}>
-              <input
-                checked={draft.conciseAnswers}
-                onChange={(e) => set("conciseAnswers", e.target.checked)}
-                type="checkbox"
-              />
-              <span>
-                <span className={styles.toolName}>Concise answers</span>
-                <span className={styles.hint}>
-                  Answers lead with the result in a few short lines, and offer details instead of including them.
-                  Documents stay full length. Applies to jobs started after the change.
-                </span>
-              </span>
-            </label>
-            <label className={styles.check}>
-              <input checked={draft.voice} onChange={(e) => set("voice", e.target.checked)} type="checkbox" />
-              <span>
-                <span className={styles.toolName}>Voice</span>
-                <span className={styles.hint}>
-                  A microphone in the composer (Workers AI Nova 3, about $0.01 per minute of speech) and Read aloud on
-                  answers (Aura 1, $0.015 per 1,000 characters). Billed only when used. On the Workers Free plan this
-                  shares the 10,000 free daily Workers AI units with routing, so heavy use can pause routing until the
-                  next day.
-                </span>
-              </span>
-            </label>
-            <label className={styles.check}>
-              <input checked={draft.autoRoute} onChange={(e) => set("autoRoute", e.target.checked)} type="checkbox" />
-              <span>
-                <span className={styles.toolName}>Route prompts automatically</span>
-                <span className={styles.hint}>A model picks the role. When off, prompts go to the fallback role.</span>
-              </span>
-            </label>
-            <label className={styles.field}>
-              <span className={styles.label}>Fallback role</span>
-              <span className={styles.hint}>Takes prompts when routing is off or cannot decide.</span>
-              <select
-                className={styles.input}
-                onChange={(e) => set("fallbackRoleId", e.target.value)}
-                value={draft.fallbackRoleId}
-              >
-                {state.roles.map((role) => (
-                  <option key={role.id} value={role.id}>
-                    {role.name}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label className={styles.check}>
-              <input
-                checked={draft.approveBrowserActions}
-                disabled={!state.capabilities.browser}
-                onChange={(e) => set("approveBrowserActions", e.target.checked)}
-                type="checkbox"
-              />
-              <span>
-                <span className={styles.toolName}>Ask before every browser action</span>
-                <span className={styles.hint}>
-                  {state.capabilities.browser
-                    ? "Each browser step waits for your approval and shows the code it will run."
-                    : "The web browser is not configured for this deployment."}
-                </span>
-              </span>
-            </label>
-          </section>
+      <section className={styles.section}>
+        <h3 className={styles.sectionTitle}>Routing</h3>
+        <label className={styles.check}>
+          <input checked={draft.autoRoute} onChange={(e) => set("autoRoute", e.target.checked)} type="checkbox" />
+          <span>
+            <span className={styles.toolName}>Route prompts automatically</span>
+            <span className={styles.hint}>
+              Clef-Flash, a Cloudflare decision model, picks the role. When off, prompts go to the fallback role.
+            </span>
+          </span>
+        </label>
+        <label className={styles.field}>
+          <span className={styles.label}>Fallback role</span>
+          <span className={styles.hint}>Takes prompts when routing is off or cannot decide.</span>
+          <select className={styles.input} onChange={(e) => set("fallbackRoleId", e.target.value)} value={draft.fallbackRoleId}>
+            {state.roles.map((role) => (
+              <option key={role.id} value={role.id}>
+                {role.name}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className={styles.field}>
+          <span className={styles.label}>Backup router model</span>
+          <span className={styles.hint}>Picks the role only when Clef-Flash is unavailable.</span>
+          <select
+            className={styles.input}
+            onChange={(e) => set("routerModel", e.target.value as OrgSettings["routerModel"])}
+            value={draft.routerModel}
+          >
+            <ModelOptions only="workers-ai" providers={state.providers} />
+          </select>
+        </label>
+      </section>
 
-          <section className={styles.section}>
-            <h3 className={styles.sectionTitle}>Safety</h3>
-            <label className={styles.field}>
-              <span className={styles.label}>Blocked sites</span>
-              <span className={styles.hint}>
-                No role may read these with "Read web pages", whatever its allowed sites say. One per line, like
-                example.com or *.example.com. The web browser can only be limited by each role's allowed sites.
-              </span>
-              <textarea
-                className={styles.textarea}
-                onChange={(e) => setBlocked(e.target.value)}
-                placeholder="internal.example.com"
-                rows={3}
-                value={blocked}
-              />
-            </label>
-          </section>
-
-          <section className={styles.section}>
-            <h3 className={styles.sectionTitle}>History</h3>
-            <label className={styles.field}>
-              <span className={styles.label}>Finished runs kept</span>
-              <span className={styles.hint}>
-                Older finished runs, and their conversations, are deleted ({SETTINGS_LIMITS.historyLimit.min} to{" "}
-                {SETTINGS_LIMITS.historyLimit.max}). Running jobs are always kept.
-              </span>
-              <input
-                className={styles.input}
-                max={SETTINGS_LIMITS.historyLimit.max}
-                min={SETTINGS_LIMITS.historyLimit.min}
-                onChange={(e) => set("historyLimit", Number(e.target.value))}
-                type="number"
-                value={draft.historyLimit}
-              />
-            </label>
-            <div className={styles.actions}>
-              {confirmClear ? (
-                <button className={styles.danger} disabled={busy} onClick={() => void clear()} type="button">
-                  Delete {finished} finished {finished === 1 ? "run" : "runs"}?
-                </button>
-              ) : (
-                <button
-                  className={styles.secondary}
-                  disabled={finished === 0}
-                  onClick={() => setConfirmClear(true)}
-                  type="button"
-                >
-                  Clear history
-                </button>
-              )}
-            </div>
-          </section>
-
-          <section className={styles.section} id="settings-tools" ref={toolsRef}>
-            <h3 className={styles.sectionTitle}>Tools</h3>
-            <ul className={styles.checklist}>
-              {CHECKLIST_ORDER.map((id) => (
-                <ChecklistItem
-                  configured={state.capabilities[id]}
-                  failure={state.featureHealth[id]}
-                  id={id}
-                  key={id}
-                  open={id === firstOffTool}
-                  setupKind={state.setupKind}
-                />
-              ))}
-            </ul>
-          </section>
-
-          </fieldset>
-
-          <AppearanceSection />
-
-          <NotificationsSection />
-
-          <fieldset className={styles.plainFieldset} disabled={!isAdmin}>
-            <ConnectionsSection />
-          </fieldset>
-
-          <MemorySection />
-
-          <AppsSection />
-
-          {isAdmin && <MembersSection />}
-
-
-          <section className={styles.section}>
-            <h3 className={styles.sectionTitle}>Status</h3>
-            <dl className={styles.status}>
-              <dt>Signed in as</dt>
-              <dd>{me.email}</dd>
-              <dt>Org id</dt>
-              <dd>{me.orgId}</dd>
-              <dt>Version</dt>
-              <dd>{__APP_VERSION__}</dd>
-            </dl>
-            <UpdateNotice repository={state.settings.repository} setupKind={state.setupKind} />
-          </section>
-
-          {message && (
-            <p className={message.kind === "error" ? styles.error : styles.muted} role={message.kind === "error" ? "alert" : "status"}>
-              {message.text}
-            </p>
+      <section className={styles.section}>
+        <h3 className={styles.sectionTitle}>History</h3>
+        <label className={styles.field}>
+          <span className={styles.label}>Finished runs kept</span>
+          <span className={styles.hint}>
+            Older finished runs, and their conversations and files, are deleted ({SETTINGS_LIMITS.historyLimit.min} to{" "}
+            {SETTINGS_LIMITS.historyLimit.max}). Running jobs are always kept.
+          </span>
+          <input
+            className={styles.input}
+            max={SETTINGS_LIMITS.historyLimit.max}
+            min={SETTINGS_LIMITS.historyLimit.min}
+            onChange={(e) => set("historyLimit", Number(e.target.value))}
+            type="number"
+            value={draft.historyLimit}
+          />
+        </label>
+        <div className={styles.actions}>
+          {confirmClear ? (
+            <button className={styles.danger} disabled={clearing} onClick={() => void clear()} type="button">
+              Delete {finished} finished {finished === 1 ? "run" : "runs"}?
+            </button>
+          ) : (
+            <button className={styles.secondary} disabled={finished === 0} onClick={() => setConfirmClear(true)} type="button">
+              Clear history
+            </button>
           )}
-          {isAdmin && (
-            <div className={styles.actions}>
-              <button className={styles.primary} disabled={busy || changed.length === 0} type="submit">
-                {changed.length === 0 ? "Saved" : "Save changes"}
-              </button>
-            </div>
-          )}
-        </form>
-      </div>
-    </dialog>
+        </div>
+        {cleared && <p className={styles.muted}>{cleared}</p>}
+      </section>
+    </>
+  );
+}
+
+function SafetyFields({ draft, set, blocked, setBlocked }: OrgForm) {
+  const { state } = useOrg();
+  return (
+    <section className={styles.section}>
+      <label className={styles.check}>
+        <input
+          checked={draft.approveBrowserActions}
+          disabled={!state.capabilities.browser}
+          onChange={(e) => set("approveBrowserActions", e.target.checked)}
+          type="checkbox"
+        />
+        <span>
+          <span className={styles.toolName}>Ask before every browser action</span>
+          <span className={styles.hint}>
+            {state.capabilities.browser
+              ? "Each browser step waits for your approval and shows the code it will run."
+              : "The web browser is not configured for this deployment."}
+          </span>
+        </span>
+      </label>
+      <label className={styles.field}>
+        <span className={styles.label}>Blocked sites</span>
+        <span className={styles.hint}>
+          No role may read these with "Read web pages", whatever its allowed sites say. One per line, like example.com or
+          *.example.com. The web browser can only be limited by each role's allowed sites.
+        </span>
+        <textarea
+          className={styles.textarea}
+          onChange={(e) => setBlocked(e.target.value)}
+          placeholder="internal.example.com"
+          rows={3}
+          value={blocked}
+        />
+      </label>
+    </section>
+  );
+}
+
+function ToolsPage({ focus }: { focus?: "tools" }) {
+  const { state } = useOrg();
+  // Opened from "... are off. Set up": the first tool that is off starts open.
+  const firstOffTool = focus === "tools" ? CHECKLIST_ORDER.find((id) => !state.capabilities[id]) : undefined;
+  return (
+    <section className={styles.section}>
+      <ul className={styles.checklist}>
+        {CHECKLIST_ORDER.map((id) => (
+          <ChecklistItem
+            configured={state.capabilities[id]}
+            failure={state.featureHealth[id]}
+            id={id}
+            key={id}
+            open={id === firstOffTool}
+            setupKind={state.setupKind}
+          />
+        ))}
+      </ul>
+    </section>
+  );
+}
+
+function StatusPage() {
+  const { state, me } = useOrg();
+  return (
+    <>
+      <section className={styles.section}>
+        <h3 className={styles.sectionTitle}>Models</h3>
+        <AiModelsStatus />
+      </section>
+      <section className={styles.section}>
+        <h3 className={styles.sectionTitle}>This deployment</h3>
+        <dl className={styles.status}>
+          <dt>Signed in as</dt>
+          <dd>{me.email}</dd>
+          <dt>Org id</dt>
+          <dd>{me.orgId}</dd>
+          <dt>Version</dt>
+          <dd>{__APP_VERSION__}</dd>
+        </dl>
+        <UpdateNotice repository={state.settings.repository} setupKind={state.setupKind} />
+      </section>
+    </>
   );
 }
 
@@ -527,7 +637,7 @@ function NotificationsSection() {
             type="checkbox"
           />
           <span>
-            <span>Notifications on this device</span>
+            <span className={styles.toolName}>Notifications on this device</span>
             <span className={styles.hint}>Each device you use is turned on separately.</span>
           </span>
         </label>
@@ -910,6 +1020,10 @@ function ConnectionsSection() {
       form.appendChild(field);
       document.body.appendChild(form);
       form.submit();
+      form.remove();
+      // The page normally leaves for GitHub now; if the browser blocked it,
+      // the buttons must not stay disabled.
+      setBusy(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
       setBusy(null);
@@ -933,10 +1047,10 @@ function ConnectionsSection() {
 
   return (
     <section className={styles.section}>
-      <h3 className={styles.sectionTitle}>Connections</h3>
+      <h3 className={styles.sectionTitle}>Servers powerhouse connects to</h3>
       <p className={styles.hint}>
-        Connect your team's accounts once; roles use only the connections they are allowed in the Roles sheet. Tools that
-        change anything wait for your approval.
+        MCP servers for your team's accounts, connected once; roles use only the ones they are allowed in the Roles
+        sheet. Tools that change anything wait for your approval.
       </p>
       {state.connections.length > 0 && (
         <ul className={styles.checklist}>
@@ -999,7 +1113,7 @@ function ConnectionsSection() {
         </ul>
       )}
       <div className={styles.field}>
-        <span className={styles.label}>Another server</span>
+        <span className={styles.label}>Add a server</span>
         <span className={styles.hint}>Any remote MCP server reachable over https. It may ask you to sign in.</span>
         <input className={styles.input} onChange={(e) => setName(e.target.value)} placeholder="Name" value={name} />
         <input

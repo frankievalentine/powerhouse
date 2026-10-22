@@ -614,3 +614,82 @@ select.input {
   border: 1px solid var(--lab-line);
   border-radius: 10px;
 }
+
+/* Settings: the list of pages, and the Back button that leads to it. */
+.pageList {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.pageLink {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  font: inherit;
+  color: var(--lab-fg);
+  text-align: left;
+  cursor: pointer;
+  background: none;
+  border: 0;
+  border-radius: 10px;
+}
+
+.pageLink > span {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.pageLink svg {
+  flex: none;
+  color: var(--lab-muted);
+}
+
+.pageLink:hover {
+  background: var(--lab-line);
+}
+
+.pageLink:focus-visible,
+.back:focus-visible {
+  outline: 2px solid var(--lab-accent);
+  outline-offset: 1px;
+}
+
+.pageTitle {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.back {
+  display: inline-flex;
+  gap: 4px;
+  align-items: center;
+  padding: 2px 6px 2px 0;
+  margin-left: -4px;
+  font: inherit;
+  color: var(--lab-fg);
+  cursor: pointer;
+  background: none;
+  border: 0;
+  border-radius: 6px;
+}
+
+.back svg {
+  color: var(--lab-muted);
+}
+
+.pageForm {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* A team memory note's text: body size, under its title. */
+.noteText {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+}

@@ -2,7 +2,10 @@
 # keeps a model's reply (or anything injected into it) from making the
 # browser contact other sites: images load only from here or data: URLs
 # (browser screenshots), and the page connects only back to this Worker.
+# Exceptions: forms may post to github.com (creating the GitHub App), audio
+# plays from blob: URLs (read aloud), and blob: scripts run for the voice
+# input's audio worklet, which the page itself creates.
 /*
-  Content-Security-Policy: default-src 'self'; script-src 'self' 'sha256-lEOdzYQQts2tjdC6lnzprJzYBIPjgKUQpyiVlhnajNU='; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self'; worker-src 'self'; frame-src 'none'; frame-ancestors 'none'; object-src 'none'; base-uri 'self'; form-action 'self'
+  Content-Security-Policy: default-src 'self'; script-src 'self' blob: 'sha256-lEOdzYQQts2tjdC6lnzprJzYBIPjgKUQpyiVlhnajNU='; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self'; worker-src 'self'; media-src 'self' blob:; frame-src 'none'; frame-ancestors 'none'; object-src 'none'; base-uri 'self'; form-action 'self' https://github.com
   Referrer-Policy: strict-origin-when-cross-origin
   X-Content-Type-Options: nosniff

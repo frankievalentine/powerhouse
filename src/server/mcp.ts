@@ -219,7 +219,7 @@ authorizeRoutes.use("*", accessAuth);
 authorizeRoutes.get("/", async (c) => {
   try {
     if (!(await (await org(c.env, c.get("orgId"))).mcpEnabled())) {
-      return page("Turned off", "<p>Using powerhouse from other apps is turned off. An admin can turn it on in Settings.</p>", 403);
+      return page("Turned off", "<p>powerhouse's MCP server is turned off. An admin can turn it on in Settings > MCP.</p>", 403);
     }
     const oauth = c.env.OAUTH_PROVIDER;
     const request = await oauth.parseAuthRequest(c.req.raw);
@@ -242,7 +242,7 @@ authorizeRoutes.post("/", async (c) => {
       return new Response(null, { headers: denied.headers, status: 302 });
     }
     if (!(await (await org(c.env, c.get("orgId"))).mcpEnabled())) {
-      return page("Turned off", "<p>Using powerhouse from other apps is turned off. An admin can turn it on in Settings.</p>", 403);
+      return page("Turned off", "<p>powerhouse's MCP server is turned off. An admin can turn it on in Settings > MCP.</p>", 403);
     }
     const approved = await oauth.approveConsent(c.req.raw, handle);
     const client = await oauth.lookupClient(approved.request.clientId);
@@ -284,7 +284,7 @@ function page(title: string, body: string, status: number) {
 
 // ---------------------------------------------------------- connected apps
 
-/** A member's apps (grants), for Settings > Use from other apps. */
+/** A member's apps (grants), for Settings > MCP. */
 export interface ConnectedApp {
   grantId: string;
   client: string;

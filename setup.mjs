@@ -22,7 +22,7 @@ const API = "https://api.cloudflare.com/client/v4";
 const POLICY_NAME = "powerhouse members";
 // MCP clients (Claude, ChatGPT, Cursor) call these paths without an Access
 // session; powerhouse checks their OAuth tokens itself, and answers 404 while
-// Settings > Use from other apps is off.
+// Settings > MCP is off.
 const MCP_APP_NAME = "powerhouse apps (MCP)";
 const MCP_POLICY_NAME = "powerhouse apps (MCP clients)";
 const MCP_PATHS = ["mcp", "oauth/*", ".well-known/*"];
@@ -503,7 +503,7 @@ async function mcpAccessApplication(cf, hostname) {
     type: "self_hosted",
   };
   await (existing ? cf.put(`/access/apps/${existing.id}`, body, "access-mcp") : cf.post("/access/apps", body, "access-mcp"));
-  done("access-mcp", `${existing ? "updated" : "created"} the Access bypass for ${hostname}'s MCP paths (answered only when Settings > Use from other apps is on)`);
+  done("access-mcp", `${existing ? "updated" : "created"} the Access bypass for ${hostname}'s MCP paths (answered only when Settings > MCP is on)`);
 }
 
 async function allowList(account) {

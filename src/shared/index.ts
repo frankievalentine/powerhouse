@@ -386,7 +386,7 @@ export interface OrgState {
   settings: OrgSettings;
   /** Team memory notes jobs proposed that wait for an admin. */
   memoryProposals: number;
-  /** The Access bypass MCP clients need exists (setup or Settings added it); see Settings > Use from other apps. */
+  /** The Access bypass MCP clients need exists (setup or Settings added it); see Settings > MCP. */
   mcpAccessReady: boolean;
 }
 

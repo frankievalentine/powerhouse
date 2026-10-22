@@ -96,7 +96,7 @@ export function MemorySection() {
           <span className={styles.checkLabel}>{note.title}</span>
           {note.status === "proposed" && <span className={styles.checkStatus}>To review</span>}
         </div>
-        <p>{note.content}</p>
+        <p className={styles.noteText}>{note.content}</p>
         <p className={styles.hint}>
           {note.status === "proposed"
             ? `Proposed by ${note.proposedBy}'s job ${formatAgo(note.createdAt, now)}`

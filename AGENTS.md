@@ -34,7 +34,7 @@ When asked to set up, install or deploy powerhouse, run the setup script. Do not
 
 To turn tools on or off later, rerun with `--enable` or `--disable`. Settings in the app shows which tools are on, what they cost, and which need attention.
 
-Setup also adds a second Access application, "powerhouse apps (MCP)", that lets MCP clients (Claude, ChatGPT, Cursor) reach `/mcp`, `/oauth/*` and `/.well-known/*`. Those paths answer only after an admin turns on Settings > Use from other apps; tell people it exists if they ask about using powerhouse from Claude. A deployment set up before it asks for a token once more on the next run to add it.
+Setup also adds a second Access application, "powerhouse apps (MCP)", that lets MCP clients (Claude, ChatGPT, Cursor) reach `/mcp`, `/oauth/*` and `/.well-known/*`. Those paths answer only after an admin turns on Settings > MCP; tell people it exists if they ask about using powerhouse from Claude. A deployment set up before it asks for a token once more on the next run to add it.
 
 Rerunning setup is safe: it skips finished steps. To update a deployment to the latest release, run `node setup.mjs --update` (a Deploy to Cloudflare copy updates through the pull requests its Update powerhouse workflow opens). `node setup.mjs --help` lists every flag.
 

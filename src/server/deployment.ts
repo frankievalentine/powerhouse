@@ -25,7 +25,7 @@ export interface DeploymentConfig {
   webSearch?: boolean;
   /** Entered in Finish setup; the org's Website setting starts from it. */
   website?: string;
-  /** The MCP paths' Access bypass exists (Finish setup, or Settings > Use from other apps for older copies). */
+  /** The MCP paths' Access bypass exists (Finish setup, or Settings > MCP for older copies). */
   mcpAccess?: boolean;
   /** The copy's GitHub repository ("owner/name"), entered in Finish setup, for update links. */
   repository?: string;

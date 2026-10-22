@@ -23,4 +23,4 @@ None yet. Every release is in [CHANGELOG.md](CHANGELOG.md).
 
 ## Decided against
 
-- **Chat integrations (Slack, Teams, Discord and others).** Use powerhouse from your own agent instead: Claude, ChatGPT or Cursor connect over MCP once an admin turns on Settings > Use from other apps.
+- **Chat integrations (Slack, Teams, Discord and others).** Use powerhouse from your own agent instead: Claude, ChatGPT or Cursor connect over MCP once an admin turns on Settings > MCP.

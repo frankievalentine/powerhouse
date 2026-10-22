@@ -75,7 +75,7 @@ Rerunning setup is safe: it skips what is done. It is also how you update (see [
 - **Safe by default.** Emails, writes to connected accounts and (for roles with connections) reading unknown sites and browser actions wait for your approval, with the full details shown.
 - **Voice.** Once an admin turns it on (Settings > Jobs), speak a job instead of typing it, and have an answer read aloud. Runs on Workers AI and is billed only when used.
 - **Attach files.** Drop PDFs, Word and Excel documents, CSVs or text files on the composer (up to 5, 5 MB each). powerhouse turns them into text with Workers AI and the job reads them. Images are not supported yet.
-- **Use it from your own agent.** Start jobs and read their results from Claude, ChatGPT or Cursor: once an admin turns on Settings > Use from other apps, add `https://<your powerhouse>/mcp` to your agent and click Allow. This is how powerhouse reaches you outside its own page; it has no Slack or other chat integrations.
+- **Use it from your own agent.** Start jobs and read their results from Claude, ChatGPT or Cursor: once an admin turns on Settings > MCP, add `https://<your powerhouse>/mcp` to your agent and click Allow. This is how powerhouse reaches you outside its own page; it has no Slack or other chat integrations.
 - **Schedules.** Run a job every day, on weekdays, on chosen days or every few hours, in your time zone.
 - **Push notifications.** Get notified on your devices when a job needs you, fails, or finishes a scheduled run.
 - **Live fleet view.** Every job shows as a pill with its current step and estimated cost, and everyone in your org sees the same live state.
@@ -132,7 +132,7 @@ Browsers close at the end of every turn, and stay open for up to five minutes on
 - **Untrusted content:** pages, search results, connection results and server-written tool descriptions are marked as untrusted for the model. The app's Content-Security-Policy stops model output from loading images or contacting other sites.
 - **Keys and tokens:** AI provider keys live on your AI Gateway; connection tokens live in your Org's storage; the setup token is used once and never saved.
 - **Admins and members:** Access decides who may sign in. Admins change settings, roles and connections, and can act on anyone's jobs and schedules; members send jobs and act on their own, and can watch everyone else's. The email you set up with is an admin (`--admins` names others); admins add more in Settings > Members.
-- **Use from other apps (MCP):** off until an admin turns it on in Settings. Members then connect Claude, ChatGPT or Cursor to `https://<your powerhouse>/mcp`; the app opens powerhouse's Allow page, behind Access, and gets a token that acts as that member (an hour, refreshed for up to 30 days). Approvals still happen only in powerhouse. Members remove their apps in Settings; admins can disconnect a member's apps in Settings > Members, which matters when someone leaves, since removing them from Access does not end tokens they already have. Turning the switch off stops every app at once. MCP clients reach `/mcp`, `/oauth/*` and `/.well-known/*` without an Access session, so setup adds a second Access application for those paths with a Bypass policy; while the switch is off, they answer 404.
+- **MCP server:** off until an admin turns it on in Settings. Members then connect Claude, ChatGPT or Cursor to `https://<your powerhouse>/mcp`; the app opens powerhouse's Allow page, behind Access, and gets a token that acts as that member (an hour, refreshed for up to 30 days). Approvals still happen only in powerhouse. Members remove their apps in Settings; admins can disconnect a member's apps in Settings > Members, which matters when someone leaves, since removing them from Access does not end tokens they already have. Turning the switch off stops every app at once. MCP clients reach `/mcp`, `/oauth/*` and `/.well-known/*` without an Access session, so setup adds a second Access application for those paths with a Bypass policy; while the switch is off, they answer 404.
 - **Live View links** are bearer credentials: fetched only when you open the browser, never stored and never given to the model. **Trace payloads** can contain personal data and are off unless you set `TRACE_PAYLOADS` to `"on"`.
 
 ## Configure
@@ -167,14 +167,14 @@ Push notifications need a VAPID key pair: the public key in `VAPID_PUBLIC_KEY`, 
 
 Working on powerhouse's code? [CONTRIBUTING.md](CONTRIBUTING.md) covers local development, tests and the code layout.
 
-## Use from other apps
+## Use powerhouse from your own agent (MCP)
 
-Settings > Use from other apps lets members start jobs and read their results from Claude, ChatGPT or Cursor (see Security for how sign-in works). An admin turns it on there.
+Settings > MCP lets members start jobs and read their results from Claude, ChatGPT or Cursor (see Security for how sign-in works). An admin turns it on there.
 
 It needs an Access bypass for the MCP paths, which setup creates. Deployments set up before 2026-10-22:
 
 - **From a copy on your computer:** run `node setup.mjs` again; it asks for a token once to add the bypass.
-- **With Deploy to Cloudflare:** Settings > Use from other apps shows "One step left" once an admin turns it on: create the one-time API token from its link, paste it, and powerhouse adds the Access application (the token is used once and not kept). By hand instead: Zero Trust > Access controls > Applications > Add an application > Self-hosted, named "powerhouse apps (MCP)", with your powerhouse hostname three times and the paths `mcp`, `oauth/*` and `.well-known/*`, and a policy with the action Bypass that includes Everyone.
+- **With Deploy to Cloudflare:** Settings > MCP shows "One step left" once an admin turns it on: create the one-time API token from its link, paste it, and powerhouse adds the Access application (the token is used once and not kept). By hand instead: Zero Trust > Access controls > Applications > Add an application > Self-hosted, named "powerhouse apps (MCP)", with your powerhouse hostname three times and the paths `mcp`, `oauth/*` and `.well-known/*`, and a policy with the action Bypass that includes Everyone.
 
 ## Updating
 

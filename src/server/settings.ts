@@ -79,7 +79,7 @@ export const SETTINGS_LABELS: Record<string, string> = {
   blockedHosts: "Blocked sites",
   companyProfile: "Company profile",
   conciseAnswers: "Concise answers",
-  mcpServer: "Use from other apps",
+  mcpServer: "MCP server",
   voice: "Voice",
   dailyBudgetUsd: "Daily budget",
   fallbackRoleId: "Fallback role",

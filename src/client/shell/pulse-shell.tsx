@@ -58,8 +58,24 @@ function anchorForRun(runId: string): JobAnchor {
 
 /** Job windows and the Cmd+K palette, layered over the page. */
 export function PulseShell({ children, className }: { children: ReactNode; className?: string }) {
-  const { dispatch, state } = useOrg();
+  const { connected, dispatch, isAdmin, saveSettings, state } = useOrg();
   const [windows, setWindows] = useState<OpenWindow[]>([]);
+
+  // Schedules run in the org's time zone. Until one is set, the first admin
+  // here sets it from their browser, so nobody has to find the setting.
+  const timeZoneSet = useRef(false);
+  useEffect(() => {
+    if (!connected || !isAdmin || state.settings.timeZone || timeZoneSet.current) {
+      return;
+    }
+    const zone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    if (zone) {
+      timeZoneSet.current = true;
+      saveSettings({ timeZone: zone }).catch(() => {
+        timeZoneSet.current = false;
+      });
+    }
+  }, [connected, isAdmin, saveSettings, state.settings.timeZone]);
   const [palette, setPalette] = useState<{ roleId?: string } | null>(null);
   const [dispatchError, setDispatchError] = useState<string | null>(null);
   const [rolesOpen, setRolesOpen] = useState(false);

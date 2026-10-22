@@ -1582,7 +1582,7 @@ export class Org extends VoiceInputAgent<Env, OrgState> {
     return { name: row.name, offset: start, text: row.text.slice(start, start + length), total: row.text.length };
   }
 
-  // ------------------------------------------------- use from other apps (MCP)
+  // ------------------------------------------------- powerhouse's MCP server
   //
   // Called by the Worker's MCP tools over RPC with the member's email from
   // their grant, which Access verified when they approved the app. Not
@@ -1591,7 +1591,7 @@ export class Org extends VoiceInputAgent<Env, OrgState> {
 
   private requireMcp() {
     if (!this.state.settings.mcpServer) {
-      throw new Error("Using powerhouse from other apps is turned off. An admin can turn it on in Settings.");
+      throw new Error("powerhouse's MCP server is turned off. An admin can turn it on in Settings > MCP.");
     }
   }
 

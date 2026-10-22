@@ -62,7 +62,7 @@ export function consentPage(details: ConsentDescription, handle: string, email: 
      ${details.redirectIsLoopback ? "<p><b>This sends access to an app on your computer.</b> Continue only if you just started connecting from it.</p>" : ""}
      <p>As <b>${escape(email)}</b>, ${name} will be able to:</p>
      <ul><li>see the team's roles</li><li>start jobs as you</li><li>read the jobs you started</li></ul>
-     <p>Approvals (emails, writes to connected accounts) still happen only in powerhouse. You can remove this app any time in Settings > Use from other apps.</p>
+     <p>Approvals (emails, writes to connected accounts) still happen only in powerhouse. You can remove this app any time in Settings > MCP.</p>
      <form method="post">
        <input type="hidden" name="handle" value="${escape(handle)}">
        <p><button name="decision" value="approve" type="submit">Allow</button> <button name="decision" value="deny" type="submit">Deny</button></p>
