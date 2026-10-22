@@ -2,6 +2,7 @@ import { Hono } from "hono";
 import { accessSettings } from "./auth";
 import { type DeploymentConfig, deployment } from "./deployment";
 import { safeError } from "./log";
+import { isRepoSlug } from "../shared";
 import { toBase64Url } from "./web-push";
 
 /**
@@ -183,6 +184,7 @@ interface FinishInput {
   providers?: unknown;
   website?: unknown;
   webSearch?: unknown;
+  repository?: unknown;
 }
 
 const EMAIL = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
@@ -215,6 +217,13 @@ setupRoutes.post("/finish", async (c) => {
   }
   if (website && !isHttps(website)) {
     return c.json({ error: "Enter the website as an address such as https://example.com, or leave it empty." }, 400);
+  }
+  const repository =
+    typeof input.repository === "string"
+      ? input.repository.trim().replace(/^https?:\/\/github\.com\//i, "").replace(/\.git$|\/$/, "")
+      : "";
+  if (repository && !isRepoSlug(repository)) {
+    return c.json({ error: "Enter the GitHub repository as owner/name, or leave it empty." }, 400);
   }
   // Web search bills through the AI Gateway, so it needs one.
   const webSearch = input.webSearch === true && ai !== "skip";
@@ -309,6 +318,7 @@ setupRoutes.post("/finish", async (c) => {
       vapid: { privateKey: jwk.d ?? "", publicKey, subject: `https://${found.host}` },
       webSearch,
       website: website || undefined,
+      repository: repository || undefined,
     };
     // Takes effect on the next request: auth.ts caches only saved settings.
     await deployment(c.env).save(config);

@@ -1,5 +1,14 @@
 import { describe, expect, test } from "bun:test";
-import { type Capabilities, isNewerVersion, resolveSuggestion, runnableSuggestions } from ".";
+import {
+  addUpdateWorkflowUrl,
+  type Capabilities,
+  isNewerVersion,
+  isRepoSlug,
+  resolveSuggestion,
+  runnableSuggestions,
+  UPDATE_WORKFLOW,
+  UPDATE_WORKFLOW_PATH,
+} from ".";
 
 const off: Capabilities = { browser: false, sendEmail: false, webFetch: true, webSearch: false };
 const ctx = { capabilities: off, me: "ana@example.com", website: "" };
@@ -39,5 +48,20 @@ describe("isNewerVersion", () => {
     expect(isNewerVersion("v1.2.0", "1.10.0")).toBe(true);
     expect(isNewerVersion("1.2.3", "v1.2.3")).toBe(false);
     expect(isNewerVersion("1.3.0", "1.2.9")).toBe(false);
+  });
+});
+
+describe("update workflow links", () => {
+  test("repository slugs", () => {
+    expect(isRepoSlug("jane/powerhouse-e2e")).toBe(true);
+    expect(isRepoSlug("https://github.com/jane/x")).toBe(false);
+    expect(isRepoSlug("jane")).toBe(false);
+  });
+
+  test("the add-workflow link carries the file name and the whole workflow", () => {
+    const url = new URL(addUpdateWorkflowUrl("jane/powerhouse-e2e"));
+    expect(url.pathname).toBe("/jane/powerhouse-e2e/new/main");
+    expect(url.searchParams.get("filename")).toBe(UPDATE_WORKFLOW_PATH);
+    expect(url.searchParams.get("value")).toBe(UPDATE_WORKFLOW);
   });
 });

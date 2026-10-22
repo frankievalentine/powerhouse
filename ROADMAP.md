@@ -100,6 +100,7 @@ A button deployment is a copy of the repository, not a fork, so GitHub's "Sync f
 - [x] `node setup.mjs --update` for clone deployments: pull the latest release, install, redeploy.
 - [x] Settings > Status: the running version and, once a day, whether a newer release exists, with its notes and how to update for this kind of deployment.
 - [x] Every release works with data saved by older versions; written into AGENTS.md as a rule.
+- Found in the 1.0.0 end-to-end test: Deploy to Cloudflare copies a snapshot (one "source repo import" commit) without `.github/workflows`. Since 1.0.1 the logic is a reusable workflow here, called from `main` by a short caller each copy adds once through a pre-filled GitHub link (Finish setup asks for the repository). Changes to the logic reach every copy without anyone editing their file.
 - The workflow applies a release's files over the copy instead of merging history (a button copy's history is not known to match), keeps `wrangler.local.jsonc` and the Worker name the Deploy form wrote into `wrangler.jsonc`, and deletes only files the release removed since the copy's version.
 - Done ahead of it: tool settings for button deployments live in `wrangler.local.jsonc`, which updates never touch.
 

@@ -5,6 +5,8 @@ import {
   type FeatureFailure,
   type MemberInfo,
   type UpdateStatus,
+  addUpdateWorkflowUrl,
+  updatePullRequestsUrl,
   LIVE_PHASES,
   MODELS,
   type OrgSettings,
@@ -150,6 +152,26 @@ export function SettingsSheet({ focus, onClose }: { focus?: "tools"; onClose: ()
                 value={draft.website}
               />
             </label>
+            {state.setupKind === "browser" && (
+              <label className={styles.field}>
+                <span className={styles.label}>GitHub repository</span>
+                <span className={styles.hint}>
+                  Your copy of powerhouse, as owner/name, for update links.{" "}
+                  {saved.repository && (
+                    <a href={addUpdateWorkflowUrl(saved.repository)} rel="noreferrer" target="_blank">
+                      Add the update workflow
+                    </a>
+                  )}
+                </span>
+                <input
+                  className={styles.input}
+                  onChange={(e) => set("repository", e.target.value)}
+                  placeholder="your-github-name/powerhouse"
+                  spellCheck={false}
+                  value={draft.repository}
+                />
+              </label>
+            )}
             <label className={styles.field}>
               <span className={styles.label}>Time zone</span>
               <span className={styles.hint}>
@@ -379,7 +401,7 @@ export function SettingsSheet({ focus, onClose }: { focus?: "tools"; onClose: ()
               <dt>Version</dt>
               <dd>{__APP_VERSION__}</dd>
             </dl>
-            <UpdateNotice setupKind={state.setupKind} />
+            <UpdateNotice repository={state.settings.repository} setupKind={state.setupKind} />
           </section>
 
           {message && (
@@ -642,7 +664,7 @@ function AppearanceSection() {
  * Cloudflare) decides who may sign in; this decides who may change things.
  */
 /** A newer powerhouse release, and how to get it on this kind of deployment. */
-function UpdateNotice({ setupKind }: { setupKind: "cli" | "browser" }) {
+function UpdateNotice({ repository, setupKind }: { repository: string; setupKind: "cli" | "browser" }) {
   const { updateStatus } = useOrg();
   const [status, setStatus] = useState<UpdateStatus | null>(null);
   useEffect(() => {
@@ -665,7 +687,12 @@ function UpdateNotice({ setupKind }: { setupKind: "cli" | "browser" }) {
       <p className={styles.hint} style={{ margin: "6px 0 0" }}>
         {setupKind === "browser"
           ? "Merge the \u201cUpdate powerhouse\u201d pull request in your powerhouse repository on GitHub, and Cloudflare redeploys. None yet? Run the Update powerhouse workflow from the repository's Actions tab."
-          : "In your powerhouse folder, run node setup.mjs --update."}
+          : "In your powerhouse folder, run node setup.mjs --update."}{" "}
+        {setupKind === "browser" && repository && (
+          <a href={updatePullRequestsUrl(repository)} rel="noreferrer" target="_blank">
+            Open update pull requests
+          </a>
+        )}
       </p>
     </div>
   );

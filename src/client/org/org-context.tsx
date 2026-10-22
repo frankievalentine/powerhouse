@@ -135,6 +135,7 @@ export function OrgProvider({ me, children }: { me: Me; children: ReactNode }) {
       routerModel: "@cf/moonshotai/kimi-k2.7-code",
       timeZone: "",
     website: "",
+    repository: "",
     },
   });
   const [connected, setConnected] = useState(false);

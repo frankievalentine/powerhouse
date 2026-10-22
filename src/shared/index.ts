@@ -255,6 +255,11 @@ export interface OrgSettings {
   /** The organization's website (https), for jobs and for suggestions that use {website}. Empty when not set. */
   website: string;
   /**
+   * The GitHub repository a Deploy to Cloudflare copy lives in ("owner/name"),
+   * for update links. Empty when not set or for setup.mjs deployments.
+   */
+  repository: string;
+  /**
    * A backstop under the AI Gateway's own spend limits: once the day's
    * estimated spend reaches it, scheduled runs are skipped. 0 turns it off.
    */
@@ -549,3 +554,5 @@ export interface UpdateStatus {
   latest: { version: string; url: string } | null;
   updateAvailable: boolean;
 }
+
+export * from "./update-workflow";

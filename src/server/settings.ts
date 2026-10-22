@@ -1,4 +1,4 @@
-import { AUTO_MODEL, DEFAULT_MODEL, modelInfo, type OrgSettings, SETTINGS_LIMITS } from "../shared";
+import { AUTO_MODEL, DEFAULT_MODEL, isRepoSlug, modelInfo, type OrgSettings, SETTINGS_LIMITS } from "../shared";
 import { z } from "zod";
 import { DEFAULT_ROLE_ID, hostList, modelId } from "./roles";
 import { isTimeZone } from "./schedule-rules";
@@ -27,6 +27,7 @@ export function defaultSettings(orgId: string): OrgSettings {
     routerModel: DEFAULT_MODEL,
     timeZone: "",
     website: "",
+    repository: "",
   };
 }
 
@@ -55,6 +56,11 @@ export const settingsInput = z
       .max(SETTINGS_LIMITS.website)
       .transform((value) => (value && !/^https?:\/\//i.test(value) ? `https://${value}` : value))
       .refine((value) => value === "" || isHttpsUrl(value), "Enter a web address such as https://example.com"),
+    repository: z
+      .string()
+      .trim()
+      .transform((value) => value.replace(/^https?:\/\/github\.com\//i, "").replace(/\.git$|\/$/, ""))
+      .refine((value) => value === "" || isRepoSlug(value), "Enter the repository as owner/name"),
   })
   .partial();
 
@@ -74,6 +80,7 @@ export const SETTINGS_LABELS: Record<string, string> = {
   maxSteps: "Steps per turn",
   orgName: "Organization name",
   website: "Website",
+  repository: "GitHub repository",
   routerModel: "Backup router model",
   timeZone: "Time zone",
 };

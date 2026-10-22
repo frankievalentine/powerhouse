@@ -7,6 +7,11 @@ What changed in each powerhouse release. Updates follow these releases: Deploy t
 ### Added
 
 - Remove powerhouse: `node setup.mjs --remove`, and a guide in the README for removing it by hand.
+- Finish setup asks for your GitHub repository and links straight to adding the update workflow and to the setting that lets it open pull requests. Settings > Organization keeps the repository.
+
+### Fixed
+
+- Updates for Deploy to Cloudflare copies: the copy does not receive workflow files, so copies now add a short workflow that calls powerhouse's own update workflow.
 
 ### Changed
 

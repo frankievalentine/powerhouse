@@ -1,25 +1,21 @@
-# Keeps a copy of powerhouse made with Deploy to Cloudflare up to date.
+# The update logic for copies of powerhouse made with Deploy to Cloudflare.
 #
-# Once a week, or when you run it from your repository's Actions tab, this
-# checks for a newer powerhouse release and opens a pull request with it.
-# Merging the pull request redeploys powerhouse through Workers Builds.
+# Deploy to Cloudflare does not copy workflow files, so each copy adds a
+# short workflow (src/shared/update-workflow.ts, linked from Finish setup)
+# that calls this one every week and on demand. It checks for a newer
+# powerhouse release and opens a pull request with it; merging redeploys
+# powerhouse through Workers Builds. Changes here reach every copy, so keep
+# it working: copies call it from main.
 #
-# It never touches wrangler.local.jsonc (your tool settings) or the Worker
-# name in wrangler.jsonc, and it removes only files the release removed.
-# GitHub lets a workflow open pull requests only after you turn on, once:
-# Settings > Actions > General > "Allow GitHub Actions to create and approve
-# pull requests". Without it, the update waits on a branch you can open as a
-# pull request yourself.
+# It never touches wrangler.local.jsonc (the copy's tool settings), the
+# Worker name in wrangler.jsonc, or .github, and removes only files the
+# release removed. GitHub lets it open the pull request only once the copy
+# turns on Settings > Actions > General > "Allow GitHub Actions to create and
+# approve pull requests"; otherwise the update waits on a branch.
 name: Update powerhouse
 
 on:
-  schedule:
-    - cron: "17 9 * * 1"
-  workflow_dispatch:
-
-permissions:
-  contents: write
-  pull-requests: write
+  workflow_call:
 
 env:
   UPSTREAM: frankievalentine/powerhouse
@@ -54,9 +50,9 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           LATEST: ${{ steps.latest.outputs.latest }}
           CURRENT: ${{ steps.latest.outputs.current }}
-          BASE: ${{ github.event.repository.default_branch }}
         run: |
           set -euo pipefail
+          BASE=$(gh repo view "$GITHUB_REPOSITORY" --json defaultBranchRef --jq .defaultBranchRef.name)
           branch="powerhouse-update/$LATEST"
           if git ls-remote --exit-code --heads origin "$branch" > /dev/null; then
             echo "The update to $LATEST is already waiting on the branch $branch." >> "$GITHUB_STEP_SUMMARY"
@@ -77,10 +73,10 @@ jobs:
           name=$(node -e 'const s=require("fs").readFileSync("wrangler.jsonc","utf8");const m=s.match(/"name"\s*:\s*"([^"]+)"/);process.stdout.write(m?m[1]:"")')
 
           git switch --quiet -c "$branch"
-          rsync -a --exclude .git --exclude .github/workflows --exclude wrangler.local.jsonc "$work/upstream/" ./
+          rsync -a --exclude .git --exclude .github --exclude wrangler.local.jsonc "$work/upstream/" ./
           while IFS= read -r file; do
             case "$file" in
-              .github/workflows/*|wrangler.local.jsonc) ;;
+              .github/*|wrangler.local.jsonc) ;;
               *) rm -f -- "$file" ;;
             esac
           done < "$work/removed"
@@ -107,9 +103,4 @@ jobs:
               echo "Open it yourself: https://github.com/${GITHUB_REPOSITORY}/compare/$BASE...$branch"
               echo "To let the next update open its own: Settings > Actions > General > Allow GitHub Actions to create and approve pull requests."
             } >> "$GITHUB_STEP_SUMMARY"
-          fi
-
-          # A workflow cannot change workflow files, so a changed one is copied by hand.
-          if ! cmp -s "$work/upstream/.github/workflows/update.yml" .github/workflows/update.yml; then
-            echo "This update workflow itself changed in $LATEST. Copy it by hand from https://github.com/$UPSTREAM/blob/$LATEST/.github/workflows/update.yml" >> "$GITHUB_STEP_SUMMARY"
           fi

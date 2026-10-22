@@ -22,10 +22,10 @@ You need:
    1. **Connect your Cloudflare account.** Create a one-time API token from the pre-filled link and paste it. It proves the deployment is yours, is used only during setup, and is never saved.
    2. **Who can sign in.** Your email (you become the admin), anyone else's email or whole `@domains`, and optionally your website.
    3. **AI models.** Your own Anthropic or OpenAI key on your AI Gateway, Cloudflare credits, or open models on Workers AI for now.
-   4. **Tools.** Turn on web search if you like. Email and the web browser come later, from Settings.
+   4. **Tools and updates.** Turn on web search if you like (email and the web browser come later, from Settings), and enter your new GitHub repository so the last screen can link to it.
    5. **Finish.** powerhouse protects itself with Cloudflare Access, creates your AI Gateway and saves its settings.
 3. Sign in, then delete the setup token as the last screen reminds you.
-4. To get updates, turn on one setting in your new GitHub repository: Settings > Actions > General > "Allow GitHub Actions to create and approve pull requests" (see [Updating](#updating)).
+4. To get updates, add the update workflow and turn on one setting in your new GitHub repository. Finish setup's last screen links to both (see [Updating](#updating)).
 
 Email and the web browser are added afterwards from Settings > Tools, which shows the few lines to commit to your repository.
 
@@ -138,7 +138,7 @@ Working on powerhouse's code? [CONTRIBUTING.md](CONTRIBUTING.md) covers local de
 
 powerhouse updates follow its [releases](https://github.com/frankievalentine/powerhouse/releases) ([CHANGELOG](CHANGELOG.md)). Settings > Status says when a newer one is out.
 
-- **Deployed with the Deploy to Cloudflare button:** your repository has an "Update powerhouse" workflow. Once a week, or when you run it from the repository's Actions tab, it opens a pull request with the new release; merge it and Cloudflare redeploys. Turn on Settings > Actions > General > "Allow GitHub Actions to create and approve pull requests" once, or the update waits on a branch you open as a pull request yourself. Your tool settings live in `wrangler.local.jsonc`, which updates never touch.
+- **Deployed with the Deploy to Cloudflare button:** Deploy to Cloudflare does not copy workflow files, so add the update workflow to your repository once. Finish setup's last screen (and Settings > Organization, once your repository is entered there) has a link that opens GitHub's editor with it filled in; click Commit changes. Or create `.github/workflows/update-powerhouse.yml` yourself with [these lines](src/shared/update-workflow.ts). Then turn on Settings > Actions > General > "Allow GitHub Actions to create and approve pull requests". Once a week, or when you run "Update powerhouse" from the Actions tab, it opens a pull request with the new release; merge it and Cloudflare redeploys. Your tool settings live in `wrangler.local.jsonc`, which updates never touch.
 - **Set up with `node setup.mjs`:** run `node setup.mjs --update`. It moves your folder to the latest release, keeps your settings and deploys.
 
 Roles you already have are never overwritten: when an update adds a tool or skill, add it to your roles in the Roles sheet; new ready-made roles appear in its library.

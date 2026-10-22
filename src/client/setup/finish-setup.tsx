@@ -1,4 +1,5 @@
 import { type FormEvent, type ReactNode, useEffect, useState } from "react";
+import { actionsSettingsUrl, addUpdateWorkflowUrl, isRepoSlug } from "../../shared";
 import styles from "./finish-setup.module.css";
 
 /**
@@ -74,6 +75,11 @@ export function FinishSetup() {
   const [others, setOthers] = useState("");
   const [website, setWebsite] = useState("");
   const [webSearch, setWebSearch] = useState(false);
+  // Deploy to Cloudflare names the repository after the Worker by default.
+  const workerName = window.location.hostname.split(".")[0] ?? "powerhouse";
+  const [repository, setRepository] = useState("");
+  const repo = repository.trim().replace(/^https?:\/\/github\.com\//i, "").replace(/\.git$|\/$/, "");
+  const repoValid = repo === "" || isRepoSlug(repo);
   const [ai, setAi] = useState<Ai>("keys");
   const [providers, setProviders] = useState<string[]>(["anthropic"]);
   const [busy, setBusy] = useState(false);
@@ -132,6 +138,7 @@ export function FinishSetup() {
           ai,
           allow: allowList,
           providers,
+          repository: repo,
           token,
           webSearch: webSearch && ai !== "skip",
           website,
@@ -173,11 +180,26 @@ export function FinishSetup() {
         text: "In the Cloudflare dashboard: AI > AI Gateway > Credits. Until you have some, jobs run on open models.",
         title: "Buy AI Gateway credits",
       },
-      {
-        action: { href: "https://github.com", label: "Open GitHub" },
-        text: 'In your powerhouse repository: Settings > Actions > General > "Allow GitHub Actions to create and approve pull requests". New releases then arrive as pull requests you merge.',
-        title: "Turn on updates",
-      },
+      ...(repo
+        ? [
+            {
+              action: { href: addUpdateWorkflowUrl(repo), label: "Add it on GitHub" },
+              text: "GitHub opens the file with everything filled in: click Commit changes. Once a week it checks for a new powerhouse release and opens a pull request; merging it updates powerhouse.",
+              title: "Add the update workflow",
+            },
+            {
+              action: { href: actionsSettingsUrl(repo), label: "Open Actions settings" },
+              text: 'Turn on "Allow GitHub Actions to create and approve pull requests" at the bottom of the page, then Save, so updates can arrive as pull requests.',
+              title: "Let updates open pull requests",
+            },
+          ]
+        : [
+            {
+              action: { href: "https://github.com/frankievalentine/powerhouse#updating", label: "How to turn on updates" },
+              text: "Add the update workflow to your powerhouse repository on GitHub and let it open pull requests. Enter your repository in Settings > Organization for one-click links.",
+              title: "Turn on updates",
+            },
+          ]),
       {
         action: { href: "https://dash.cloudflare.com/profile/api-tokens", label: "Open API tokens" },
         text: 'Delete the "powerhouse setup" token. Nothing needs it any more.',
@@ -198,7 +220,7 @@ export function FinishSetup() {
         </div>
         <section aria-labelledby="next-title">
           <h2 className={styles.subtitle} id="next-title">
-            {next.length === 1 ? "One thing left" : `${next.length === 2 ? "Two" : "Three"} things left`}
+            {next.length === 1 ? "One thing left" : `${["Two", "Three", "Four"][next.length - 2] ?? next.length} things left`}
           </h2>
           <ol className={styles.steps}>
             {next.map((item, i) => (
@@ -403,13 +425,28 @@ export function FinishSetup() {
                 {ai === "skip" && " Needs the AI Gateway: choose a way to pay for models in step 3 first."}
               </span>
             </label>
+            <label className={styles.field} htmlFor="setup-repository">
+              <span className={styles.label}>Your GitHub repository (for updates)</span>
+              <span className={styles.muted}>
+                The copy Deploy to Cloudflare made, as owner/name. The last step links to it to turn on updates.
+              </span>
+              <input
+                className={styles.input}
+                id="setup-repository"
+                onChange={(e) => setRepository(e.target.value)}
+                placeholder={`your-github-name/${workerName}`}
+                spellCheck={false}
+                value={repository}
+              />
+              {!repoValid && <span className={styles.error}>Enter it as owner/name, for example jane/{workerName}.</span>}
+            </label>
             <p className={styles.muted}>
               Send email and the web browser are added later in Settings &gt; Tools: they need a small file in your GitHub
               repository, plus a domain on Cloudflare Email Service for email and the Workers Paid plan for the browser.
             </p>
           </div>
           <div className={styles.actions}>
-            <button className={styles.primary} onClick={() => setStep(5)} type="button">
+            <button className={styles.primary} disabled={!repoValid} onClick={() => setStep(5)} type="button">
               Continue
             </button>
             <button className={styles.secondary} onClick={() => setStep(3)} type="button">

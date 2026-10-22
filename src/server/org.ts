@@ -287,8 +287,12 @@ export class Org extends Agent<Env, OrgState> {
     const [pending] = this.sql<{ value: string }>`SELECT value FROM meta WHERE key = 'team_pending'`;
     let settings = this.settings();
     // The website entered in Finish setup, until someone sets one in Settings.
-    if (saved?.website && !settings.website) {
-      settings = { ...settings, website: saved.website };
+    if ((saved?.website && !settings.website) || (saved?.repository && !settings.repository)) {
+      settings = {
+        ...settings,
+        repository: settings.repository || saved?.repository || "",
+        website: settings.website || saved?.website || "",
+      };
       this.sql`INSERT OR REPLACE INTO settings (id, config) VALUES (1, ${JSON.stringify(settings)})`;
     }
     this.maxConcurrentAgentTools = settings.maxConcurrentJobs;
