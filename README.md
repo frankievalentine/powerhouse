@@ -154,7 +154,7 @@ Removing powerhouse deletes everything it stored (roles, jobs, settings, members
 1. **Access application:** Zero Trust > Access controls > Applications > the "powerhouse" application for your powerhouse address > Delete. Then Access controls > Policies > "powerhouse members" > Delete, unless another application uses it.
 2. **Worker and its data:** Workers & Pages > your powerhouse Worker > Settings > Delete. This also stops Workers Builds for a Deploy to Cloudflare repository.
 3. **AI Gateway:** AI > AI Gateway > "powerhouse" > Settings > Delete gateway. Its stored provider keys and logs go with it.
-4. **API tokens:** My Profile > API Tokens: delete any "powerhouse setup" or "powerhouse remove" token left.
+4. **API tokens:** My Profile > API Tokens: delete any "powerhouse setup" or "powerhouse remove" token left, and, for a Deploy to Cloudflare deployment, the "<your Worker's name> build token" Workers Builds created to deploy it.
 
 **Keep or remove yourself:**
 

@@ -789,7 +789,7 @@ async function removePowerhouse(account) {
     done("remove", `deleted the AI Gateway "${gatewayId}"`);
   }
   log(
-    "\npowerhouse is removed. Delete the \"powerhouse remove\" API token now: https://dash.cloudflare.com/profile/api-tokens" +
+    `\npowerhouse is removed. Delete the "powerhouse remove" API token now, and a "${worker} build token" if Deploy to Cloudflare made one: https://dash.cloudflare.com/profile/api-tokens` +
       "\nThis folder still has your settings (wrangler.local.jsonc); delete the folder if you are done with it.",
   );
   return { deleteRemoveToken: true, kept, removed };
