@@ -7,21 +7,32 @@ Built on [Cloudflare Agents](https://developers.cloudflare.com/agents/), [AI Gat
 
 ## Get started
 
+[![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/frankievalentine/powerhouse)
+
 You need:
 
 - A [Cloudflare account](https://dash.cloudflare.com/sign-up). Workers Free runs everything except the browser tool and the open-weight Workers AI models, which need [Workers Paid](https://developers.cloudflare.com/workers/platform/pricing/).
-- [Cloudflare Zero Trust](https://one.dash.cloudflare.com) turned on once (free for up to 50 users): choose a team name and the Free plan, which asks for a payment method even on Free. Setup cannot do this step for you.
-- One way to pay for Claude or GPT: an [Anthropic](https://console.anthropic.com) or [OpenAI](https://platform.openai.com) API key, which you add to your AI Gateway in the Cloudflare dashboard, or [Cloudflare credits](https://developers.cloudflare.com/ai-gateway/features/unified-billing/). Your keys stay on the gateway; powerhouse never sees them.
-- [Node](https://nodejs.org) 20 or later, and this repository on your computer.
+- [Cloudflare Zero Trust](https://one.dash.cloudflare.com) turned on once (free for up to 50 users): choose a team name and the Free plan, which asks for a payment method even on Free. Nothing can do this step for you.
+- One way to pay for Claude or GPT: an [Anthropic](https://console.anthropic.com) or [OpenAI](https://platform.openai.com) API key, which you add to your AI Gateway in the Cloudflare dashboard, or [Cloudflare credits](https://developers.cloudflare.com/ai-gateway/features/unified-billing/). Your keys stay on the gateway; powerhouse never sees them. You can also start with open models on Workers AI and add this later.
 
-Get the code:
+### Option 1: Deploy to Cloudflare (no terminal)
+
+1. Click **Deploy to Cloudflare** above. Cloudflare copies powerhouse into your GitHub account and deploys it.
+2. Open the new `workers.dev` address. It shows **Finish setup**: create one API token from a pre-filled link, choose who can sign in, how to pay for AI models, and which tools to turn on. powerhouse protects itself with Cloudflare Access and saves its settings.
+3. Sign in. To get updates, turn on one setting in your new GitHub repository: Settings > Actions > General > "Allow GitHub Actions to create and approve pull requests" (see [Updating](#updating)).
+
+Email and the web browser are added afterwards from Settings > Tools, which shows the few lines to commit to your repository.
+
+### Option 2 and 3: from a copy on your computer
+
+These need [Node](https://nodejs.org) 20 or later and the code:
 
 ```sh
 git clone https://github.com/frankievalentine/powerhouse.git
 cd powerhouse
 ```
 
-### Option 1: ask a coding agent (recommended)
+#### Option 2: ask a coding agent
 
 Open this folder in a coding agent that can run commands (Claude Code, Codex, Cursor and the like) and send it:
 
@@ -29,9 +40,9 @@ Open this folder in a coding agent that can run commands (Claude Code, Codex, Cu
 Set up powerhouse in my Cloudflare account. Follow the setup instructions in AGENTS.md, ask me before running anything, and never ask me to paste an API token or key into the chat.
 ```
 
-The agent runs the same setup command as Option 2 and walks you through the steps that need you: approving the Cloudflare sign-in, creating one API token from a pre-filled page, and adding your AI key to the gateway.
+The agent runs the same setup command as Option 3 and walks you through the steps that need you: approving the Cloudflare sign-in, creating one API token from a pre-filled page, and adding your AI key to the gateway.
 
-### Option 2: run the setup command
+#### Option 3: run the setup command
 
 ```sh
 node setup.mjs
@@ -47,10 +58,6 @@ It asks a few questions, then:
 Sign in with an address you allowed, then open Settings > Models and press Test. Delete the setup token afterwards, as setup reminds you.
 
 Rerunning setup is safe: it skips what is done. It is also how you update (see [Updating](#updating)). `node setup.mjs --help` lists every flag, including `--yes --json` for running without prompts.
-
-### Option 3: Deploy to Cloudflare (coming)
-
-A one-click Deploy to Cloudflare button is planned for when the repository is public. It also needs powerhouse to finish its own setup in the browser: a button deploy builds from a copy of the repository, which cannot hold your Access and AI Gateway settings, so setup has to move into the app first. The plan and its open problems are in [ROADMAP.md](ROADMAP.md#getting-started-planned-2026-10-21).
 
 ## What it does
 

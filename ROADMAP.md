@@ -65,7 +65,7 @@ Tasks:
 - [x] Create the AI Gateway from setup (2026-10-21): jobs run on Claude Opus 5.5 or GPT-6 Sol through it, paid with the person's Anthropic/OpenAI keys or Unified Billing credits. Required after Zero Trust. Keys are added in the dashboard by default, so setup never sees them and its token needs only AI Gateway Edit; setup can store pasted keys instead (adds Secrets Store Edit to the token). Setup ends by reminding people to delete the setup token. Open-weight Workers AI models stay available. The token link pre-fills AI Gateway: Edit with the undocumented template key `aig` (found by testing in the dashboard); Secrets Store's key is still unknown, so the "keys" option asks for it to be added by hand. Setup checks the token can reach AI Gateway right after it is pasted. Not yet tested against a live account.
 - [ ] Deploy to Cloudflare button, the main path once the repository is public (it is private for now). See "Getting started" below.
 
-### Getting started (planned 2026-10-21)
+### Getting started (button shipped in 1.0.0, 2026-10-22)
 
 Two paths. Both start with the one step nothing can automate: turning on Zero Trust (a team name and the Free plan, which asks for a payment method).
 

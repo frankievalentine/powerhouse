@@ -4,6 +4,8 @@ What changed in each powerhouse release. Updates follow these releases: Deploy t
 
 ## Unreleased
 
+## 1.0.0 (2026-10-22)
+
 ### Added
 
 - Finish setup: a deployment made with Deploy to Cloudflare sets itself up in the browser (Cloudflare Access, who can sign in, AI models, tools).
