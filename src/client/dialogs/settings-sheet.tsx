@@ -40,7 +40,7 @@ const PAGES: { id: PageId; title: string; summary: string; adminOnly?: boolean }
   { id: "organization", summary: "Name, website, time zone, company profile and team memory", title: "Organization" },
   { id: "jobs", summary: "Model, answers, voice, limits, routing and history", title: "Jobs" },
   { id: "safety", summary: "Approvals for browser actions, blocked sites", title: "Safety" },
-  { id: "mcp", summary: "Servers powerhouse connects to, and powerhouse's own MCP server", title: "MCP" },
+  { id: "mcp", summary: "Use powerhouse in Claude, ChatGPT or Cursor, and the servers it connects to", title: "MCP" },
   { adminOnly: true, id: "members", summary: "Who is an admin", title: "Members" },
   { id: "status", summary: "Models, tools, notifications, version and updates", title: "Status" },
   { id: "appearance", summary: "Light, dark or your device's setting", title: "Appearance" },
@@ -132,11 +132,11 @@ function SettingsPage({ page, focus }: { page: PageId; focus?: "tools" }) {
     case "mcp":
       return (
         <>
+          <AppsSection />
           {/* Members see the connections; only admins change them. */}
           <fieldset className={styles.plainFieldset} disabled={!isAdmin}>
             <ConnectionsSection />
           </fieldset>
-          <AppsSection />
         </>
       );
     case "members":
