@@ -4,7 +4,6 @@ Your team's own fleet of AI agents, running in your own Cloudflare account. Desc
 
 Built on [Cloudflare Agents](https://developers.cloudflare.com/agents/), [AI Gateway](https://developers.cloudflare.com/ai-gateway/) and Workers AI. Sign-in is Cloudflare Access, so only the people you allow can use it.
 
-> Status: early, and in daily use on a workers.dev deployment. See [ROADMAP.md](ROADMAP.md) for what is planned and what is known not to work yet.
 
 ## Get started
 
