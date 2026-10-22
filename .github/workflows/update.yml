@@ -8,8 +8,8 @@
 # it working: copies call it from main.
 #
 # It never touches wrangler.local.jsonc (the copy's tool settings), the
-# Worker name in wrangler.jsonc, or .github, and removes only files the
-# release removed. GitHub lets it open the pull request only once the copy
+# names Deploy to Cloudflare gave the copy (wrangler.jsonc, package.json),
+# or .github, and removes only files the release removed. GitHub lets it open the pull request only once the copy
 # turns on Settings > Actions > General > "Allow GitHub Actions to create and
 # approve pull requests"; otherwise the update waits on a branch.
 name: Update powerhouse
@@ -69,8 +69,12 @@ jobs:
             : > "$work/removed"
           fi
 
-          # The Worker name Deploy to Cloudflare wrote into wrangler.jsonc.
-          name=$(node -e 'const s=require("fs").readFileSync("wrangler.jsonc","utf8");const m=s.match(/"name"\s*:\s*"([^"]+)"/);process.stdout.write(m?m[1]:"")')
+          # Deploy to Cloudflare renames the copy: the Worker name in
+          # wrangler.jsonc and the package name in package.json. Both are kept.
+          first_name() { node -e 'const s=require("fs").readFileSync(process.argv[1],"utf8");const m=s.match(/"name"\s*:\s*"([^"]+)"/);process.stdout.write(m?m[1]:"")' "$1"; }
+          keep_name() { NAME="$2" node -e 'const fs=require("fs");const f=process.argv[1];fs.writeFileSync(f,fs.readFileSync(f,"utf8").replace(/"name"\s*:\s*"[^"]+"/,JSON.stringify("name")+": "+JSON.stringify(process.env.NAME)))' "$1"; }
+          worker_name=$(first_name wrangler.jsonc)
+          package_name=$(first_name package.json)
 
           git switch --quiet -c "$branch"
           rsync -a --exclude .git --exclude .github --exclude wrangler.local.jsonc "$work/upstream/" ./
@@ -80,9 +84,8 @@ jobs:
               *) rm -f -- "$file" ;;
             esac
           done < "$work/removed"
-          if [ -n "$name" ]; then
-            NAME="$name" node -e 'const fs=require("fs");const s=fs.readFileSync("wrangler.jsonc","utf8");fs.writeFileSync("wrangler.jsonc",s.replace(/"name"\s*:\s*"[^"]+"/,JSON.stringify("name")+": "+JSON.stringify(process.env.NAME)))'
-          fi
+          [ -n "$worker_name" ] && keep_name wrangler.jsonc "$worker_name"
+          [ -n "$package_name" ] && keep_name package.json "$package_name"
 
           git add -A
           if git diff --cached --quiet; then
