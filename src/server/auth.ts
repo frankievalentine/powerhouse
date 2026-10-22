@@ -1,5 +1,6 @@
 import { createMiddleware } from "hono/factory";
 import { createRemoteJWKSet, jwtVerify } from "jose";
+import { type AccessSettings, deployment } from "./deployment";
 import { devEmail } from "./dev";
 
 export interface AuthVariables {
@@ -20,9 +21,32 @@ const LOCAL_ORG_ID = "local";
 function orgIdForTeam(teamDomain: string) {
   const team = new URL(teamDomain).hostname.split(".")[0];
   if (!team) {
-    throw new Error(`Cannot derive an org id from ACCESS_TEAM_DOMAIN "${teamDomain}"`);
+    throw new Error(`Cannot derive an org id from the Access team domain "${teamDomain}"`);
   }
   return team;
+}
+
+/** Settings saved by Finish setup, cached per isolate; refreshed after a minute. */
+let saved: { at: number; settings: AccessSettings } | null = null;
+const SAVED_TTL_MS = 60_000;
+
+/**
+ * The Access application to verify against: setup.mjs's vars when present
+ * (wrangler.local.jsonc), else what Finish setup saved. Null until either
+ * exists: the deployment is not set up yet.
+ */
+export async function accessSettings(env: Env): Promise<AccessSettings | null> {
+  if (env.ACCESS_TEAM_DOMAIN && env.ACCESS_AUD) {
+    return { aud: env.ACCESS_AUD, teamDomain: env.ACCESS_TEAM_DOMAIN };
+  }
+  if (saved && Date.now() - saved.at < SAVED_TTL_MS) {
+    return saved.settings;
+  }
+  const settings = await deployment(env).access();
+  // Only a saved result is cached, so a deployment being set up sees its
+  // settings on the next request after Finish setup saves them.
+  saved = settings ? { at: Date.now(), settings } : null;
+  return settings;
 }
 
 let jwks: ReturnType<typeof createRemoteJWKSet> | null = null;
@@ -56,13 +80,15 @@ export const accessAuth = createMiddleware<AppEnv>(async (c, next) => {
     return next();
   }
 
+  const access = await accessSettings(env);
+  if (!access) {
+    // Not set up yet: the page shows Finish setup (see setup-routes.ts).
+    return c.json({ error: "Setup required", setupRequired: true }, 503);
+  }
   let orgId: string;
   try {
-    orgId = orgIdForTeam(env.ACCESS_TEAM_DOMAIN);
+    orgId = orgIdForTeam(access.teamDomain);
   } catch {
-    orgId = "";
-  }
-  if (!(orgId && env.ACCESS_AUD)) {
     return c.json({ error: "Access is not configured" }, 500);
   }
 
@@ -74,11 +100,11 @@ export const accessAuth = createMiddleware<AppEnv>(async (c, next) => {
   }
 
   try {
-    const { payload } = await jwtVerify(token, getJwks(env.ACCESS_TEAM_DOMAIN), {
+    const { payload } = await jwtVerify(token, getJwks(access.teamDomain), {
       // Access signs with RS256.
       algorithms: ["RS256"],
-      audience: env.ACCESS_AUD,
-      issuer: env.ACCESS_TEAM_DOMAIN,
+      audience: access.aud,
+      issuer: access.teamDomain,
     });
     if (typeof payload.email !== "string") {
       return c.json({ error: "Unauthorized" }, 401);

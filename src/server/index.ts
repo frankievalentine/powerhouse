@@ -4,6 +4,7 @@ import { type AuthVariables, accessAuth, forwardMember, orgGuard } from "./auth"
 
 // Runs the model-written browser code in a Worker Loader sandbox (browser tool).
 export { CodemodeRuntime } from "agents/browser";
+export { Deployment } from "./deployment";
 export { JobAgent } from "./job-agent";
 export { Org } from "./org";
 

@@ -17,15 +17,18 @@
     "not_found_handling": "single-page-application",
     "run_worker_first": ["/agents/*", "/api/*"]
   },
-  "vars": {
-    // Cloudflare Access: team domain (https://<team>.cloudflareaccess.com) and the
-    // application AUD tag. The team name is also the org id: one org per Access team.
-    "ACCESS_TEAM_DOMAIN": "",
-    "ACCESS_AUD": ""
-  },
   // Org is the only top-level agent. JobAgent runs as an Org sub-agent (facet) and needs no binding.
+  // Deployment keeps settings made in the browser (Finish setup), such as Access.
+  // Access settings set by setup.mjs are vars in wrangler.local.jsonc instead,
+  // and are deliberately not declared here: Deploy to Cloudflare would ask for them.
   "durable_objects": {
-    "bindings": [{ "class_name": "Org", "name": "Org" }]
+    "bindings": [
+      { "class_name": "Org", "name": "Org" },
+      { "class_name": "Deployment", "name": "DEPLOYMENT" }
+    ]
   },
-  "migrations": [{ "new_sqlite_classes": ["Org"], "tag": "v1" }]
+  "migrations": [
+    { "new_sqlite_classes": ["Org"], "tag": "v1" },
+    { "new_sqlite_classes": ["Deployment"], "tag": "v2" }
+  ]
 }

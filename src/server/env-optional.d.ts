@@ -3,6 +3,13 @@
 // check for them at runtime (see capabilities.ts). env.d.ts declares Env both
 // globally and under Cloudflare, so both are augmented.
 interface OptionalBindings {
+  /**
+   * Cloudflare Access, as setup.mjs writes it: team domain
+   * (https://<team>.cloudflareaccess.com) and the application's AUD tag.
+   * Absent on deployments set up in the browser (see deployment.ts).
+   */
+  ACCESS_TEAM_DOMAIN?: string;
+  ACCESS_AUD?: string;
   BROWSER?: BrowserRun;
   EMAIL?: SendEmail;
   EMAIL_FROM?: string;
