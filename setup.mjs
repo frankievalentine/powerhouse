@@ -758,7 +758,7 @@ async function removePowerhouse(account) {
     return { removed: [], kept };
   }
 
-  log(`\nThis removes, for good:\n${plan.map((p) => `  - ${p}`).join("\n")}\nKept:\n${kept.map((k) => `  - ${k}`).join("\n")}\n`);
+  log(`\nThis removes, for good, from the Cloudflare account "${account.name}":\n${plan.map((p) => `  - ${p}`).join("\n")}\nKept:\n${kept.map((k) => `  - ${k}`).join("\n")}\n`);
   if (!args.yes) {
     const answer = (await ask(`Type the Worker's name (${worker}) to remove it all, or anything else to stop: `)).trim();
     if (answer !== worker) {
