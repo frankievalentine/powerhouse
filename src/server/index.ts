@@ -1,6 +1,7 @@
 import { Hono } from "hono";
 import { agentsMiddleware } from "hono-agents";
 import { type AuthVariables, accessAuth, forwardMember, orgGuard } from "./auth";
+import { setupRoutes } from "./setup-routes";
 
 // Runs the model-written browser code in a Worker Loader sandbox (browser tool).
 export { CodemodeRuntime } from "agents/browser";
@@ -10,6 +11,9 @@ export { Org } from "./org";
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
+// Finish setup answers before sign-in exists, so it is mounted ahead of
+// accessAuth; its routes refuse once the deployment is set up.
+app.route("/api/setup", setupRoutes);
 app.use("/api/*", accessAuth);
 app.use("/agents/*", accessAuth, orgGuard, forwardMember);
 // The Agents SDK answers an uncaught error with its stack trace; members get

@@ -6,6 +6,7 @@ import type { ToolSet, UIMessage } from "ai";
 import { createWorkersAI } from "workers-ai-provider";
 import { gatewayModel, modelSetupFailure, providerOptionsFor } from "./models";
 import { MEMBER_EMAIL_HEADER } from "./auth";
+import { withDeploymentConfig } from "./deployment";
 import { capabilitiesFor } from "./capabilities";
 import { CONNECTION_GUIDANCE, connectionTools } from "./connections";
 import { Org } from "./org";
@@ -79,6 +80,8 @@ export class JobAgent extends Think<Env> {
    * would handle chat, approvals and clears before the check saw them).
    */
   async onStart() {
+    // Settings saved by Finish setup (AI Gateway), for browser-set-up deployments.
+    this.env = await withDeploymentConfig(this.env);
     if (this.accessCheckInstalled) {
       return;
     }

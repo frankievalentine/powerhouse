@@ -14,6 +14,8 @@ const loaders = {
   settingsSheet: () => import("../dialogs/settings-sheet"),
 };
 
+/** Only a deployment without Access shows it, so it is not prefetched. */
+export const FinishSetup = lazy(() => import("../setup/finish-setup").then((m) => ({ default: m.FinishSetup })));
 export const LiveSession = lazy(() => loaders.liveSession().then((m) => ({ default: m.LiveSession })));
 export const RolesSheet = lazy(() => loaders.rolesSheet().then((m) => ({ default: m.RolesSheet })));
 export const SchedulesSheet = lazy(() => loaders.schedulesSheet().then((m) => ({ default: m.SchedulesSheet })));

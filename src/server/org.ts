@@ -38,6 +38,7 @@ import {
 import { generateText } from "ai";
 import { createWorkersAI } from "workers-ai-provider";
 import { MEMBER_EMAIL_HEADER } from "./auth";
+import { withDeploymentConfig } from "./deployment";
 import { devEmail } from "./dev";
 import { capabilitiesFor, providersFor, vapidFor } from "./capabilities";
 import { gatewayModel, modelSetupFailure, TEST_MODELS } from "./models";
@@ -235,6 +236,8 @@ export class Org extends Agent<Env, OrgState> {
    * fetched on demand by the roles editor through listRoles.
    */
   async onStart() {
+    // Settings saved by Finish setup, for deployments set up in the browser.
+    this.env = await withDeploymentConfig(this.env);
     // The SDK keeps this in memory only, and an OAuth callback can arrive
     // after a restart (seen on the deploy), so it is set on every start.
     this.mcp.configureOAuthCallback({ customHandler: oauthResultPage });

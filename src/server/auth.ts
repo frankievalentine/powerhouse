@@ -36,7 +36,9 @@ const SAVED_TTL_MS = 60_000;
  * exists: the deployment is not set up yet.
  */
 export async function accessSettings(env: Env): Promise<AccessSettings | null> {
-  if (env.ACCESS_TEAM_DOMAIN && env.ACCESS_AUD) {
+  // Only real settings count: an earlier Deploy to Cloudflare form made people
+  // type placeholders ("not_set") into these, which must still mean "not set up".
+  if (env.ACCESS_TEAM_DOMAIN?.startsWith("https://") && env.ACCESS_AUD && env.ACCESS_AUD.length >= 32) {
     return { aud: env.ACCESS_AUD, teamDomain: env.ACCESS_TEAM_DOMAIN };
   }
   if (saved && Date.now() - saved.at < SAVED_TTL_MS) {
