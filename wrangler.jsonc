@@ -8,6 +8,9 @@
   "main": "src/server/index.ts",
   "compatibility_date": "2026-06-11",
   "compatibility_flags": ["nodejs_compat"],
+  // No per-version preview hostnames: Access protects only the main hostname,
+  // so every reachable hostname should be one Access covers.
+  "preview_urls": false,
   // Workers AI runs remotely even in local dev, so dev usage bills your account.
   "ai": { "binding": "AI", "remote": true },
   "assets": {

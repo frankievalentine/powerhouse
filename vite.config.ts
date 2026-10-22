@@ -3,7 +3,7 @@ import { cloudflare } from "@cloudflare/vite-plugin";
 import react from "@vitejs/plugin-react";
 import agents from "agents/vite";
 import { defineConfig } from "vite";
-import { wranglerConfigPath } from "./config/merge-wrangler";
+import { wranglerConfigPath } from "./config/merge-wrangler.ts";
 
 const { version } = JSON.parse(readFileSync(new URL("./package.json", import.meta.url), "utf8")) as { version: string };
 

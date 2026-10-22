@@ -84,10 +84,10 @@ Spike in a throwaway account (2026-10-22): the button copies the repository, det
 
 - The form makes every var in `wrangler.jsonc` a required field, so the empty `ACCESS_TEAM_DOMAIN` and `ACCESS_AUD` had to be filled with placeholders. Access settings should leave the base config (problem 1) so the form does not ask for values nobody has yet.
 - It pre-fills secrets from `.dev.vars.example` (problem 3).
-- The project is built twice: the deploy command `bun run deploy` runs `vite build` again. Make `deploy` only `wrangler deploy` and have setup run build then deploy, or point the button at `bunx wrangler deploy`.
-- Preview URLs are on by default (no `preview_urls` in the config). Each version gets a public `*.workers.dev` hostname that Access does not cover at the edge; the Worker's own Access check still refuses requests, but set `"preview_urls": false` in the base config, for existing deployments too.
+- The project is built twice: the deploy command `bun run deploy` runs `vite build` again. Kept: it costs about 4 seconds, Cloudflare's own Vite templates do the same, and `bun run deploy` should keep building for people who deploy by hand.
+- Preview URLs are on by default (no `preview_urls` in the config). Each version gets a public `*.workers.dev` hostname that Access does not cover at the edge; the Worker's own Access check still refuses requests. Fixed: `"preview_urls": false` in the base config.
 - A first build started before the copy was pushed and failed with "Script not found: build"; the next one succeeded. A Cloudflare-side race, nothing to fix here.
-- Minor: `vite.config.ts` imports `./config/merge-wrangler` without an extension, which Vite's future native config loader will reject.
+- Minor, fixed: `vite.config.ts` imported `./config/merge-wrangler` without an extension, which Vite's future native config loader will reject.
 
 Next: the Finish setup page, then decide problem 2.
 
